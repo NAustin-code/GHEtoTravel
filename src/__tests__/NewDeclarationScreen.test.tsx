@@ -92,7 +92,8 @@ describe("NewDeclarationScreen (Travel Request)", () => {
     expect(screen.getAllByText("Traveler Details").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Travel Details").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Accommodation & Transport").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText("Declaration & Undertaking").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Supporting Documents").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Travel Declaration & Undertaking").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Traveler 1")).toBeInTheDocument();
   });
 
@@ -218,6 +219,42 @@ describe("NewDeclarationScreen (Travel Request)", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Traveler 2")).toBeInTheDocument();
+    });
+  });
+
+  it("rejects unsupported file types", async () => {
+    const { container } = render(<NewDeclarationScreen onSubmitSuccess={vi.fn()} onDraftSaved={vi.fn()} />);
+    await waitFor(() => expect(screen.getByText(/New Travel Request/i)).toBeInTheDocument());
+
+    const fileInput = container.querySelector('input[type="file"]')!;
+    const file = new File(["dummy"], "test.html", { type: "text/html" });
+    Object.defineProperty(fileInput, "files", { value: [file] });
+    fireEvent.change(fileInput);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Unsupported file type/i)).toBeInTheDocument();
+    });
+  });
+
+  it("uploads a supported file and lists it with remove option", async () => {
+    const { container } = render(<NewDeclarationScreen onSubmitSuccess={vi.fn()} onDraftSaved={vi.fn()} />);
+    await waitFor(() => expect(screen.getByText(/New Travel Request/i)).toBeInTheDocument());
+
+    vi.mocked(uploadDeclarationFile).mockResolvedValue({
+      name: "quote.pdf", size: 5, type: "application/pdf", url: "local:file/pending/quote.pdf",
+    });
+    const fileInput = container.querySelector('input[type="file"]')!;
+    const file = new File(["dummy"], "quote.pdf", { type: "application/pdf" });
+    Object.defineProperty(fileInput, "files", { value: [file] });
+    fireEvent.change(fileInput);
+
+    await waitFor(() => {
+      expect(screen.getByText("quote.pdf")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Remove quote.pdf/i }));
+    await waitFor(() => {
+      expect(screen.queryByText("quote.pdf")).not.toBeInTheDocument();
     });
   });
 });

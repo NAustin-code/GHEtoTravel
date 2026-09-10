@@ -371,8 +371,8 @@ export function MyDeclarationsScreen({ onEditDraft }: { onEditDraft?: (d: Declar
       <Card className="hidden overflow-x-auto md:block">
         <Table>
           <Thead>
-            {["Declaration ID", "Type", "Destination", "Value", "Submitted", "Final Approver", "Status", "Actions"].map((label) => {
-              const key = label === "Declaration ID" ? "id" : label === "Type" ? "type" : label === "Destination" ? "counterparty" : label === "Value" ? "value" : label === "Submitted" ? "submitted" : label === "Final Approver" ? "approver" : label === "Status" ? "status" : null;
+            {["Request ID", "Type", "Destination", "Value", "Submitted", "Final Approver", "Status", "Actions"].map((label) => {
+              const key = label === "Request ID" ? "id" : label === "Type" ? "type" : label === "Destination" ? "counterparty" : label === "Value" ? "value" : label === "Submitted" ? "submitted" : label === "Final Approver" ? "approver" : label === "Status" ? "status" : null;
               const isSortable = key !== null;
               return (
                 <Th

@@ -14,9 +14,9 @@ npx vitest --coverage   # With coverage report
 
 | File | Tests | What's tested |
 |------|-------|---------------|
-| `api-services.test.ts` | 52 | Local-store service layer: CRUD, submit lifecycle, workflows, reports, errors |
+| `api-services.test.ts` | 54 | Local-store service layer: CRUD, submit lifecycle, workflows, reports, errors |
 | `integration.test.ts` | 28 | Auth + journey flows against the local store |
-| `NewDeclarationScreen.test.tsx` | 8 | Travel form render, validation, submit/draft, traveler blocks |
+| `NewDeclarationScreen.test.tsx` | 10 | Travel form render, validation, submit/draft, traveler blocks, file upload |
 | `approval-workflow.test.tsx` | 23 | WorkflowTimeline options, decisions, auto-fetch |
 | `ApprovalDetail.test.tsx` | 15 | Approval detail decisions and payloads |
 | `workflow-e2e.test.tsx` | 29 | Approval lifecycle, documents, error paths |
@@ -32,7 +32,7 @@ npx vitest --coverage   # With coverage report
 | `admin-dashboard-states.test.tsx` | 2 | Admin dashboard loading/error states |
 | `org-api.test.ts` | 4 | Organization API helpers |
 
-**Total: 245 tests**
+**Total: 249 tests**
 
 Tests run fully offline — the service layer reads/writes the localStorage-backed
 store, reset via `resetLocalStore()` in `beforeEach`. No backend required.

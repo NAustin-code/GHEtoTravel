@@ -205,7 +205,7 @@ export function AdminReports() {
         </Card>
         <Card className="overflow-x-auto p-5">
           <h3 className="mb-4 text-sm font-bold text-foreground">Approval SLA</h3>
-          <Table><Thead><Tr><Th>Role</Th><Th>Average Days</Th><Th>Cases</Th></Tr></Thead><Tbody>{slaData.length === 0 ? <Tr><Td colSpan={3}>No completed approvals.</Td></Tr> : slaData.map((row) => <Tr key={row.role}><Td>{row.role}</Td><Td>{row.avg}</Td><Td>{row.count}</Td></Tr>)}</Tbody></Table>
+          <Table><Thead><Th>Role</Th><Th>Average Days</Th><Th>Cases</Th></Thead><Tbody>{slaData.length === 0 ? <Tr><Td colSpan={3}>No completed approvals.</Td></Tr> : slaData.map((row) => <Tr key={row.role}><Td>{row.role}</Td><Td>{row.avg}</Td><Td>{row.count}</Td></Tr>)}</Tbody></Table>
         </Card>
       </div>
 

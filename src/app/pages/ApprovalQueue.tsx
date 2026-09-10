@@ -72,7 +72,7 @@ export function ApprovalQueue({ onReview }: { onReview: (d: Declaration) => void
     );
   });
   const sortFieldMap: Record<string, string> = {
-    "Declaration ID": "id", TeamMember: "employee", Dept: "department", Type: "type",
+    "Request ID": "id", TeamMember: "employee", Dept: "department", Type: "type",
     Destination: "counterparty", Value: "value", Submitted: "submitted",
     Priority: "priority", Status: "status",
   };
@@ -292,7 +292,7 @@ export function ApprovalQueue({ onReview }: { onReview: (d: Declaration) => void
       <Card className="hidden overflow-x-auto md:block">
         <Table>
           <Thead>
-            {["Declaration ID", "TeamMember", "Dept", "Type", "Destination", "Value", "Submitted", "Priority", "Status", "Step"].map((label) => (
+            {["Request ID", "TeamMember", "Dept", "Type", "Destination", "Value", "Submitted", "Priority", "Status", "Step"].map((label) => (
               <Th
                 key={label}
                 sortable

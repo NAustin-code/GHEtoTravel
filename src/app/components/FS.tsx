@@ -1,14 +1,6 @@
 import React from "react";
 import { Card } from "./Card";
-import { PURPLE, GRADIENT_PRIMARY } from "@/config/theme";
-
-export const FORM_SECTIONS = [
-  { id: "sec-traveler",     num: "1", label: "Traveler Details" },
-  { id: "sec-travel",       num: "2", label: "Travel Details" },
-  { id: "sec-accommodation", num: "3", label: "Accommodation & Transport" },
-  { id: "sec-docs",         num: "4", label: "Supporting Documents" },
-  { id: "sec-undertaking",  num: "5", label: "Declaration & Undertaking" },
-];
+import { GRADIENT_PRIMARY } from "@/config/theme";
 
 export function FS({
   id,

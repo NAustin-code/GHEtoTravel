@@ -8,23 +8,23 @@ import { SystemConfig, NotificationTemplates } from "../../../types/declaration"
 
 const DEFAULT_NOTIFICATION_TEMPLATES: NotificationTemplates = {
   managerApproval: {
-    subject: "Travel Request – Approval Required - [Declaration ID]",
+    subject: "Travel Request – Approval Required - [Request ID]",
     body: "Hi [Approving Manager Name],\n\nA new travel request has been submitted by [Team Member Name] and requires your attention.\n\nPlease access the Travel Request App using the link below to review and action the request.\n\n[Review Travel Request]\n\nKind regards,\nTravel Request System\n\nThis is an automated notification. Please do not reply to this email.",
   },
   hrApproval: {
-    subject: "Travel Request – HR Approval Required - [Declaration ID]",
+    subject: "Travel Request – HR Approval Required - [Request ID]",
     body: "Hi [HR Approver Name],\n\nA travel request has been submitted for HR approval and requires your attention.\n\nPlease access the Travel Request App using the link below to review and action the request.\n\n[Review Travel Request]\n\nKind regards,\nTravel Request System\n\nThis is an automated notification. Please do not reply to this email.",
   },
   declarationReturned: {
-    subject: "Travel Request – Action Required - [Declaration ID]",
+    subject: "Travel Request – Action Required - [Request ID]",
     body: "Hi [Team Member Name],\n\nYour travel request has been returned and requires your attention.\n\nPlease access the Travel Request App using the link below to review the feedback, make the required changes and resubmit your request.\n\n[Review Travel Request]\n\nKind regards,\nTravel Request System\n\nThis is an automated notification. Please do not reply to this email.",
   },
   declarationDeclined: {
-    subject: "Travel Request – Declined - [Declaration ID]",
+    subject: "Travel Request – Declined - [Request ID]",
     body: "Hi [Team Member Name],\n\nYour travel request has been reviewed and declined.\n\nPlease access the Travel Request App using the link below to view the outcome and any relevant feedback.\n\n[View Travel Request]\n\nKind regards,\nTravel Request System\n\nThis is an automated notification. Please do not reply to this email.",
   },
   declarationApproved: {
-    subject: "Travel Request – Approved - [Declaration ID]",
+    subject: "Travel Request – Approved - [Request ID]",
     body: "Hi [Team Member Name],\n\nYour travel request has completed the required approval process and has been [Manager Approval Option].\n\nPlease access the Travel Request App using the link below to view your request.\n\n[View Travel Request]\n\nKind regards,\nTravel Request System\n\nThis is an automated notification. Please do not reply to this email.",
   },
 };

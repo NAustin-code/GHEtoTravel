@@ -193,18 +193,29 @@ Call log:
         - generic [ref=e229]:
           - generic [ref=e230]:
             - generic [ref=e231]: "4"
-            - heading "Declaration & Undertaking" [level=3] [ref=e232]
+            - heading "Supporting Documents" [level=3] [ref=e232]
           - generic [ref=e233]:
-            - list [ref=e234]:
-              - listitem [ref=e235]: I confirm that the travel details provided are true and correct.
-              - listitem [ref=e236]: I understand that travel bookings must follow company policy and approved budgets.
-              - listitem [ref=e237]: I agree to submit proof of travel and receipts where required.
+            - generic [ref=e234]:
+              - generic [ref=e235]: Attach supporting documents
+              - paragraph [ref=e237]: Quotes, itineraries or invoices. PDF, PNG, JPG or DOCX up to 20 MB each.
             - generic [ref=e238] [cursor=pointer]:
-              - checkbox "I confirm the information above is correct and I accept the travel policy conditions. *" [ref=e239]
-              - generic [ref=e240]: I confirm the information above is correct and I accept the travel policy conditions. *
-        - generic [ref=e241]:
-          - button "Save Draft" [ref=e242]
-          - button "Submit Travel Request" [ref=e243]
+              - text: Click to upload or drag files here
+              - button "Click to upload or drag files here" [ref=e242]
+        - generic [ref=e243]:
+          - generic [ref=e244]:
+            - generic [ref=e245]: "5"
+            - heading "Travel Declaration & Undertaking" [level=3] [ref=e246]
+          - generic [ref=e247]:
+            - list [ref=e248]:
+              - listitem [ref=e249]: I confirm that the travel details provided are true and correct.
+              - listitem [ref=e250]: I understand that travel bookings must follow company policy and approved budgets.
+              - listitem [ref=e251]: I agree to submit proof of travel and receipts where required.
+            - generic [ref=e252] [cursor=pointer]:
+              - checkbox "I confirm the information above is correct and I accept the travel policy conditions. *" [ref=e253]
+              - generic [ref=e254]: I confirm the information above is correct and I accept the travel policy conditions. *
+        - generic [ref=e255]:
+          - button "Save Draft" [ref=e256]
+          - button "Submit Travel Request" [ref=e257]
 ```
 
 # Test source

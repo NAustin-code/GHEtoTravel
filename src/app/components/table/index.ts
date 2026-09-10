@@ -10,7 +10,7 @@ export { Td } from "./Td";
 // ─── Shared column style map (ApprovalQueue reference standard) ───
 
 export const COL = {
-  /** Declaration ID — wrap Td content in <span className={COL.ID} style={{ color: PURPLE }}> */
+  /** Request ID — wrap Td content in <span className={COL.ID} style={{ color: PURPLE }}> */
   ID: "font-mono text-sm font-bold",
   /** Type — renders via <TypeBadge> */
   TYPE: "",

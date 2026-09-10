@@ -762,7 +762,7 @@ export function NewDeclarationScreen({
         )}
       </FS>
 
-      <FS id="sec-undertaking" num="5" title="Declaration & Undertaking">
+      <FS id="sec-undertaking" num="5" title="Travel Declaration & Undertaking">
         <ul className="list-disc space-y-2 pl-5 text-sm text-foreground">
           <li>I confirm that the travel details provided are true and correct.</li>
           <li>I understand that travel bookings must follow company policy and approved budgets.</li>

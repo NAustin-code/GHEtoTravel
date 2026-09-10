@@ -15,7 +15,7 @@
 TimeoutError: page.waitForSelector: Timeout 15000ms exceeded.
 Call log:
   - waiting for locator('aside nav, nav') to be visible
-    28 × locator resolved to 2 elements. Proceeding with the first one: <nav class="flex-1 py-5 px-2">…</nav>
+    30 × locator resolved to 2 elements. Proceeding with the first one: <nav class="flex-1 py-5 px-2">…</nav>
 
 ```
 
