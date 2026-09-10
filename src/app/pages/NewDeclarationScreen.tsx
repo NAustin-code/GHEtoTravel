@@ -8,8 +8,10 @@ import { Declaration, Traveler, TransportMode, UploadedFile } from "@/types/decl
 import {
   createDeclaration,
   submitDeclaration,
+  updateDeclaration,
   uploadDeclarationFile,
   fetchConfig,
+  fetchDropdowns,
   fetchUserById,
   fetchOrganizations,
 } from "@/services/api";
@@ -126,15 +128,19 @@ export function NewDeclarationScreen({
   const { user } = useUser();
   const [formState, setFormState] = useState<TravelFormState>(EMPTY_FORM);
   const [numberOfPeople, setNumberOfPeople] = useState(1);
-  const [travellers, setTravellers] = useState<Traveler[]>([blankTraveler(0)]);
+  const [travelers, setTravelers] = useState<Traveler[]>([blankTraveler(0)]);
   const [departments, setDepartments] = useState<string[]>([]);
   const [organizations, setOrganizations] = useState<{ id: string; name: string; shortCode: string }[]>([]);
   const [lineManagerName, setLineManagerName] = useState("");
+  const [config, setConfig] = useState({ highValueThreshold: 5000, mediumValueThreshold: 1000 });
+  const [savedId, setSavedId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState("");
   const [saving, setSaving] = useState(false);
   const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [fileError, setFileError] = useState("");
+  // Deliberately not restored from drafts: the undertaking must be re-confirmed on every submit.
   const [agreed, setAgreed] = useState(false);
 
   const set = <K extends keyof TravelFormState>(key: K, value: TravelFormState[K]) =>
@@ -143,9 +149,13 @@ export function NewDeclarationScreen({
   useEffect(() => {
     fetchConfig()
       .then((c) => {
-        if (c?.departments) setDepartments(c.departments);
+        setConfig({
+          highValueThreshold: Number(c?.highValueThreshold) || 5000,
+          mediumValueThreshold: Number(c?.mediumValueThreshold) || 1000,
+        });
       })
       .catch(() => {});
+    fetchDropdowns().then((d) => setDepartments(d.departments || [])).catch(() => {});
     fetchOrganizations().then(setOrganizations).catch(() => {});
   }, []);
 
@@ -206,26 +216,30 @@ export function NewDeclarationScreen({
       enterTravellerDetails: draft.enterTravellerDetails || false,
     });
     const saved = draft.travelers && draft.travelers.length > 0 ? draft.travelers : [blankTraveler(0)];
-    setTravellers(saved);
+    setTravelers(saved);
     setNumberOfPeople(draft.numberOfPeople || saved.length || 1);
+    setSavedId(draft.id || null);
     setFiles(draft.files || []);
+    setPendingFiles([]);
     setFileError("");
     setErrors({});
     setSubmitError("");
   }, [draft]);
 
-  const updateTraveller = (index: number, patch: Partial<Traveler>) =>
-    setTravellers((list) => list.map((t, i) => (i === index ? { ...t, ...patch } : t)));
+  const updateTraveler = (index: number, patch: Partial<Traveler>) =>
+    setTravelers((list) => list.map((t, i) => (i === index ? { ...t, ...patch } : t)));
 
   const handleNumberOfPeople = (n: number) => {
     const clamped = Math.min(10, Math.max(1, n || 1));
     setNumberOfPeople(clamped);
-    setTravellers((list) => {
+    setTravelers((list) => {
       if (list.length === clamped) return list;
       if (list.length > clamped) return list.slice(0, clamped);
       return [...list, ...Array.from({ length: clamped - list.length }, (_, k) => blankTraveler(list.length + k))];
     });
   };
+
+  const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const validate = (): boolean => {
     const next: Record<string, string> = {};
@@ -236,23 +250,27 @@ export function NewDeclarationScreen({
     if (formState.departureDate && formState.returnDate && formState.returnDate < formState.departureDate) {
       next.returnDate = "Return date cannot be before departure date";
     }
-    travellers.slice(0, numberOfPeople).forEach((t, i) => {
-      if (!t.name.trim()) next[`traveller-name-${i}`] = "Traveler name is required";
-      if (!t.email.trim()) next[`traveller-email-${i}`] = "Traveler email is required";
-      if (!t.cellPhone.trim()) next[`traveller-phone-${i}`] = "Traveler cell phone is required";
-      if (!t.idDocument.trim()) next[`traveller-id-${i}`] = "ID / passport number is required";
+    travelers.slice(0, numberOfPeople).forEach((t, i) => {
+      if (!t.name.trim()) next[`traveler-name-${i}`] = "Traveler name is required";
+      if (!t.email.trim()) next[`traveler-email-${i}`] = "Traveler email is required";
+      else if (!EMAIL_PATTERN.test(t.email.trim())) next[`traveler-email-${i}`] = "Enter a valid email address";
+      if (!t.cellPhone.trim()) next[`traveler-phone-${i}`] = "Traveler cell phone is required";
+      else if (t.cellPhone.replace(/\D/g, "").length < 9) next[`traveler-phone-${i}`] = "Enter a valid cell number (at least 9 digits)";
+      if (!t.idDocument.trim()) next[`traveler-id-${i}`] = "ID / passport number is required";
+      else if (t.idDocument.trim().length < 5) next[`traveler-id-${i}`] = "ID / passport number looks too short";
     });
     if (!agreed) next.agreed = "Please confirm the declaration before submitting";
     setErrors(next);
     return Object.keys(next).length === 0;
   };
 
-  const buildDeclaration = (status: "Draft" | "Pending"): Declaration => {
+  const buildDeclaration = (status: "Draft" | "Pending", idOverride?: string, uploadedFiles?: UploadedFile[]): Declaration => {
     const flight = Number(formState.flightCost) || 0;
     const stay = Number(formState.accommodationCost) || 0;
-    const active = travellers.slice(0, numberOfPeople);
+    const active = travelers.slice(0, numberOfPeople);
+    const total = flight + stay;
     return {
-      id: draft?.id || `TR-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000).padStart(4, "0")}`,
+      id: idOverride || draft?.id || savedId || `TR-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000).padStart(4, "0")}`,
       employee: user?.name || draft?.employee || "Employee",
       employeeId: user?.id || draft?.employeeId || "user-1",
       teamMemberNumber: user?.teamMemberNumber || draft?.teamMemberNumber || "",
@@ -265,11 +283,11 @@ export function NewDeclarationScreen({
       organizationId: formState.organizationId || user?.organizationId,
       type: formState.travelType,
       counterparty: formState.destination,
-      value: flight + stay,
+      value: total,
       submitted: new Date().toISOString(),
       approver: formState.lineManager || lineManagerName || draft?.approver || "",
       status,
-      priority: flight + stay >= 5000 ? "High" : flight + stay >= 1000 ? "Medium" : "Low",
+      priority: total >= config.highValueThreshold ? "High" : total >= config.mediumValueThreshold ? "Medium" : "Low",
       description: formState.reason,
       relationship: `${formState.from} → ${formState.to}`.trim(),
       receivedGiven: "",
@@ -280,7 +298,7 @@ export function NewDeclarationScreen({
       date: formState.departureDate,
       instances: String(numberOfPeople),
       publicOfficial: "",
-      files,
+      files: uploadedFiles ?? files,
       travelers: active,
       numberOfPeople,
       destination: formState.destination,
@@ -301,6 +319,19 @@ export function NewDeclarationScreen({
     };
   };
 
+  const resetForm = () => {
+    setFormState(EMPTY_FORM);
+    setTravelers([blankTraveler(0)]);
+    setNumberOfPeople(1);
+    setSavedId(null);
+    setFiles([]);
+    setPendingFiles([]);
+    setFileError("");
+    setAgreed(false);
+    setErrors({});
+    setSubmitError("");
+  };
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError("");
@@ -308,7 +339,13 @@ export function NewDeclarationScreen({
     setSaving(true);
     try {
       const created = await createDeclaration(buildDeclaration("Draft"));
-      const submitted = await submitDeclaration(created.id).catch(() => created);
+      const uploaded = await flushPendingFiles(created.id);
+      const withFiles = uploaded.length > 0
+        ? await updateDeclaration(created.id, { files: [...(created.files || []), ...uploaded] })
+        : created;
+      const submitted = await submitDeclaration(withFiles.id);
+      setSavedId(null);
+      resetForm();
       onSubmitSuccess(submitted);
     } catch (err: unknown) {
       setSubmitError(err instanceof Error ? err.message : "Submission failed");
@@ -321,7 +358,14 @@ export function NewDeclarationScreen({
     setSubmitError("");
     setSaving(true);
     try {
-      await createDeclaration(buildDeclaration("Draft"));
+      const saved = await createDeclaration(buildDeclaration("Draft"));
+      const uploaded = await flushPendingFiles(saved.id);
+      const withFiles = uploaded.length > 0
+        ? await updateDeclaration(saved.id, { files: [...(saved.files || []), ...uploaded] })
+        : saved;
+      setSavedId(withFiles.id);
+      setFiles(withFiles.files || []);
+      setPendingFiles([]);
       onDraftSaved();
     } catch (err: unknown) {
       setSubmitError(err instanceof Error ? err.message : "Saving draft failed");
@@ -335,9 +379,12 @@ export function NewDeclarationScreen({
   const ACCEPTED_EXTENSIONS = ["pdf", "png", "jpg", "jpeg", "docx"];
   const MAX_FILE_BYTES = 20 * 1024 * 1024;
 
-  const handleFiles = async (selected: FileList | null) => {
+  // Files are only staged here; nothing is uploaded until save/submit, so
+  // abandoned forms leave no orphaned file records behind.
+  const handleFiles = (selected: FileList | null) => {
     if (!selected || selected.length === 0) return;
     setFileError("");
+    const staged: File[] = [];
     for (const file of Array.from(selected)) {
       const ext = file.name.split(".").pop()?.toLowerCase() || "";
       if (!ACCEPTED_EXTENSIONS.includes(ext)) {
@@ -348,16 +395,25 @@ export function NewDeclarationScreen({
         setFileError(`${file.name} exceeds the 20 MB limit.`);
         continue;
       }
+      staged.push(file);
+    }
+    if (staged.length > 0) setPendingFiles((prev) => [...prev, ...staged]);
+  };
+
+  const flushPendingFiles = async (declarationId: string): Promise<UploadedFile[]> => {
+    const uploaded: UploadedFile[] = [];
+    for (const file of pendingFiles) {
       try {
-        const uploaded = await uploadDeclarationFile(file, draft?.id || "pending");
-        setFiles((prev) => [...prev, uploaded]);
+        uploaded.push(await uploadDeclarationFile(file, declarationId));
       } catch (uploadErr: unknown) {
-        setFileError(uploadErr instanceof Error ? uploadErr.message : `Could not upload ${file.name}`);
+        throw new Error(uploadErr instanceof Error ? uploadErr.message : `Could not upload ${file.name}`);
       }
     }
+    return uploaded;
   };
 
   const removeFile = (index: number) => setFiles((prev) => prev.filter((_, i) => i !== index));
+  const removePendingFile = (index: number) => setPendingFiles((prev) => prev.filter((_, i) => i !== index));
 
   return (
     <form onSubmit={onSubmit} className="p-4 space-y-7">
@@ -442,35 +498,35 @@ export function NewDeclarationScreen({
         </div>
 
         <div className="mt-6 space-y-5">
-          {travellers.slice(0, numberOfPeople).map((t, i) => (
-            <div key={t.id} className="rounded-xl border border-border p-4">
+          {travelers.slice(0, numberOfPeople).map((t, i) => (
+            <div key={`${t.id}-${i}`} className="rounded-xl border border-border p-4">
               <p className="text-sm font-bold text-foreground mb-3">Traveler {i + 1}</p>
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="md:col-span-1">
-                  <FL required error={err(`traveller-name-${i}`)}>
+                  <FL required error={err(`traveler-name-${i}`)}>
                     Name (As Per ID/Passport)
                   </FL>
                   <input
-                    className={`${inp} ${err(`traveller-name-${i}`) ? "border-red-500 bg-red-50" : ""}`}
+                    className={`${inp} ${err(`traveler-name-${i}`) ? "border-red-500 bg-red-50" : ""}`}
                     value={t.name}
-                    onChange={(e) => updateTraveller(i, { name: e.target.value })}
+                    onChange={(e) => updateTraveler(i, { name: e.target.value })}
                     placeholder="Full name"
                   />
                 </div>
                 <div>
-                  <FL required error={err(`traveller-id-${i}`)}>
+                  <FL required error={err(`traveler-id-${i}`)}>
                     ID / Passport No
                   </FL>
                   <input
-                    className={`${inp} ${err(`traveller-id-${i}`) ? "border-red-500 bg-red-50" : ""}`}
+                    className={`${inp} ${err(`traveler-id-${i}`) ? "border-red-500 bg-red-50" : ""}`}
                     value={t.idDocument}
-                    onChange={(e) => updateTraveller(i, { idDocument: e.target.value })}
+                    onChange={(e) => updateTraveler(i, { idDocument: e.target.value })}
                     placeholder="ID or passport number"
                   />
                 </div>
                 <div>
                   <FL>Gender</FL>
-                  <Sel value={t.gender || "Male"} onChange={(v) => updateTraveller(i, { gender: v })}>
+                  <Sel value={t.gender || "Male"} onChange={(v) => updateTraveler(i, { gender: v })}>
                     {GENDER_OPTIONS.map((g) => (
                       <option key={g} value={g}>
                         {g}
@@ -479,25 +535,27 @@ export function NewDeclarationScreen({
                   </Sel>
                 </div>
                 <div>
-                  <FL required error={err(`traveller-email-${i}`)}>
+                  <FL required error={err(`traveler-email-${i}`)}>
                     Email Address
                   </FL>
                   <input
-                    className={`${inp} ${err(`traveller-email-${i}`) ? "border-red-500 bg-red-50" : ""}`}
+                    className={`${inp} ${err(`traveler-email-${i}`) ? "border-red-500 bg-red-50" : ""}`}
                     value={t.email}
-                    onChange={(e) => updateTraveller(i, { email: e.target.value })}
+                    onChange={(e) => updateTraveler(i, { email: e.target.value })}
                     placeholder="name@company.co.za"
-                    type="email"
+                    type="text"
+                    inputMode="email"
+                    autoComplete="email"
                   />
                 </div>
                 <div>
-                  <FL required error={err(`traveller-phone-${i}`)}>
+                  <FL required error={err(`traveler-phone-${i}`)}>
                     Cell Number
                   </FL>
                   <input
-                    className={`${inp} ${err(`traveller-phone-${i}`) ? "border-red-500 bg-red-50" : ""}`}
+                    className={`${inp} ${err(`traveler-phone-${i}`) ? "border-red-500 bg-red-50" : ""}`}
                     value={t.cellPhone}
-                    onChange={(e) => updateTraveller(i, { cellPhone: e.target.value })}
+                    onChange={(e) => updateTraveler(i, { cellPhone: e.target.value })}
                     placeholder="082 000 0000"
                   />
                 </div>
@@ -506,7 +564,7 @@ export function NewDeclarationScreen({
                   <input
                     className={inp}
                     value={t.jobTitle}
-                    onChange={(e) => updateTraveller(i, { jobTitle: e.target.value })}
+                    onChange={(e) => updateTraveler(i, { jobTitle: e.target.value })}
                     placeholder="Job title"
                   />
                 </div>
@@ -515,7 +573,7 @@ export function NewDeclarationScreen({
                   <input
                     className={inp}
                     value={t.teamMemberNumber}
-                    onChange={(e) => updateTraveller(i, { teamMemberNumber: e.target.value })}
+                    onChange={(e) => updateTraveler(i, { teamMemberNumber: e.target.value })}
                     placeholder="Employee code"
                   />
                 </div>
@@ -733,14 +791,14 @@ export function NewDeclarationScreen({
             className="sr-only"
             multiple
             accept=".pdf,.png,.jpg,.jpeg,.docx"
-            onChange={(e) => { void handleFiles(e.target.files); e.target.value = ""; }}
+            onChange={(e) => { handleFiles(e.target.files); e.target.value = ""; }}
           />
         </label>
         {fileError && <p className="text-[11px] text-red-500 mt-1.5">{fileError}</p>}
-        {files.length > 0 && (
+        {(files.length > 0 || pendingFiles.length > 0) && (
           <ul className="mt-3 space-y-2">
             {files.map((f, i) => (
-              <li key={`${f.name}-${i}`} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
+              <li key={`saved-${f.name}-${i}`} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
                 <span className="flex min-w-0 items-center gap-2">
                   <Paperclip size={14} className="flex-shrink-0 text-muted-foreground" />
                   <span className="truncate font-medium text-foreground">{f.name}</span>
@@ -751,6 +809,25 @@ export function NewDeclarationScreen({
                 <button
                   type="button"
                   onClick={() => removeFile(i)}
+                  aria-label={`Remove ${f.name}`}
+                  className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </li>
+            ))}
+            {pendingFiles.map((f, i) => (
+              <li key={`pending-${f.name}-${i}`} className="flex items-center justify-between gap-3 rounded-xl border border-dashed border-teal-300 bg-teal-50/50 px-3 py-2 text-sm">
+                <span className="flex min-w-0 items-center gap-2">
+                  <Paperclip size={14} className="flex-shrink-0 text-muted-foreground" />
+                  <span className="truncate font-medium text-foreground">{f.name}</span>
+                  <span className="flex-shrink-0 text-xs text-muted-foreground">
+                    {(f.size / 1024).toFixed(0)} KB · uploads on save
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => removePendingFile(i)}
                   aria-label={`Remove ${f.name}`}
                   className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500"
                 >

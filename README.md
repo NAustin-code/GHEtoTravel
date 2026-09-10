@@ -20,13 +20,13 @@ npx playwright test  # Run the Playwright e2e suite (offline, local store seeds 
 
 The New Travel Request form captures Traveler Details (up to 10 travelers: name as per ID/passport, ID/passport number, gender, email, cell, job title, employee code, plus company / company to be billed / department / approval manager / order number), Travel Details (departure/return dates, domestic/international, reason, from/to, transport mode and costs, seat preference), and Accommodation & Transport. New requests get `TR-YYYY-####` IDs. The Approver Dashboard uses Pending Queue, Approved, Returned, and Declined KPI cards; Returned is counted from requests with status `Returned`.
 
-### Test Coverage (249 tests, 17 files, fully offline via the local store)
+### Test Coverage (254 tests, 17 files, fully offline via the local store)
 
 | File | Tests | Focus |
 |------|-------|-------|
-| `api-services.test.ts` | 54 | Local-store service layer: CRUD, submit lifecycle, workflows, reports, errors |
+| `api-services.test.ts` | 55 | Local-store service layer: CRUD, submit lifecycle, workflows, reports, errors |
 | `integration.test.ts` | 28 | Auth + journey flows against the local store |
-| `NewDeclarationScreen.test.tsx` | 10 | Travel form render, validation, submit/draft, traveler blocks, file upload |
+| `NewDeclarationScreen.test.tsx` | 14 | Travel form render, validation, submit/draft, traveler blocks, file upload |
 | `approval-workflow.test.tsx` | 23 | WorkflowTimeline options, decisions, auto-fetch |
 | `ApprovalDetail.test.tsx` | 15 | Approval detail decisions and payloads |
 | `workflow-e2e.test.tsx` | 29 | Approval lifecycle, documents, error paths |

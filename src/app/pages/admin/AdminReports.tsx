@@ -5,7 +5,7 @@ import html2canvas from "html2canvas";
 import { Card } from "../../components/Card";
 import { PageHeader } from "../../components/PageHeader";
 import { Table, Thead, Th, Tbody, Tr, Td, COL } from "../../components/table";
-import { PURPLE, formatRand, GRADIENT_PRIMARY } from "../../../config/theme";
+import { formatRand, GRADIENT_PRIMARY } from "../../../config/theme";
 import { fetchReports } from "../../../services/reports";
 import { exportToExcel, ColumnDef } from "../../utils/excelExport";
 
@@ -24,10 +24,10 @@ export function AdminReports() {
   const [status, setStatus] = useState("All Statuses");
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [counterpartyData, setCounterpartyData] = useState<any[]>([]);
-  const [highValueData, setHighValueData] = useState<any[]>([]);
+  const [counterpartyData, setCounterpartyData] = useState<{ counterparty: string; count: number; totalValue: number; avgValue: number }[]>([]);
+  const [highValueData, setHighValueData] = useState<{ employee: string; lineManager: string; declarationCount: number; totalValue: number; averageValue: number; totalGift: number; totalHospitality: number; totalEntertainment: number; mostFrequentSupplier: string }[]>([]);
   const [statusBreakdown, setStatusBreakdown] = useState<Record<string, number>>({});
-  const [slaData, setSlaData] = useState<any[]>([]);
+  const [slaData, setSlaData] = useState<{ role: string; avg: number; min: number; max: number; count: number }[]>([]);
   const [departments, setDepartments] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const tableRef = useRef<HTMLDivElement>(null);
@@ -72,9 +72,9 @@ export function AdminReports() {
         { header: "Declarations", key: "declarationCount", width: 14 },
         { header: "Total Value", key: "totalValue", width: 14 },
         { header: "Average Value", key: "averageValue", width: 14 },
-        { header: "Total G", key: "totalGift", width: 10 },
-        { header: "Total H", key: "totalHospitality", width: 10 },
-        { header: "Total E", key: "totalEntertainment", width: 10 },
+        { header: "Total Domestic", key: "totalGift", width: 10 },
+        { header: "Total International", key: "totalHospitality", width: 10 },
+        { header: "Total Other", key: "totalEntertainment", width: 10 },
         { header: "Most Frequent Supplier", key: "mostFrequentSupplier", width: 28 },
       ]
     : [
@@ -115,7 +115,7 @@ export function AdminReports() {
       pdf.text(`Generated: ${new Date().toLocaleString("en-ZA")}`, 14, 26);
       let y = 36;
       const lines = reportType === "High-Value Travel Report"
-        ? highValueData.map((row) => `${row.employee} | ${row.lineManager} | ${row.declarationCount} | ${formatRand(row.totalValue)} | Avg ${formatRand(row.averageValue)} | G ${row.totalGift} H ${row.totalHospitality} E ${row.totalEntertainment} | ${row.mostFrequentSupplier}`)
+        ? highValueData.map((row) => `${row.employee} | ${row.lineManager} | ${row.declarationCount} | ${formatRand(row.totalValue)} | Avg ${formatRand(row.averageValue)} | Domestic ${row.totalGift} International ${row.totalHospitality} Other ${row.totalEntertainment} | ${row.mostFrequentSupplier}`)
         : counterpartyData.map((row) => `${row.counterparty} | ${row.count} declarations | ${formatRand(row.totalValue)} | Avg ${formatRand(row.avgValue)}`);
       lines.forEach((line) => {
         if (y > 190) { pdf.addPage(); y = 20; }
@@ -219,7 +219,7 @@ export function AdminReports() {
           </div>
           <Table>
             <Thead>
-              {["Employee", "Line Manager", "Declarations", "Total Value", "Average Value", "Total G", "Total H", "Total E", "Most Frequent Supplier"].map((label) => (
+              {["Employee", "Line Manager", "Declarations", "Total Value", "Average Value", "Domestic", "International", "Other", "Most Frequent Destination"].map((label) => (
                 <Th key={label}>{label}</Th>
               ))}
             </Thead>

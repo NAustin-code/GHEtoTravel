@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { render, screen, fireEvent, waitFor } from "@testing-library/react"
+import { render, screen, waitFor } from "@testing-library/react"
 import { WorkflowTimeline, StepView } from "../app/components/WorkflowTimeline"
 import { fetchWorkflowInstance } from "../services/api"
+import type { WorkflowInstance } from "../types/declaration"
 
 vi.mock("../services/api", () => ({
   fetchWorkflowInstance: vi.fn(),
@@ -11,14 +12,14 @@ vi.mock("../services/api", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  type ResizeHandler = (entries: { contentRect: { width: number; height: number } }[]) => void;
   class RO {
-    cb: any;
-    constructor(cb: any) { this.cb = cb; }
+    constructor(private cb: ResizeHandler) {}
     observe() { this.cb([{ contentRect: { width: 400, height: 600 } }]); }
     unobserve() {}
     disconnect() {}
   }
-  (globalThis as any).ResizeObserver = RO;
+  vi.stubGlobal("ResizeObserver", RO);
   Object.defineProperty(HTMLElement.prototype, "offsetWidth", { configurable: true, value: 400 });
   Object.defineProperty(HTMLElement.prototype, "offsetHeight", { configurable: true, value: 600 });
 });
@@ -41,16 +42,20 @@ const mockSteps = (overrides?: Partial<StepView>[]): StepView[] => [
   },
 ];
 
-const mockWfWithSteps = (steps: any[]): any => {
+const mockWfWithSteps = (steps: StepView[]): WorkflowInstance => {
   return {
     declarationId: "GHE-2026-1003",
     steps: steps.map((s, i) => ({
-      role: ["lineManager", "hr"][i],
-      label: s.label,
+      order: i + 1,
+      role: i === 0 ? "lineManager" : "hr",
+      assignee: `user-${i + 1}`,
       assigneeName: s.actor,
+      label: s.label,
       status: i === 0 ? "approved" : "pending",
       decision: i === 0 ? "accept" : null,
       decidedAt: i === 0 ? "2026-07-10T08:30:00.000Z" : null,
+      decidedById: i === 0 ? "user-1" : null,
+      decidedByName: i === 0 ? s.actor : null,
       notes: i === 0 ? "Looks good" : "",
     })),
   };
@@ -66,7 +71,7 @@ describe("WorkflowTimeline - Fix for multiple matching elements", () => {
     await waitFor(() => {
       expect(screen.getByText("1. Line Manager Approval")).toBeInTheDocument();
     });
-    expect(screen.getByText("Sipho Nkosi")).toBeInTheDocument();
+    expect(screen.getAllByText("Sipho Nkosi").length).toBeGreaterThanOrEqual(1);
     
     expect(screen.getAllByText("2. Head of HR Approval").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Lindiwe Zulu").length).toBeGreaterThanOrEqual(1);

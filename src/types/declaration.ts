@@ -6,7 +6,6 @@ export type Screen =
   | "approver-dashboard"
   | "approval-queue"
   | "approval-detail"
-  | "declaration-detail"
   | "admin-dashboard"
   | "admin-users"
   | "admin-workflows"
@@ -180,7 +179,7 @@ export interface WorkflowStep {
   assignee: string;
   assigneeName: string;
   label: string;
-  status: "pending" | "approved" | "declined" | "returned";
+  status: "pending" | "approved" | "declined" | "returned" | "skipped";
   decision: ApprovalDecision;
   notes: string;
   decidedAt: string | null;

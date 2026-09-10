@@ -16,7 +16,7 @@ const mockQueueItems = [
       occasion: "Business Meeting", date: "2026-07-01", instances: "1",
       publicOfficial: "No",
     },
-    step: { order: 1, role: "lineManager", assignee: "user-bob", assigneeName: "Bob", label: "Line Manager", status: "pending" as const },
+    step: { order: 1, role: "lineManager" as const, assignee: "user-bob", assigneeName: "Bob", label: "Line Manager", status: "pending" as const, decision: null, notes: "", decidedAt: null, decidedById: null, decidedByName: null },
   },
   {
     declaration: {
@@ -29,7 +29,7 @@ const mockQueueItems = [
       occasion: "Business Meeting", date: "2026-06-10", instances: "2",
       publicOfficial: "No",
     },
-    step: { order: 2, role: "hr", assignee: "user-bob", assigneeName: "Bob", label: "HR Review", status: "pending" as const },
+    step: { order: 2, role: "hr" as const, assignee: "user-bob", assigneeName: "Bob", label: "HR Review", status: "pending" as const, decision: null, notes: "", decidedAt: null, decidedById: null, decidedByName: null },
   },
   {
     declaration: {
@@ -42,7 +42,7 @@ const mockQueueItems = [
       occasion: "Festive Season", date: "2026-07-05", instances: "1",
       publicOfficial: "No",
     },
-    step: { order: 2, role: "hr", assignee: "user-bob", assigneeName: "Bob", label: "HR Review", status: "pending" as const },
+    step: { order: 2, role: "hr" as const, assignee: "user-bob", assigneeName: "Bob", label: "HR Review", status: "pending" as const, decision: null, notes: "", decidedAt: null, decidedById: null, decidedByName: null },
   },
 ];
 
@@ -60,14 +60,14 @@ vi.mock("../utils/excel", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  type ResizeHandler = (entries: { contentRect: { width: number; height: number } }[]) => void;
   class RO {
-    cb: any;
-    constructor(cb: any) { this.cb = cb; }
+    constructor(private cb: ResizeHandler) {}
     observe() { this.cb([{ contentRect: { width: 400, height: 600 } }]); }
     unobserve() {}
     disconnect() {}
   }
-  (globalThis as any).ResizeObserver = RO;
+  vi.stubGlobal("ResizeObserver", RO);
   Element.prototype.scrollIntoView = vi.fn();
   Object.defineProperty(HTMLElement.prototype, "offsetWidth", { configurable: true, value: 400 });
   Object.defineProperty(HTMLElement.prototype, "offsetHeight", { configurable: true, value: 600 });
@@ -89,7 +89,7 @@ describe("ApprovalQueue", () => {
   });
 
   it("renders actionable queue items returned by the workflow API", async () => {
-    vi.mocked(fetchPendingWorkflows).mockResolvedValue(mockQueueItems as any);
+    vi.mocked(fetchPendingWorkflows).mockResolvedValue(mockQueueItems);
     render(<ApprovalQueue onReview={vi.fn()} />);
     await waitFor(() => {
       expect(screen.getAllByText("GHE-2026-1001").length).toBeGreaterThan(0);
@@ -99,7 +99,7 @@ describe("ApprovalQueue", () => {
   });
 
   it("filters by search text", async () => {
-    vi.mocked(fetchPendingWorkflows).mockResolvedValue(mockQueueItems as any);
+    vi.mocked(fetchPendingWorkflows).mockResolvedValue(mockQueueItems);
     render(<ApprovalQueue onReview={vi.fn()} />);
     await waitFor(() => expect(screen.getAllByText("GHE-2026-1001").length).toBeGreaterThan(0));
 
@@ -112,7 +112,7 @@ describe("ApprovalQueue", () => {
   });
 
   it("filters by department", async () => {
-    vi.mocked(fetchPendingWorkflows).mockResolvedValue(mockQueueItems as any);
+    vi.mocked(fetchPendingWorkflows).mockResolvedValue(mockQueueItems);
     render(<ApprovalQueue onReview={vi.fn()} />);
     await waitFor(() => expect(screen.getAllByText("GHE-2026-1001").length).toBeGreaterThan(0));
 
@@ -125,7 +125,7 @@ describe("ApprovalQueue", () => {
   });
 
   it("filters by priority", async () => {
-    vi.mocked(fetchPendingWorkflows).mockResolvedValue(mockQueueItems as any);
+    vi.mocked(fetchPendingWorkflows).mockResolvedValue(mockQueueItems);
     render(<ApprovalQueue onReview={vi.fn()} />);
     await waitFor(() => expect(screen.getAllByText("GHE-2026-1001").length).toBeGreaterThan(0));
 
@@ -138,7 +138,7 @@ describe("ApprovalQueue", () => {
   });
 
   it("calls onReview when Review button is clicked", async () => {
-    vi.mocked(fetchPendingWorkflows).mockResolvedValue(mockQueueItems as any);
+    vi.mocked(fetchPendingWorkflows).mockResolvedValue(mockQueueItems);
     const onReview = vi.fn();
     render(<ApprovalQueue onReview={onReview} />);
     await waitFor(() => expect(screen.getAllByText("GHE-2026-1001").length).toBeGreaterThan(0));
@@ -149,7 +149,7 @@ describe("ApprovalQueue", () => {
   });
 
   it("calls exportRowsToXls on Export button click", async () => {
-    vi.mocked(fetchPendingWorkflows).mockResolvedValue(mockQueueItems as any);
+    vi.mocked(fetchPendingWorkflows).mockResolvedValue(mockQueueItems);
     render(<ApprovalQueue onReview={vi.fn()} />);
     await waitFor(() => expect(screen.getAllByText("GHE-2026-1001").length).toBeGreaterThan(0));
 
@@ -159,7 +159,7 @@ describe("ApprovalQueue", () => {
   });
 
   it("shows empty state when no declarations match filters", async () => {
-    vi.mocked(fetchPendingWorkflows).mockResolvedValue(mockQueueItems as any);
+    vi.mocked(fetchPendingWorkflows).mockResolvedValue(mockQueueItems);
     render(<ApprovalQueue onReview={vi.fn()} />);
     await waitFor(() => expect(screen.getAllByText("GHE-2026-1001").length).toBeGreaterThan(0));
 

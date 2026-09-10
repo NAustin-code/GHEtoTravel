@@ -16,7 +16,6 @@ import { PURPLE } from "@/config/theme";
 import { exportRowsToXls } from "@/utils/excel";
 import { useWorkflowApproval } from "@/app/hooks/useWorkflowApproval";
 import type {
-    ApprovalDecision,
     StatusType,
 } from "@/types/declaration";
 

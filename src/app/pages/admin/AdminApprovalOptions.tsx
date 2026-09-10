@@ -30,8 +30,8 @@ export function AdminApprovalOptions() {
       if (!label) return;
       await createApprovalOption({ id, value, label });
       setOptions(await fetchApprovalOptions());
-    } catch (err: any) {
-      setError(err.message || "Failed to add approval option.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to add approval option.");
     }
   };
 
@@ -48,8 +48,8 @@ export function AdminApprovalOptions() {
       await updateApprovalOption(option.value, { value: editValue, label: editLabel });
       setOptions(await fetchApprovalOptions());
       setEditingIdx(null);
-    } catch (err: any) {
-      setError(err.message || "Failed to save approval option.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to save approval option.");
     }
   };
 
@@ -58,8 +58,8 @@ export function AdminApprovalOptions() {
       if (!confirm("Delete this option?")) return;
       await deleteApprovalOption(options[idx].value);
       setOptions(await fetchApprovalOptions());
-    } catch (err: any) {
-      setError(err.message || "Failed to delete approval option.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to delete approval option.");
     }
   };
 

@@ -11,14 +11,14 @@ vi.mock("../services/api", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  type ResizeHandler = (entries: { contentRect: { width: number; height: number } }[]) => void;
   class RO {
-    cb: any;
-    constructor(cb: any) { this.cb = cb; }
+    constructor(private cb: ResizeHandler) {}
     observe() { this.cb([{ contentRect: { width: 400, height: 600 } }]); }
     unobserve() {}
     disconnect() {}
   }
-  (globalThis as any).ResizeObserver = RO;
+  vi.stubGlobal("ResizeObserver", RO);
   Object.defineProperty(HTMLElement.prototype, "offsetWidth", { configurable: true, value: 400 });
   Object.defineProperty(HTMLElement.prototype, "offsetHeight", { configurable: true, value: 600 });
 });
@@ -212,9 +212,10 @@ describe("ApprovalDetail handleSubmit logic", () => {
 describe("WorkflowTimeline built-in auto-fetch", () => {
   it("fetches workflow when declarationId is provided without steps", async () => {
     const { fetchWorkflowInstance } = await import("../services/api");
-    (fetchWorkflowInstance as any).mockResolvedValue({
+    vi.mocked(fetchWorkflowInstance).mockResolvedValue({
+      declarationId: "GHE-001",
       steps: [
-        { role: "lineManager", label: "LM", assigneeName: "Sipho", status: "pending" },
+        { order: 1, role: "lineManager", assignee: "user-2", assigneeName: "Sipho", label: "LM", status: "pending", decision: null, notes: "", decidedAt: null, decidedById: null, decidedByName: null },
       ],
     });
     render(<WorkflowTimeline declarationId="GHE-001" />);

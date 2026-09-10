@@ -1,11 +1,12 @@
 import { getDestinationConcentration, getHighValueRows, getReportList, getSLAData, getStatusBreakdown, listDeclarations } from "./localStore";
+import type { Declaration } from "@/types/declaration";
 
 export interface ReportsData {
   statusBreakdown: Record<string, number>;
   slaData: Array<{ role: string; avg: number; min: number; max: number; count: number }>;
   counterpartyData: Array<{ counterparty: string; count: number; totalValue: number; avgValue: number }>;
   highValueData: Array<{ employee: string; lineManager: string; declarationCount: number; totalValue: number; averageValue: number; totalGift: number; totalHospitality: number; totalEntertainment: number; mostFrequentSupplier: string }>;
-  declarations: any[];
+  declarations: Declaration[];
   departments: string[];
 }
 
@@ -19,7 +20,7 @@ function buildParams(params?: Record<string, string>): Record<string, string> | 
 export async function fetchReports(params?: Record<string, string>): Promise<ReportsData> {
   const query = buildParams(params);
   const declarations = listDeclarations(query?.status, query?.search);
-  const departments = [...new Set(declarations.map((d: any) => d.department).filter(Boolean))].sort();
+  const departments = [...new Set(declarations.map((d: Declaration) => d.department).filter(Boolean))].sort();
   return {
     statusBreakdown: getStatusBreakdown(query),
     slaData: getSLAData(query),

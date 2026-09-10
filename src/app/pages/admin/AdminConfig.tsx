@@ -73,8 +73,8 @@ export function AdminConfig() {
       setSaved(true);
       const t = setTimeout(() => setSaved(false), 2000);
       return () => clearTimeout(t);
-    } catch (err: any) {
-      setFetchError(err.message || "Failed to save configuration.");
+    } catch (err: unknown) {
+      setFetchError(err instanceof Error ? err.message : "Failed to save configuration.");
     }
   };
 
@@ -85,8 +85,8 @@ export function AdminConfig() {
       setOrganizations([...organizations, created]);
       setNewOrgName("");
       setNewOrgShortCode("");
-    } catch (err: any) {
-      setFetchError(err.message || "Failed to create organization.");
+    } catch (err: unknown) {
+      setFetchError(err instanceof Error ? err.message : "Failed to create organization.");
     }
   };
 
@@ -96,8 +96,8 @@ export function AdminConfig() {
       const updated = await updateOrganization(editingOrg.id, { name: editingOrg.name, shortCode: editingOrg.shortCode });
       setOrganizations(organizations.map((o) => o.id === updated.id ? updated : o));
       setEditingOrg(null);
-    } catch (err: any) {
-      setFetchError(err.message || "Failed to update organization.");
+    } catch (err: unknown) {
+      setFetchError(err instanceof Error ? err.message : "Failed to update organization.");
     }
   };
 
@@ -105,8 +105,8 @@ export function AdminConfig() {
     try {
       await deleteOrganization(id);
       setOrganizations(organizations.filter((o) => o.id !== id));
-    } catch (err: any) {
-      setFetchError(err.message || "Failed to delete organization.");
+    } catch (err: unknown) {
+      setFetchError(err instanceof Error ? err.message : "Failed to delete organization.");
     }
   };
 

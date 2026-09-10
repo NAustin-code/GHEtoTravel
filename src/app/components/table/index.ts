@@ -1,5 +1,3 @@
-import { PURPLE } from "../../../config/theme";
-
 export { Table } from "./Table";
 export { Thead } from "./Thead";
 export { Th } from "./Th";
@@ -10,7 +8,7 @@ export { Td } from "./Td";
 // ─── Shared column style map (ApprovalQueue reference standard) ───
 
 export const COL = {
-  /** Request ID — wrap Td content in <span className={COL.ID} style={{ color: PURPLE }}> */
+  /** Request ID — wrap Td content in a monospace <span> */
   ID: "font-mono text-sm font-bold",
   /** Type — renders via <TypeBadge> */
   TYPE: "",

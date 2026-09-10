@@ -21,7 +21,6 @@ export function LandingScreen({ onEnter }: { onEnter: (role: Role, name: string)
   const { setUser } = useUser();
   const [selectedIdx, setSelectedIdx] = useState(0);
   const email = QUICK_LOGIN_USERS[selectedIdx].email;
-  const role = QUICK_LOGIN_USERS[selectedIdx].role;
   const [password, setPassword] = useState("password");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -86,12 +85,13 @@ export function LandingScreen({ onEnter }: { onEnter: (role: Role, name: string)
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-foreground mb-1.5">Password</label>
+              <label className="block text-sm font-semibold text-foreground mb-1.5">Demo user</label>
               <select value={selectedIdx} onChange={(e) => { setSelectedIdx(Number(e.target.value)); setPassword("password"); setError(""); }}
                 className={`${inp} cursor-pointer`}
               >
                 {QUICK_LOGIN_USERS.map((u, i) => <option key={i} value={i}>{u.label}</option>)}
               </select>
+              <p className="mt-1.5 text-[11px] text-muted-foreground">Demo sign-in — pick a user, no password required.</p>
             </div>
             {error && (
               <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div>
@@ -102,14 +102,6 @@ export function LandingScreen({ onEnter }: { onEnter: (role: Role, name: string)
                 style={{ background: "linear-gradient(90deg, #30004F 0%, #6633A3 100%)" }}
               >
                 {loading ? "Signing in…" : "Sign In"}
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <button type="button" className="h-10 rounded-xl border border-slate-300 bg-white/20 text-sm font-medium text-slate-500 transition-colors hover:bg-white/60">
-                Forgot Password
-              </button>
-              <button type="button" className="h-10 rounded-xl border border-slate-300 bg-white/20 text-sm font-medium text-slate-500 transition-colors hover:bg-white/60">
-                Support
               </button>
             </div>
           </form>

@@ -1,7 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { ApprovalDetail } from "../app/pages/ApprovalDetail";
-import { fetchWorkflowInstance, approveWorkflowStep, fetchConfig } from "../services/api";
+import { fetchWorkflowInstance, approveWorkflowStep } from "../services/api";
+import type { WorkflowDecisionResult } from "../services/api";
+import type { WorkflowInstance } from "../types/declaration";
+
+const decisionResult = (newStatus: WorkflowDecisionResult["newStatus"]): WorkflowDecisionResult => ({
+  declarationId: "GHE-2026-1001",
+  steps: [],
+  status: newStatus,
+  newStatus,
+});
 
 const mockDeclaration = {
   id: "GHE-2026-1001", employee: "Alice", employeeId: "user-1", department: "IT",
@@ -17,14 +26,14 @@ const mockDeclaration = {
 const mockWorkflow = {
   declarationId: "GHE-2026-1001",
   steps: [
-    { order: 1, role: "lineManager", assignee: "user-3", assigneeName: "Sipho Nkosi",
-      label: "Line Manager Review", status: "pending" as const, decision: null, notes: "", decidedAt: null },
-    { order: 2, role: "hr", assignee: "user-4", assigneeName: "Lindiwe Zulu",
-      label: "HR Review", status: "pending" as const, decision: null, notes: "", decidedAt: null },
+    { order: 1, role: "lineManager" as const, assignee: "user-3", assigneeName: "Sipho Nkosi",
+      label: "Line Manager Review", status: "pending" as const, decision: null, notes: "", decidedAt: null, decidedById: null, decidedByName: null },
+    { order: 2, role: "hr" as const, assignee: "user-4", assigneeName: "Lindiwe Zulu",
+      label: "HR Review", status: "pending" as const, decision: null, notes: "", decidedAt: null, decidedById: null, decidedByName: null },
   ],
 };
 
-let mockUserStep: any;
+let mockUserStep: WorkflowInstance;
 
 vi.mock("../services/api", () => ({
   fetchWorkflowInstance: vi.fn(),
@@ -44,14 +53,14 @@ vi.mock("../app/auth/UserContext", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  type ResizeHandler = (entries: { contentRect: { width: number; height: number } }[]) => void;
   class RO {
-    cb: any;
-    constructor(cb: any) { this.cb = cb; }
+    constructor(private cb: ResizeHandler) {}
     observe() { this.cb([{ contentRect: { width: 800, height: 600 } }]); }
     unobserve() {}
     disconnect() {}
   }
-  (globalThis as any).ResizeObserver = RO;
+  vi.stubGlobal("ResizeObserver", RO);
   Element.prototype.scrollIntoView = vi.fn();
   Object.defineProperty(HTMLElement.prototype, "offsetWidth", { configurable: true, value: 800 });
   Object.defineProperty(HTMLElement.prototype, "offsetHeight", { configurable: true, value: 600 });
@@ -111,7 +120,7 @@ describe("ApprovalDetail", () => {
   });
 
   it("submits decision and calls approveWorkflowStep", async () => {
-    vi.mocked(approveWorkflowStep).mockResolvedValue({ newStatus: "Pending" } as any);
+    vi.mocked(approveWorkflowStep).mockResolvedValue(decisionResult("Pending"));
     vi.mocked(fetchWorkflowInstance).mockResolvedValue(mockUserStep);
     render(<ApprovalDetail declaration={mockDeclaration} onBack={vi.fn()} />);
     await waitFor(() => {
@@ -129,7 +138,7 @@ describe("ApprovalDetail", () => {
   });
 
   it("shows success message after submission", async () => {
-    vi.mocked(approveWorkflowStep).mockResolvedValue({ newStatus: "Pending" } as any);
+    vi.mocked(approveWorkflowStep).mockResolvedValue(decisionResult("Pending"));
     vi.mocked(fetchWorkflowInstance).mockResolvedValue(mockUserStep);
     render(<ApprovalDetail declaration={mockDeclaration} onBack={vi.fn()} />);
     await waitFor(() => {
@@ -164,7 +173,7 @@ describe("ApprovalDetail", () => {
   });
 
   it("submits 'decline' decision and updates status to Declined", async () => {
-    vi.mocked(approveWorkflowStep).mockResolvedValue({ newStatus: "Declined" } as any);
+    vi.mocked(approveWorkflowStep).mockResolvedValue(decisionResult("Declined"));
     vi.mocked(fetchWorkflowInstance).mockResolvedValue(mockUserStep);
     render(<ApprovalDetail declaration={mockDeclaration} onBack={vi.fn()} />);
     await waitFor(() => expect(screen.getByText("Decision *")).toBeInTheDocument());
@@ -183,7 +192,7 @@ describe("ApprovalDetail", () => {
   });
 
   it("submits 'return' decision and shows Returned status", async () => {
-    vi.mocked(approveWorkflowStep).mockResolvedValue({ newStatus: "Returned" } as any);
+    vi.mocked(approveWorkflowStep).mockResolvedValue(decisionResult("Returned"));
     vi.mocked(fetchWorkflowInstance).mockResolvedValue(mockUserStep);
     render(<ApprovalDetail declaration={mockDeclaration} onBack={vi.fn()} />);
     await waitFor(() => expect(screen.getByText("Decision *")).toBeInTheDocument());
@@ -207,7 +216,7 @@ describe("ApprovalDetail", () => {
   });
 
   it("includes notes in the approveWorkflowStep payload", async () => {
-    vi.mocked(approveWorkflowStep).mockResolvedValue({ newStatus: "Pending" } as any);
+    vi.mocked(approveWorkflowStep).mockResolvedValue(decisionResult("Pending"));
     vi.mocked(fetchWorkflowInstance).mockResolvedValue(mockUserStep);
     render(<ApprovalDetail declaration={mockDeclaration} onBack={vi.fn()} />);
     await waitFor(() => expect(screen.getByText("Decision *")).toBeInTheDocument());
@@ -224,7 +233,7 @@ describe("ApprovalDetail", () => {
   });
 
   it("submits 'org' decision type", async () => {
-    vi.mocked(approveWorkflowStep).mockResolvedValue({ newStatus: "Pending" } as any);
+    vi.mocked(approveWorkflowStep).mockResolvedValue(decisionResult("Pending"));
     vi.mocked(fetchWorkflowInstance).mockResolvedValue(mockUserStep);
     render(<ApprovalDetail declaration={mockDeclaration} onBack={vi.fn()} />);
     await waitFor(() => expect(screen.getByText("Decision *")).toBeInTheDocument());
@@ -240,7 +249,7 @@ describe("ApprovalDetail", () => {
   });
 
   it("submits 'foundation' decision type", async () => {
-    vi.mocked(approveWorkflowStep).mockResolvedValue({ newStatus: "Pending" } as any);
+    vi.mocked(approveWorkflowStep).mockResolvedValue(decisionResult("Pending"));
     vi.mocked(fetchWorkflowInstance).mockResolvedValue(mockUserStep);
     render(<ApprovalDetail declaration={mockDeclaration} onBack={vi.fn()} />);
     await waitFor(() => expect(screen.getByText("Decision *")).toBeInTheDocument());

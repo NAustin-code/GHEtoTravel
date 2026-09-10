@@ -1,21 +1,24 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { fetchWorkflowInstance, approveWorkflowStep } from "@/services/api";
+import type { WorkflowDecisionResult } from "@/services/api";
 import { DECISION_LABELS } from "@/config/theme";
 import type { StepView } from "@/app/components/WorkflowTimeline"
 import type {
     ApprovalDecision,
     StatusType,
+    WorkflowInstance,
+    WorkflowStep,
 } from "@/types/declaration";
 
 interface UseWorkflowApprovalOptions {
     declarationId: string | null;
     userId: string | null;
-    initialWorkflowSteps?: any[];
+    initialWorkflowSteps?: WorkflowStep[];
     onStatusUpdate?: (status: StatusType) => void;
 }
 
 export function useWorkflowApproval({ declarationId, userId, initialWorkflowSteps, onStatusUpdate }: UseWorkflowApprovalOptions) {
-  const [wfInstance, setWfInstance] = useState<any>(null);
+  const [wfInstance, setWfInstance] = useState<WorkflowInstance | null>(null);
   const [wfLoading, setWfLoading] = useState(!!declarationId);
   const [lmDecision, setLmDecision] = useState<ApprovalDecision>(null);
   const [hrDecision, setHrDecision] = useState<ApprovalDecision>(null);
@@ -41,7 +44,7 @@ export function useWorkflowApproval({ declarationId, userId, initialWorkflowStep
       const wf = await fetchWorkflowInstance(declarationId);
       setWfInstance(wf);
       if (wf) {
-        const getStep = (role: string) => wf.steps.find((s: any) => s.role === role);
+        const getStep = (role: string) => wf.steps.find((s: WorkflowStep) => s.role === role);
         setLmDecision(getStep("lineManager")?.decision ?? null);
         setHrDecision(getStep("hr")?.decision ?? null);
         setLmNotes(getStep("lineManager")?.notes ?? "");
@@ -59,13 +62,13 @@ export function useWorkflowApproval({ declarationId, userId, initialWorkflowStep
   }, [loadWorkflowInstance]);
 
   const steps = wfInstance?.steps ?? [];
-  const lmStep = steps.find((s: any) => s.role === "lineManager");
-  const hrStep = steps.find((s: any) => s.role === "hr");
+  const lmStep = steps.find((s: WorkflowStep) => s.role === "lineManager");
+  const hrStep = steps.find((s: WorkflowStep) => s.role === "hr");
 
   const hasLm = !!lmStep;
   const hasHr = !!hrStep;
   const isLmApproved = lmStep?.status === "approved";
-  const isHrEnabled = hasHr && (isLmApproved || lmStep?.status === "skipped");
+  const isHrEnabled = hasHr && isLmApproved;
 
   const allRoles = useMemo(() => [
     {
@@ -117,8 +120,11 @@ export function useWorkflowApproval({ declarationId, userId, initialWorkflowStep
   });
   }, [allRoles]);
 
+  // A step is actionable once every predecessor is approved. "skipped" is
+  // accepted defensively for forward-compatibility; the local store only
+  // emits pending/approved/declined/returned.
   const currentUserStep = useMemo(() => steps.find(
-    (s: any, i: number) => s.status === "pending" && steps.slice(0, i).every((p: any) => p.status === "approved" || p.status === "skipped")
+    (s: WorkflowStep, i: number) => s.status === "pending" && steps.slice(0, i).every((p: WorkflowStep) => p.status === "approved" || p.status === "skipped")
   ), [steps]);
   const canApprove = !!(currentUserStep?.assignee === userId && currentUserStep);
   const currentUserStepRole = canApprove ? currentUserStep?.role : undefined;
@@ -136,19 +142,15 @@ export function useWorkflowApproval({ declarationId, userId, initialWorkflowStep
     setIsSubmitting(true);
     try {
       if (!declarationId) return;
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15000);
-      const res: any = await approveWorkflowStep({ declarationId, decision, notes });
-      clearTimeout(timeout);
+      const res: WorkflowDecisionResult | undefined = await approveWorkflowStep({ declarationId, decision, notes });
       // 204 returns undefined — treat as success
       if (res?.newStatus) onStatusUpdate?.(res.newStatus);
-      else if (res === undefined) onStatusUpdate?.("Pending" as any);
+      else if (res === undefined) onStatusUpdate?.("Pending" as StatusType);
       await loadWorkflowInstance();
       setWfMessage("Decision submitted successfully.");
       setTimeout(() => { setWfMessage(""); }, 1500);
-    } catch (err: any) {
-      if (err.name === "AbortError") setSubmitError("Request timed out. Please try again.");
-      else setSubmitError(err.message || "An error occurred while submitting the decision.");
+    } catch (err: unknown) {
+      setSubmitError(err instanceof Error ? err.message : "An error occurred while submitting the decision.");
     } finally {
       setIsSubmitting(false);
     }

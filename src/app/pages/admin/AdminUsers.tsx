@@ -43,11 +43,6 @@ export function AdminUsers() {
       );
     }
     if (roleFilter !== "All Roles") {
-      const reverseMap: Record<string, string> = {
-        "Team Member": "teamMember",
-        Approver: "approver",
-        Administrator: "admin",
-      };
       list = list.filter((u) => ROLE_MAP[u.role] === roleFilter);
     }
     return list;
@@ -76,11 +71,11 @@ export function AdminUsers() {
         teamMemberNumber: "",
         position: "",
         lineManager: null,
-        organizationId: org?.id || null,
+        organizationId: org?.id || undefined,
       });
       refresh();
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unexpected error.");
     }
   };
 
@@ -97,10 +92,10 @@ export function AdminUsers() {
     const orgShortCode = prompt(`Organization (${orgList}):`, user.organizationId ? organizations.find((o) => o.id === user.organizationId)?.shortCode || "" : "") || "";
     const org = organizations.find((o) => o.shortCode === orgShortCode || o.name === orgShortCode);
     try {
-      await updateUser(user.id, { name, email, role: roleLabel as User["role"], department, organizationId: org?.id || null });
+      await updateUser(user.id, { name, email, role: roleLabel as User["role"], department, organizationId: org?.id || undefined });
       refresh();
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unexpected error.");
     }
   };
 
@@ -109,8 +104,8 @@ export function AdminUsers() {
     try {
       await deleteUser(user.id);
       refresh();
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unexpected error.");
     }
   };
 

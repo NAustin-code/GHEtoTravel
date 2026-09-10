@@ -29,6 +29,9 @@ function AppInner() {
   const [showSubmittedView, setShowSubmittedView] = useState(false);
   const [showDraftBanner, setShowDraftBanner] = useState(false);
   const [editingDraft, setEditingDraft] = useState<Declaration | null>(null);
+  // Bumped on every navigation to the form so it remounts fresh instead of
+  // showing stale values from a previous session.
+  const [formKey, setFormKey] = useState(0);
 
   useEffect(() => {
     if (!showSubmittedView) return;
@@ -71,7 +74,10 @@ function AppInner() {
   }, []);
 
   const guardedNavigate = (s: Screen) => {
-    if (s === "new-declaration" || s === "travel-request") setEditingDraft(null);
+    if (s === "new-declaration" || s === "travel-request") {
+      setEditingDraft(null);
+      setFormKey((k) => k + 1);
+    }
     if (!canAccessScreen(user, s)) {
       setScreen("landing");
       return;
@@ -94,6 +100,7 @@ function AppInner() {
       <AppShell role={user?.role || getRoleForScreen(screen)} screen={screen} userName={user?.name || ""} onNavigate={guardedNavigate} onSignOut={handleSignOut} user={user}>
         {screen === "new-declaration" && !showSubmittedView && (
           <NewDeclarationScreen
+            key={formKey}
             onSubmitSuccess={(data) => { setEditingDraft(null); handleSubmitSuccess(data); }}
             onDraftSaved={() => setShowDraftBanner(true)}
             draft={editingDraft}
@@ -105,6 +112,7 @@ function AppInner() {
         {screen === "my-declarations" && <MyDeclarationsScreen onEditDraft={(d) => { setEditingDraft(d); setScreen("new-declaration"); }} />}
         {screen === "travel-request" && !showSubmittedView && (
           <NewDeclarationScreen
+            key={formKey}
             onSubmitSuccess={(data) => { setEditingDraft(null); handleSubmitSuccess(data); }}
             onDraftSaved={() => setShowDraftBanner(true)}
             draft={editingDraft}

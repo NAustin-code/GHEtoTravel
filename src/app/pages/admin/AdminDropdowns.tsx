@@ -15,7 +15,7 @@ export function AdminDropdowns() {
 
   const tabs = Object.keys(data) as (keyof typeof data)[];
 
-  useEffect(() => { fetchDropdowns().then(setData).catch((err: Error) => setError(err.message)); }, []);
+  useEffect(() => { fetchDropdowns().then((d) => setData({ ...d })).catch((err: Error) => setError(err.message)); }, []);
 
   const currentList = data[activeTab] || [];
 
@@ -27,9 +27,9 @@ export function AdminDropdowns() {
     setData(updated);
     try {
       await updateDropdowns(updated);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setData(prev);
-      setError(err.message || "Failed to add item.");
+      setError(err instanceof Error ? err.message : "Failed to add item.");
     }
   };
 
@@ -48,9 +48,9 @@ export function AdminDropdowns() {
     try {
       await updateDropdowns(updated);
       setEditingIdx(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setData(prev);
-      setError(err.message || "Failed to save item.");
+      setError(err instanceof Error ? err.message : "Failed to save item.");
     }
   };
 
@@ -62,9 +62,9 @@ export function AdminDropdowns() {
     setData(updated);
     try {
       await updateDropdowns(updated);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setData(prev);
-      setError(err.message || "Failed to delete item.");
+      setError(err instanceof Error ? err.message : "Failed to delete item.");
     }
   };
 

@@ -1,4 +1,4 @@
-import { Home, Plane, FileText, CheckSquare, Menu, ChevronLeft, Settings, Users, Activity, List, BarChart3, CheckCircle2 } from "lucide-react";
+import { Home, Plane, FileText, CheckSquare, Menu, ChevronLeft, Settings, Users, Activity, List, BarChart3, CheckCircle2, type LucideIcon } from "lucide-react";
 import { ImageWithFallback } from "@/app/components/ImageWithFallback";
 import logoImg from "@/assets/HB-Logo-NO-BG.png";
 import { YELLOW, GRADIENT_SIDEBAR } from "@/config/theme";
@@ -37,7 +37,7 @@ export function Sidebar({
           { screen: "my-declarations"  as Screen, icon: FileText,   label: "My Travel Requests" },
         ]
       : (() => {
-          const base: { screen: Screen; icon: any; label: string }[] = [
+          const base: { screen: Screen; icon: LucideIcon; label: string }[] = [
             { screen: "approver-dashboard" as Screen, icon: Home,        label: "Dashboard" },
             { screen: "new-declaration"    as Screen, icon: Plane,       label: "New Travel Request" },
             { screen: "approval-queue"     as Screen, icon: CheckSquare, label: "Approval Queue" },

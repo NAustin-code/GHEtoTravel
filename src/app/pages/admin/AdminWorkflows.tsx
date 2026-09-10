@@ -6,7 +6,19 @@ import { PURPLE, GRADIENT_PRIMARY } from "../../../config/theme";
 import { WorkflowRule } from "../../../types/declaration";
 import { fetchWorkflowRules, createWorkflowRule, updateWorkflowRule, deleteWorkflowRule, fetchConfig } from "../../../services/api";
 
-const ROLE_LABELS: Record<string, string> = { lineManager: "Line Manager", hr: "Head of HR" };
+function stepsOf(rule: WorkflowRule): { order: number; role: string; label: string }[] {
+  const raw = (rule as unknown as { steps: unknown }).steps;
+  if (Array.isArray(raw)) return raw as { order: number; role: string; label: string }[];
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      return Array.isArray(parsed) ? (parsed as { order: number; role: string; label: string }[]) : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
 
 export function AdminWorkflows() {
   const [rules, setRules] = useState<WorkflowRule[]>([]);
@@ -16,21 +28,21 @@ export function AdminWorkflows() {
   const [threshold, setThreshold] = useState<{ highValueThreshold: number; maximumValue: number } | null>(null);
 
   useEffect(() => { fetchWorkflowRules().then(setRules).catch((err: Error) => setError(err.message)); }, []);
-  useEffect(() => { fetchConfig().then((c) => setThreshold({ highValueThreshold: c.highValueThreshold, maximumValue: (c as any).maximumValue ?? 1000000 })).catch(() => {}); }, []);
+  useEffect(() => { fetchConfig().then((c) => setThreshold({ highValueThreshold: c.highValueThreshold, maximumValue: c.maximumValue ?? 1000000 })).catch(() => {}); }, []);
 
   const handleAdd = async () => {
     try {
       const newRule: WorkflowRule = {
         id: `rule-${Date.now()}`,
         name: "New Rule",
-        condition: "gift",
+        condition: "standard",
         priority: rules.length + 1,
         steps: [{ order: 1, role: "lineManager", label: "Line Manager Review" }],
       };
       await createWorkflowRule(newRule);
       fetchWorkflowRules().then(setRules).catch((err: Error) => setError(err.message));
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unexpected error.");
     }
   };
 
@@ -44,8 +56,8 @@ export function AdminWorkflows() {
       await updateWorkflowRule(id, { name: editName });
       setEditingId(null);
       fetchWorkflowRules().then(setRules).catch((err: Error) => setError(err.message));
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unexpected error.");
     }
   };
 
@@ -54,8 +66,8 @@ export function AdminWorkflows() {
     try {
       await deleteWorkflowRule(id);
       fetchWorkflowRules().then(setRules).catch((err: Error) => setError(err.message));
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unexpected error.");
     }
   };
 
@@ -77,7 +89,7 @@ export function AdminWorkflows() {
       {threshold && (
         <Card className="border-purple-200/50 bg-purple-50/50 p-4">
           <p className="text-sm text-purple-900">
-            <span className="font-bold">Current thresholds from System Configuration:</span> High Value = R{threshold.highValueThreshold.toLocaleString("en-ZA").replace(/,/g, " ")} (above → Line Manager + HR, below → Line Manager only) • Maximum = R{threshold.maximumValue.toLocaleString("en-ZA").replace(/,/g, " ")} (blocked above). Changing System Configuration affects new declarations (existing workflows frozen).
+            <span className="font-bold">Current thresholds from System Configuration:</span> High Value = R{threshold.highValueThreshold.toLocaleString("en-ZA").replace(/,/g, " ")} (high-value requests follow the high-value rule) • Maximum = R{threshold.maximumValue.toLocaleString("en-ZA").replace(/,/g, " ")} (blocked above). Changing System Configuration affects new travel requests (existing workflows frozen).
           </p>
         </Card>
       )}
@@ -85,12 +97,8 @@ export function AdminWorkflows() {
       <div className="grid grid-cols-1 gap-5">
         {rules
           .filter((r) => {
-            try {
-              const steps: any[] = JSON.parse((r as any).steps ?? "[]");
-              return !steps.some((s: any) => s.role === "ceo" || s.label?.toLowerCase().includes("ceo"));
-            } catch {
-              return true;
-            }
+            const steps = stepsOf(r);
+            return !steps.some((s) => s.role === "ceo" || s.label?.toLowerCase().includes("ceo"));
           })
           .map((rule) => (
           <Card key={rule.id} className="group flex flex-col justify-between gap-4 border-white/70 bg-white/80 p-5 card-shadow transition-all md:flex-row md:items-center">
@@ -106,12 +114,12 @@ export function AdminWorkflows() {
                 )}
                 <p className="mt-1 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Condition: {rule.condition}</p>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
-                  {rule.steps.map((step, idx) => (
+                  {stepsOf(rule).map((step, idx) => (
                     <div key={`${step.order}-${step.role}`} className="flex items-center gap-2">
                       <span className="rounded-xl border border-primary/10 bg-secondary/20 px-3 py-1.5 text-sm font-medium text-foreground shadow-sm">
                         {step.order}. {step.label}
                       </span>
-                      {idx < rule.steps.length - 1 && <ArrowRight size={14} className="text-muted-foreground" />}
+                      {idx < stepsOf(rule).length - 1 && <ArrowRight size={14} className="text-muted-foreground" />}
                     </div>
                   ))}
                 </div>

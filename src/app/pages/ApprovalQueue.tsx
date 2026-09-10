@@ -78,8 +78,8 @@ export function ApprovalQueue({ onReview }: { onReview: (d: Declaration) => void
   };
   const sorted = sortKey
     ? [...filteredQueue].sort((a, b) => {
-        const aVal = (a as any)[sortFieldMap[sortKey] || sortKey] ?? "";
-        const bVal = (b as any)[sortFieldMap[sortKey] || sortKey] ?? "";
+        const aVal: unknown = (a as unknown as Record<string, unknown>)[sortFieldMap[sortKey] || sortKey] ?? "";
+        const bVal: unknown = (b as unknown as Record<string, unknown>)[sortFieldMap[sortKey] || sortKey] ?? "";
         if (typeof aVal === "number" && typeof bVal === "number") return sortDir === "asc" ? aVal - bVal : bVal - aVal;
         const aStr = String(aVal).toLowerCase();
         const bStr = String(bVal).toLowerCase();

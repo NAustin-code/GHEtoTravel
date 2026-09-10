@@ -28,15 +28,6 @@ function ModernCard({ children, className = "", style, accent }: { children: Rea
 
 type DashboardFilter = "All" | "Pending" | "Approved" | "Returned" | "Declined" | "Escalated" | "Total Value";
 
-
-
-function isCurrentMonth(value: string): boolean {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return false;
-  const now = new Date();
-  return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
-}
-
 const PRIORITY_ORDER: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
 
 export function ApproverDashboard({ onNavigate, onReview }: { onNavigate: (s: Screen) => void; onReview?: (d: Declaration) => void }) {
@@ -55,13 +46,7 @@ export function ApproverDashboard({ onNavigate, onReview }: { onNavigate: (s: Sc
       .finally(() => setLoading(false));
   }, []);
 
-  const isAdmin = user?.role === "admin";
   const isTeamMember = user?.role === "teamMember";
-
-  const currentMonthDeclarations = useMemo(
-    () => declarations.filter((d) => isCurrentMonth(d.submitted)),
-    [declarations]
-  );
 
   const scopedDeclarations = useMemo(() => {
     if (isTeamMember) {
@@ -160,7 +145,6 @@ export function ApproverDashboard({ onNavigate, onReview }: { onNavigate: (s: Sc
   }
 
   const queueCount = scopedDeclarations.filter((d) => ["Pending", "Escalated"].includes(d.status)).length;
-  const monthLabel = new Date().toLocaleDateString("en-ZA", { month: "long", year: "numeric" });
 
   const kpiDefs = [
     { ...STATUS_KPI.Pending, label: "Pending Queue" },
@@ -262,7 +246,7 @@ export function ApproverDashboard({ onNavigate, onReview }: { onNavigate: (s: Sc
                           <Cell key={entry.name} fill={entry.color} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value: number, _name, payload: any) => [`${value}`, payload?.payload?.name || ""]} />
+                      <Tooltip formatter={(value, _name, item) => [`${value}`, (item as { payload?: { name?: string } })?.payload?.name || ""]} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>

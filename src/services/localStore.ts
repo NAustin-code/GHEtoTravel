@@ -666,6 +666,9 @@ export function decideWorkflowStep(declarationId: string, decision: string, note
   if (declarations[idx].status === "Approved" || declarations[idx].status === "Declined" || declarations[idx].status === "Returned") {
     throw new ApiClientError(409, "No pending workflow step for this declaration");
   }
+  if (declarations[idx].status !== "Pending" && declarations[idx].status !== "Escalated") {
+    throw new ApiClientError(409, `Cannot decide a ${declarations[idx].status} declaration`);
+  }
   const workflows = getWorkflows();
   let instance = workflows.find((w) => w.declarationId === declarationId);
   if (!instance) {

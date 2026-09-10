@@ -235,7 +235,7 @@ describe("Integration — Journey 9: Complete workflow (J9.8 / J9.6)", () => {
     const res = await approveWorkflowStep({ declarationId: "TR-2026-INT-1", decision: "org" });
     const wf = await fetchWorkflowInstance("TR-2026-INT-1");
     expect(wf.steps).toHaveLength(2);
-    wf.steps.forEach((s: any) => expect(s.status).toBe("approved"));
+    wf.steps.forEach((s) => expect(s.status).toBe("approved"));
     expect(wf.steps[0].decision).toBe("accept");
     expect(wf.steps[1].decision).toBe("org");
     expect(res.status).toBe("Approved");

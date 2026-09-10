@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from "react";
 import { fetchWorkflowInstance } from "@/services/api";
-import { ApprovalDecision } from "@/types/declaration";
+import { ApprovalDecision, WorkflowInstance, WorkflowStep } from "@/types/declaration";
 import { DECISION_LABELS, APPROVAL_OPTIONS, STATUS_COLORS, labelToStatus } from "@/config/theme";
 
 export interface StepView {
@@ -15,7 +15,6 @@ export interface StepView {
 
 interface WorkflowTimelineProps {
   declarationId?: string;
-  employee?: string;
   steps?: StepView[];
   decision?: ApprovalDecision;
   onDecision?: (d: ApprovalDecision) => void;
@@ -31,9 +30,10 @@ const ALL_ROLES = [
   { role: "hr",          label: "HR Review",           defaultActor: "Head of HR" },
 ];
 
-function buildStepsFromWorkflow(wf: any, employee?: string): StepView[] {
-  const hasData = wf && wf.steps && wf.steps.length > 0;
-  const existing = hasData ? new Map(wf.steps.map((s: any) => [s.role, s])) : new Map();
+function buildStepsFromWorkflow(wf: WorkflowInstance | null | undefined): StepView[] {
+  const steps = wf?.steps ?? [];
+  const hasData = steps.length > 0;
+  const existing = new Map<string, WorkflowStep>(steps.map((s: WorkflowStep) => [s.role, s]));
   const result: StepView[] = [];
   let hasTerminal = false;
   for (const r of ALL_ROLES) {
@@ -44,7 +44,7 @@ function buildStepsFromWorkflow(wf: any, employee?: string): StepView[] {
       continue;
     }
     if (!step) {
-      result.push({ label: r.label, actor: step?.assigneeName || r.defaultActor, state: "skipped" });
+      result.push({ label: r.label, actor: r.defaultActor, state: "skipped" });
     } else if (step.status === "pending") {
       result.push({ label: step.label, actor: step.assigneeName, state: result.some((s) => s.state === "active" || s.state === "pending") ? "pending" : "active" });
     } else {
@@ -151,7 +151,7 @@ function CompletedDetails({ step }: { step: StepView }) {
   );
 }
 
-function PendingDetails({ isActive }: { isActive?: boolean }) {
+function PendingDetails() {
   return (
     <>
       <div className="wf-detail-row flex justify-between py-1 text-sm">
@@ -170,14 +170,13 @@ function WaitingDetails({ actor }: { actor: string }) {
   return (
     <>
       <p className="text-sm text-purple-700 font-semibold mb-3">Awaiting action from <strong>{actor}</strong></p>
-      <PendingDetails isActive />
+      <PendingDetails />
     </>
   );
 }
 
 export function WorkflowTimeline({
   declarationId,
-  employee,
   steps: externalSteps,
   decision,
   onDecision,
@@ -187,7 +186,7 @@ export function WorkflowTimeline({
   submitDisabled,
   submitted,
 }: WorkflowTimelineProps) {
-  const [wf, setWf] = useState<any>(undefined);
+  const [wf, setWf] = useState<WorkflowInstance | null | undefined>(undefined);
 
   useEffect(() => {
     if (!declarationId || externalSteps) return;
@@ -198,7 +197,7 @@ export function WorkflowTimeline({
     return () => { cancelled = true; };
   }, [declarationId, externalSteps]);
 
-  const steps = externalSteps || buildStepsFromWorkflow(wf, employee);
+  const steps = externalSteps || buildStepsFromWorkflow(wf);
 
   return (
     <div className="detail-panel-shell h-full">
@@ -220,8 +219,6 @@ export function WorkflowTimeline({
       <div className="flex-1">
         {steps.map((step, i) => {
           const isLast = i === steps.length - 1;
-          const isActive = step.state === "active";
-          const isSkipped = step.state === "skipped";
 
           return (
             <div key={step.label} className="flex gap-4">

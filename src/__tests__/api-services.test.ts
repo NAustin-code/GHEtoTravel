@@ -197,7 +197,7 @@ describe("fetchUserById", () => {
   it("returns seeded user without password hash", async () => {
     const result = await fetchUserById("user-2");
     expect(result.name).toBe("Sipho Nkosi");
-    expect((result as any).passwordHash).toBeUndefined();
+    expect(result).not.toHaveProperty("passwordHash");
   });
 
   it("throws 404 for unknown id", async () => {
@@ -333,6 +333,13 @@ describe("workflow operations", () => {
     await expect(
       approveWorkflowStep({ declarationId: "TR-2026-9200", decision: "accept" })
     ).rejects.toMatchObject({ status: 409 });
+  });
+
+  it("approveWorkflowStep rejects deciding a Draft declaration", async () => {
+    await createDeclaration(mockDeclaration("TR-2026-9300"));
+    await expect(
+      approveWorkflowStep({ declarationId: "TR-2026-9300", decision: "accept" })
+    ).rejects.toThrow("Cannot decide a Draft declaration");
   });
 });
 

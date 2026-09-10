@@ -1,3 +1,8 @@
+// NOTE: the app runs fully offline against services/localStore.ts — no HTTP
+// calls are made at runtime. This module now only provides the auth-token
+// helpers and ApiClientError used by the store and its tests. The `api`
+// fetch wrapper below is dormant legacy kept for the httpClient unit tests.
+
 const TOKEN_KEY = "ghe.auth.token";
 
 function getToken(): string | null {

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { NewDeclarationScreen } from "../app/pages/NewDeclarationScreen";
-import { createDeclaration, submitDeclaration, updateDeclaration, uploadDeclarationFile, fetchConfig, fetchUserById } from "../services/api";
+import { createDeclaration, submitDeclaration, updateDeclaration, uploadDeclarationFile } from "../services/api";
 
 const mockConfig = {
   highValueThreshold: 5000, mediumValueThreshold: 1000,
@@ -22,7 +22,7 @@ vi.mock("../services/api", () => ({
 }));
 
 vi.mock("../app/components/Sel", () => ({
-  Sel: ({ value, onChange, children, placeholder }: any) => (
+  Sel: ({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) => (
     <input
       role="combobox"
       data-placeholder={placeholder}
@@ -31,6 +31,37 @@ vi.mock("../app/components/Sel", () => ({
     />
   ),
 }));
+
+
+import type { Declaration } from "../types/declaration";
+
+const declResult = (overrides: Partial<Declaration> = {}): Declaration => ({
+  id: "TR-2026-9999",
+  employee: "Test User",
+  employeeId: "user-1",
+  department: "Marketing",
+  type: "Domestic",
+  counterparty: "Cape Town",
+  value: 0,
+  submitted: "2026-07-01",
+  approver: "",
+  status: "Draft",
+  priority: "Low",
+  description: "",
+  relationship: "",
+  teamMemberNumber: "HB-10001",
+  lineManager: "",
+  position: "",
+  receivedGiven: "",
+  from: "",
+  contactPerson: "",
+  biddingProcess: "",
+  occasion: "",
+  date: "",
+  instances: "1",
+  publicOfficial: "",
+  ...overrides,
+});
 
 vi.mock("../app/auth/UserContext", () => ({
   useUser: () => ({
@@ -42,14 +73,14 @@ vi.mock("../app/auth/UserContext", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  type ResizeHandler = (entries: { contentRect: { width: number; height: number } }[]) => void;
   class RO {
-    cb: any;
-    constructor(cb: any) { this.cb = cb; }
+    constructor(private cb: ResizeHandler) {}
     observe() { this.cb([{ contentRect: { width: 400, height: 600 } }]); }
     unobserve() {}
     disconnect() {}
   }
-  (globalThis as any).ResizeObserver = RO;
+  vi.stubGlobal("ResizeObserver", RO);
   Element.prototype.scrollIntoView = vi.fn();
   Object.defineProperty(HTMLElement.prototype, "offsetWidth", { configurable: true, value: 400 });
   Object.defineProperty(HTMLElement.prototype, "offsetHeight", { configurable: true, value: 600 });
@@ -131,8 +162,8 @@ describe("NewDeclarationScreen (Travel Request)", () => {
   });
 
   it("calls createDeclaration + submitDeclaration on valid submit", async () => {
-    vi.mocked(createDeclaration).mockResolvedValue({ id: "TR-2026-9999", status: "Draft" } as any);
-    vi.mocked(submitDeclaration).mockResolvedValue({ id: "TR-2026-9999", status: "Pending", approver: "Sipho Nkosi" } as any);
+    vi.mocked(createDeclaration).mockResolvedValue(declResult({ status: "Draft" }));
+    vi.mocked(submitDeclaration).mockResolvedValue(declResult({ status: "Pending", approver: "Sipho Nkosi" }));
 
     const onSuccess = vi.fn();
     render(<NewDeclarationScreen onSubmitSuccess={onSuccess} onDraftSaved={vi.fn()} />);
@@ -152,9 +183,10 @@ describe("NewDeclarationScreen (Travel Request)", () => {
           travelType: "Domestic",
         })
       );
-      const payload = vi.mocked(createDeclaration).mock.calls[0][0] as any;
-      expect(payload.travelers).toHaveLength(1);
-      expect(payload.travelers[0]).toMatchObject({
+      const payload = vi.mocked(createDeclaration).mock.calls[0][0];
+      const travelers = payload.travelers ?? [];
+      expect(travelers).toHaveLength(1);
+      expect(travelers[0]).toMatchObject({
         name: "Thandi Mokoena",
         email: "thandi@hb.co.za",
         cellPhone: "0821234567",
@@ -165,7 +197,7 @@ describe("NewDeclarationScreen (Travel Request)", () => {
   });
 
   it("calls createDeclaration on Save Draft without requiring validation", async () => {
-    vi.mocked(createDeclaration).mockResolvedValue({ id: "TR-2026-9999", status: "Draft" } as any);
+    vi.mocked(createDeclaration).mockResolvedValue(declResult({ status: "Draft" }));
 
     const onDraftSaved = vi.fn();
     render(<NewDeclarationScreen onSubmitSuccess={vi.fn()} onDraftSaved={onDraftSaved} />);
@@ -236,13 +268,10 @@ describe("NewDeclarationScreen (Travel Request)", () => {
     });
   });
 
-  it("uploads a supported file and lists it with remove option", async () => {
+  it("stages a supported file without uploading until save", async () => {
     const { container } = render(<NewDeclarationScreen onSubmitSuccess={vi.fn()} onDraftSaved={vi.fn()} />);
     await waitFor(() => expect(screen.getByText(/New Travel Request/i)).toBeInTheDocument());
 
-    vi.mocked(uploadDeclarationFile).mockResolvedValue({
-      name: "quote.pdf", size: 5, type: "application/pdf", url: "local:file/pending/quote.pdf",
-    });
     const fileInput = container.querySelector('input[type="file"]')!;
     const file = new File(["dummy"], "quote.pdf", { type: "application/pdf" });
     Object.defineProperty(fileInput, "files", { value: [file] });
@@ -251,10 +280,102 @@ describe("NewDeclarationScreen (Travel Request)", () => {
     await waitFor(() => {
       expect(screen.getByText("quote.pdf")).toBeInTheDocument();
     });
+    expect(vi.mocked(uploadDeclarationFile)).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole("button", { name: /Remove quote.pdf/i }));
     await waitFor(() => {
       expect(screen.queryByText("quote.pdf")).not.toBeInTheDocument();
     });
+  });
+
+  it("uploads staged files on submit and attaches them to the request", async () => {
+    vi.mocked(createDeclaration).mockResolvedValue(declResult({ status: "Draft" }));
+    vi.mocked(updateDeclaration).mockResolvedValue(declResult({ status: "Draft" }));
+    vi.mocked(submitDeclaration).mockResolvedValue(declResult({ status: "Pending" }));
+    vi.mocked(uploadDeclarationFile).mockResolvedValue({
+      name: "quote.pdf", size: 5, type: "application/pdf", url: "local:file/TR-2026-9999/quote.pdf",
+    });
+
+    const { container } = render(<NewDeclarationScreen onSubmitSuccess={vi.fn()} onDraftSaved={vi.fn()} />);
+    await waitFor(() => expect(screen.getByText(/New Travel Request/i)).toBeInTheDocument());
+    await fillValidForm();
+
+    const fileInput = container.querySelector('input[type="file"]')!;
+    const file = new File(["dummy"], "quote.pdf", { type: "application/pdf" });
+    Object.defineProperty(fileInput, "files", { value: [file] });
+    fireEvent.change(fileInput);
+    await waitFor(() => expect(screen.getByText("quote.pdf")).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole("button", { name: /Submit Travel Request/i }));
+
+    await waitFor(() => {
+      expect(vi.mocked(uploadDeclarationFile)).toHaveBeenCalledWith(
+        expect.objectContaining({ name: "quote.pdf" }),
+        "TR-2026-9999"
+      );
+      expect(vi.mocked(updateDeclaration)).toHaveBeenCalledWith(
+        "TR-2026-9999",
+        expect.objectContaining({ files: expect.arrayContaining([expect.objectContaining({ name: "quote.pdf" })]) })
+      );
+      expect(submitDeclaration).toHaveBeenCalledWith("TR-2026-9999");
+    });
+  });
+
+  it("reuses the same id when saving a draft twice", async () => {
+    vi.mocked(createDeclaration).mockImplementation(async (d: Partial<Declaration>) => declResult({ ...d, status: "Draft" }));
+
+    render(<NewDeclarationScreen onSubmitSuccess={vi.fn()} onDraftSaved={vi.fn()} />);
+    await waitFor(() => expect(screen.getByText(/New Travel Request/i)).toBeInTheDocument());
+
+    fireEvent.change(screen.getByPlaceholderText("Destination"), { target: { value: "Cape Town" } });
+    fireEvent.click(screen.getByRole("button", { name: /Save Draft/i }));
+    await waitFor(() => expect(createDeclaration).toHaveBeenCalledTimes(1));
+    fireEvent.click(screen.getByRole("button", { name: /Save Draft/i }));
+    await waitFor(() => expect(createDeclaration).toHaveBeenCalledTimes(2));
+
+    const calls = vi.mocked(createDeclaration).mock.calls.map((c) => c[0].id);
+    expect(calls[0]).toBeTruthy();
+    expect(calls[1]).toBe(calls[0]);
+  });
+
+  it("surfaces submit failures instead of reporting success", async () => {
+    vi.mocked(createDeclaration).mockResolvedValue(declResult({ status: "Draft" }));
+    vi.mocked(submitDeclaration).mockRejectedValue(new Error("Submit failed"));
+
+    const onSuccess = vi.fn();
+    render(<NewDeclarationScreen onSubmitSuccess={onSuccess} onDraftSaved={vi.fn()} />);
+    await waitFor(() => expect(screen.getByText(/New Travel Request/i)).toBeInTheDocument());
+    await fillValidForm();
+    fireEvent.click(screen.getByRole("button", { name: /Submit Travel Request/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Submit failed/i)).toBeInTheDocument();
+    });
+    expect(onSuccess).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid traveler contact details", async () => {
+    render(<NewDeclarationScreen onSubmitSuccess={vi.fn()} onDraftSaved={vi.fn()} />);
+    await waitFor(() => expect(screen.getByText(/New Travel Request/i)).toBeInTheDocument());
+
+    fireEvent.change(screen.getByPlaceholderText("Full name"), { target: { value: "Thandi Mokoena" } });
+    fireEvent.change(screen.getByPlaceholderText("ID or passport number"), { target: { value: "9001015800083" } });
+    fireEvent.change(screen.getByPlaceholderText("name@company.co.za"), { target: { value: "not-an-email" } });
+    fireEvent.change(screen.getByPlaceholderText("082 000 0000"), { target: { value: "123" } });
+    fireEvent.change(screen.getByPlaceholderText("Destination"), { target: { value: "Cape Town" } });
+    fireEvent.change(screen.getByPlaceholderText("Purpose of the trip"), { target: { value: "Visit" } });
+    const dates = document.querySelectorAll('input[type="date"]');
+    fireEvent.change(dates[0], { target: { value: "2026-08-01" } });
+    fireEvent.change(dates[1], { target: { value: "2026-08-05" } });
+    const boxes = screen.getAllByRole("checkbox");
+    fireEvent.click(boxes[boxes.length - 1]);
+
+    fireEvent.click(screen.getByRole("button", { name: /Submit Travel Request/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Enter a valid email address")).toBeInTheDocument();
+      expect(screen.getByText("Enter a valid cell number (at least 9 digits)")).toBeInTheDocument();
+    });
+    expect(createDeclaration).not.toHaveBeenCalled();
   });
 });

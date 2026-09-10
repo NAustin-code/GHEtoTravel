@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MyDeclarationsScreen } from "../app/pages/MyDeclarationsScreen";
-import { fetchDeclarations, fetchWorkflowInstance, fetchConfig } from "../services/api";
+import { fetchDeclarations, fetchWorkflowInstance } from "../services/api";
 import { exportRowsToXls } from "../utils/excel";
 
 const mockDeclarations = [
@@ -41,7 +41,7 @@ const mockEmptySteps = {
   declarationId: "GHE-2026-1001",
   steps: [
     { order: 1, role: "lineManager" as const, assignee: "user-3", assigneeName: "Bob",
-      label: "Line Manager Review", status: "pending" as const, decision: null, notes: "", decidedAt: null },
+      label: "Line Manager Review", status: "pending" as const, decision: null, notes: "", decidedAt: null, decidedById: null, decidedByName: null },
   ],
 };
 
@@ -70,14 +70,14 @@ vi.mock("../utils/excel", () => ({
 beforeEach(() => {
   mockUserRole = "approver";
   vi.clearAllMocks();
+  type ResizeHandler = (entries: { contentRect: { width: number; height: number } }[]) => void;
   class RO {
-    cb: any;
-    constructor(cb: any) { this.cb = cb; }
+    constructor(private cb: ResizeHandler) {}
     observe() { this.cb([{ contentRect: { width: 400, height: 600 } }]); }
     unobserve() {}
     disconnect() {}
   }
-  (globalThis as any).ResizeObserver = RO;
+  vi.stubGlobal("ResizeObserver", RO);
   Element.prototype.scrollIntoView = vi.fn();
   Object.defineProperty(HTMLElement.prototype, "offsetWidth", { configurable: true, value: 400 });
   Object.defineProperty(HTMLElement.prototype, "offsetHeight", { configurable: true, value: 600 });

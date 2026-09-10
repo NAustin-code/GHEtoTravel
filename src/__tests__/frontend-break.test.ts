@@ -82,8 +82,8 @@ describe("httpClient — api.get", () => {
   it("sets Authorization header when token exists", async () => {
     setToken("my-secret-token");
     let capturedHeaders: Record<string, string> = {};
-    vi.spyOn(globalThis, "fetch").mockImplementation(async (_, opts: any) => {
-      capturedHeaders = opts.headers ?? {};
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (_input: string | URL | Request, opts?: RequestInit) => {
+      capturedHeaders = (opts?.headers as Record<string, string> | undefined) ?? {};
       return { ok: true, status: 200, json: () => Promise.resolve({}), headers: new Headers() } as Response;
     });
     await api.get("/api/test");
@@ -92,8 +92,8 @@ describe("httpClient — api.get", () => {
 
   it("omits Authorization header when no token", async () => {
     let capturedHeaders: Record<string, string> = {};
-    vi.spyOn(globalThis, "fetch").mockImplementation(async (_, opts: any) => {
-      capturedHeaders = opts.headers ?? {};
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (_input: string | URL | Request, opts?: RequestInit) => {
+      capturedHeaders = (opts?.headers as Record<string, string> | undefined) ?? {};
       return { ok: true, status: 200, json: () => Promise.resolve({}), headers: new Headers() } as Response;
     });
     await api.get("/api/test");
@@ -102,8 +102,8 @@ describe("httpClient — api.get", () => {
 
   it("sends Content-Type: application/json", async () => {
     let capturedHeaders: Record<string, string> = {};
-    vi.spyOn(globalThis, "fetch").mockImplementation(async (_, opts: any) => {
-      capturedHeaders = opts.headers ?? {};
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (_input: string | URL | Request, opts?: RequestInit) => {
+      capturedHeaders = (opts?.headers as Record<string, string> | undefined) ?? {};
       return { ok: true, status: 200, json: () => Promise.resolve({}), headers: new Headers() } as Response;
     });
     await api.get("/api/test");
@@ -114,8 +114,8 @@ describe("httpClient — api.get", () => {
 describe("httpClient — api.post", () => {
   it("sends JSON body", async () => {
     let capturedBody: string | undefined;
-    vi.spyOn(globalThis, "fetch").mockImplementation(async (_: string, opts: any) => {
-      capturedBody = opts.body;
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (_input: string | URL | Request, opts?: RequestInit) => {
+      capturedBody = opts?.body as string | undefined;
       return { ok: true, status: 201, json: () => Promise.resolve({ id: 1 }), headers: new Headers() } as Response;
     });
     const data = await api.post("/api/test", { name: "hello" });
@@ -125,8 +125,8 @@ describe("httpClient — api.post", () => {
 
   it("sends without body", async () => {
     let capturedBody: string | undefined;
-    vi.spyOn(globalThis, "fetch").mockImplementation(async (_: string, opts: any) => {
-      capturedBody = opts.body;
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (_input: string | URL | Request, opts?: RequestInit) => {
+      capturedBody = opts?.body as string | undefined;
       return { ok: true, status: 200, json: () => Promise.resolve({}), headers: new Headers() } as Response;
     });
     await api.post("/api/test");
@@ -137,8 +137,8 @@ describe("httpClient — api.post", () => {
 describe("httpClient — api.put, api.patch, api.del", () => {
   it("api.put sends PUT with body", async () => {
     let capturedMethod = "";
-    vi.spyOn(globalThis, "fetch").mockImplementation(async (_: string, opts: any) => {
-      capturedMethod = opts.method;
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (_input: string | URL | Request, opts?: RequestInit) => {
+      capturedMethod = opts?.method ?? '';
       return { ok: true, status: 200, json: () => Promise.resolve({}), headers: new Headers() } as Response;
     });
     await api.put("/api/test/1", { name: "updated" });
@@ -147,8 +147,8 @@ describe("httpClient — api.put, api.patch, api.del", () => {
 
   it("api.patch sends PATCH with body", async () => {
     let capturedMethod = "";
-    vi.spyOn(globalThis, "fetch").mockImplementation(async (_: string, opts: any) => {
-      capturedMethod = opts.method;
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (_input: string | URL | Request, opts?: RequestInit) => {
+      capturedMethod = opts?.method ?? '';
       return { ok: true, status: 200, json: () => Promise.resolve({}), headers: new Headers() } as Response;
     });
     await api.patch("/api/test/1", { status: "Approved" });
@@ -157,8 +157,8 @@ describe("httpClient — api.put, api.patch, api.del", () => {
 
   it("api.del sends DELETE", async () => {
     let capturedMethod = "";
-    vi.spyOn(globalThis, "fetch").mockImplementation(async (_: string, opts: any) => {
-      capturedMethod = opts.method;
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (_input: string | URL | Request, opts?: RequestInit) => {
+      capturedMethod = opts?.method ?? '';
       return { ok: true, status: 204, json: () => Promise.resolve(undefined), headers: new Headers() } as Response;
     });
     await api.del("/api/test/1");
