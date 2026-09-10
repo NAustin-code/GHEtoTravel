@@ -75,8 +75,8 @@ export function MyDeclarationsScreen({ onEditDraft }: { onEditDraft?: (d: Declar
   const userDeclarations = user
     ? declarations.filter((d) => d.employeeId === user.id || d.employee === user.name)
     : declarations;
-  const ownDraftsOnly = (d: Declaration) => d.status !== "Draft" || d.employeeId === user?.id || d.employee === user?.name;
-  const visibleDeclarations = (viewMode === "my" ? userDeclarations : declarations).filter(ownDraftsOnly);
+  const showAllNonDraftsAndUserDrafts = (d: Declaration) => d.status !== "Draft" || d.employeeId === user?.id || d.employee === user?.name;
+  const visibleDeclarations = (viewMode === "my" ? userDeclarations : declarations).filter(showAllNonDraftsAndUserDrafts);
 
   if (loading) {
     return (

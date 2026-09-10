@@ -269,8 +269,7 @@ export function NewDeclarationScreen({
     const stay = Number(formState.accommodationCost) || 0;
     const active = travelers.slice(0, numberOfPeople);
     const total = flight + stay;
-    return {
-      id: idOverride || draft?.id || savedId || `TR-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000).padStart(4, "0")}`,
+    const base: Omit<Declaration, "id" | "travelers" | "numberOfPeople" | "files"> = {
       employee: user?.name || draft?.employee || "Employee",
       employeeId: user?.id || draft?.employeeId || "user-1",
       teamMemberNumber: user?.teamMemberNumber || draft?.teamMemberNumber || "",
@@ -296,9 +295,12 @@ export function NewDeclarationScreen({
       biddingProcess: "",
       occasion: formState.reason,
       date: formState.departureDate,
-      instances: String(numberOfPeople),
       publicOfficial: "",
-      files: uploadedFiles ?? files,
+      files: uploadedFiles ?? [],
+    };
+    return {
+      ...base,
+      id: idOverride || draft?.id || savedId || `TR-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000).padStart(4, "0")}`,
       travelers: active,
       numberOfPeople,
       destination: formState.destination,
@@ -354,7 +356,7 @@ export function NewDeclarationScreen({
     }
   };
 
-  const onDraftSave = async () => {
+const onDraftSave = async () => {
     setSubmitError("");
     setSaving(true);
     try {

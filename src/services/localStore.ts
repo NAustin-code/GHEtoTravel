@@ -573,7 +573,8 @@ export function updateDeclarationRecord(id: string, data: Partial<Declaration>):
 function hrForOrganization(organizationId?: string): { id: string; name: string } {
   const users = getUsers();
   const hr = users.find((u) => u.role === "approver" && u.department === "HR" && (!organizationId || u.organizationId === organizationId))
-    || users.find((u) => u.id === "user-5")!;
+    || users.find((u) => u.id === "user-5");
+  if (!hr) throw notFound("HR approver", organizationId ?? "any");
   return { id: hr.id, name: hr.name };
 }
 
@@ -581,7 +582,8 @@ function managerForUser(userId?: string): { id: string; name: string } {
   const users = getUsers();
   const user = users.find((u) => u.id === userId);
   const manager = (user?.lineManager && users.find((u) => u.id === user.lineManager))
-    || users.find((u) => u.id === "user-2")!;
+    || users.find((u) => u.id === "user-2");
+  if (!manager) throw notFound("Manager", userId ?? "any");
   return { id: manager.id, name: manager.name };
 }
 
@@ -685,6 +687,10 @@ export function decideWorkflowStep(declarationId: string, decision: string, note
   current.decidedByName = current.assigneeName;
   const terminal = TERMINAL_BY_DECISION[decision];
   let status: StatusType;
+  // 3-way branching:
+  // 1) Terminal decision (return/decline) → step+declaration get terminal status
+  // 2) Other steps still pending → step approved, declaration stays "Pending"
+  // 3) No pending steps remain → step approved, declaration becomes "Approved"
   if (terminal) {
     current.status = terminal.step;
     status = terminal.declaration;
@@ -852,28 +858,45 @@ const TYPE_COLOR_FALLBACK: Record<string, string> = {
 
 export function getDashboardStats(): LocalDashboardStats {
   const declarations = getDeclarations();
-  const byStatus = (s: string) => declarations.filter((d) => d.status === s);
   const kpis = {
     total: declarations.length,
-    pending: byStatus("Pending").length,
-    approved: byStatus("Approved").length,
-    declined: byStatus("Declined").length,
-    escalated: byStatus("Escalated").length,
-    totalValue: declarations.filter((d) => d.status === "Pending" || d.status === "Approved").reduce((sum, d) => sum + d.value, 0),
+    pending: 0,
+    approved: 0,
+    declined: 0,
+    escalated: 0,
+    totalValue: 0,
   };
   const trend = new Map<string, { month: string; approved: number; declined: number }>();
+  const byType = new Map<string, number>();
   for (const d of declarations) {
+    // KPIs
+    if (d.status === "Pending") kpis.pending += 1;
+    if (d.status === "Approved") kpis.approved += 1;
+    if (d.status === "Declined") kpis.declined += 1;
+    if (d.status === "Escalated") kpis.escalated += 1;
+    if (d.status === "Pending" || d.status === "Approved") kpis.totalValue += d.value;
+
+    // Compliance trend
     const month = String(d.submitted).slice(0, 7);
     if (!trend.has(month)) trend.set(month, { month, approved: 0, declined: 0 });
     const point = trend.get(month)!;
     if (d.status === "Approved") point.approved += 1;
     if (d.status === "Declined") point.declined += 1;
+
+    // Type breakdown
+    byType.set(d.type, (byType.get(d.type) || 0) + 1);
   }
   const complianceTrend = [...trend.values()].sort((a, b) => a.month.localeCompare(b.month));
-  const byType = new Map<string, number>();
-  for (const d of declarations) byType.set(d.type, (byType.get(d.type) || 0) + 1);
   const typeBreakdown = [...byType.entries()].map(([name, value]) => ({ name, value, color: TYPE_COLOR_FALLBACK[name] || "#6B7280" }));
-  return { kpis, complianceTrend, typeBreakdown };
+  const kpisComplete = {
+    total: kpis.total,
+    pending: kpis.pending,
+    approved: kpis.approved,
+    declined: kpis.declined,
+    escalated: kpis.escalated,
+    totalValue: kpis.totalValue,
+  };
+  return { kpis: kpisComplete, complianceTrend, typeBreakdown };
 }
 
 export function getAdminDashboard(): { users: number; workflows: number; declarations: number; threshold: number } {
