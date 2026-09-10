@@ -1,45 +1,36 @@
-import { Declaration, ComplianceTrendPoint, TypeBreakdownItem, UploadedFile } from"@/types/declaration" 
-import { api } from "@/services/httpClient" 
+import { Declaration, ComplianceTrendPoint, TypeBreakdownItem, UploadedFile } from"@/types/declaration"
+import * as store from "@/services/localStore"
+
+// Local-store backed service layer (no backend). Signatures match the former
+// REST API wrappers so components and tests keep working unchanged.
 
 export async function fetchDeclarations(status?: string, search?: string): Promise<Declaration[]> {
-  const params = new URLSearchParams();
-  if (status) params.set("status", status);
-  if (search) params.set("search", search);
-  const qs = params.toString();
-  const raw = await api.get<any[]>(`/api/declarations${qs ? `?${qs}` : ""}`);
-  return raw.map(mapDeclaration);
+  return store.listDeclarations(status, search);
 }
 
 export async function fetchDeclarationById(id: string): Promise<Declaration> {
-  const raw = await api.get<any>(`/api/declarations/${id}`);
-  return { ...mapDeclaration(raw), workflowSteps: raw.workflowSteps ?? [] };
+  const declaration = store.findDeclarationById(id);
+  return { ...declaration, workflowSteps: declaration.workflowSteps ?? [] };
 }
 
 export async function createDeclaration(declaration: Partial<Declaration>): Promise<Declaration> {
-  const raw = await api.post<any>("/api/declarations", toApiDeclaration(declaration));
-  return mapDeclaration(raw);
+  return store.createDeclarationRecord(declaration);
 }
 
 export async function updateDeclaration(id: string, data: Partial<Declaration>): Promise<Declaration> {
-  const raw = await api.put<any>(`/api/declarations/${id}`, toApiDeclaration(data as Declaration));
-  return mapDeclaration(raw);
+  return store.updateDeclarationRecord(id, data);
 }
 
 export async function updateDeclarationStatus(id: string, status: string): Promise<Declaration> {
-  const raw = await api.patch<any>(`/api/declarations/${id}/status`, { status });
-  return mapDeclaration(raw);
+  return store.setDeclarationStatus(id, status);
 }
 
 export async function submitDeclaration(id: string): Promise<Declaration> {
-  const raw = await api.patch<any>(`/api/declarations/${id}/submit`);
-  return mapDeclaration(raw);
+  return store.submitDeclarationRecord(id);
 }
 
 export async function uploadDeclarationFile(file: File, declarationId: string): Promise<UploadedFile> {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("declarationId", declarationId);
-  return api.postForm<UploadedFile>("/api/files/upload", formData);
+  return store.uploadFileRecord(file, declarationId);
 }
 export interface DashboardStats {
   kpis: {
@@ -55,131 +46,85 @@ export interface DashboardStats {
 }
 
 export async function fetchDashboardStats(): Promise<DashboardStats> {
-  return api.get<DashboardStats>("/api/declarations/stats");
-}
-
-function mapDeclaration(raw: any): Declaration {
-  return {
-    id:                  raw.id,
-    employee:            raw.employee,
-    employeeId:          raw.employeeId,
-    teamMemberNumber:    raw.teamMemberNumber,
-    lineManager:         raw.lineManager,
-    position:            raw.position,
-    department:          raw.department,
-    company:             raw.company,
-    team:                raw.team,
-    type:                raw.type,
-    counterparty:        raw.counterparty,
-    value:               raw.value,
-    submitted:           raw.submitted,
-    approver:            raw.approver,
-    approverId:          raw.approverId,
-    status:              raw.status,
-    priority:            raw.priority,
-    description:         raw.description,
-    relationship:        raw.relationship,
-    receivedGiven:       raw.receivedGiven,
-    from:                raw.from,
-    contactPerson:       raw.contactPerson,
-    biddingProcess:      raw.biddingProcess,
-    contractNegotiation: raw.contractNegotiation,
-    occasion:            raw.occasion,
-    date:                raw.date,
-    instances:           raw.instances,
-    publicOfficial:      raw.publicOfficial,
-    substantiation:      raw.substantiation,
-    files:               raw.files,
-    organizationId:      raw.organizationId,
-  };
+  return store.getDashboardStats();
 }
 
 // ── Admin: Users ─────────────────────────────────────
 export async function fetchUsers(search?: string, role?: string): Promise<any[]> {
-  const params = new URLSearchParams();
-  if (search) params.set("search", search);
-  if (role) params.set("role", role);
-  const qs = params.toString();
-  return api.get<any[]>(`/api/admin/users${qs ? `?${qs}` : ""}`);
+  return store.listUsers(search, role);
 }
 
 export async function fetchUserById(id: string): Promise<any> {
-  return api.get<any>(`/api/users/${id}`);
+  return store.findUserById(id);
 }
 
 export async function fetchManagers(organizationId?: string): Promise<any[]> {
-  const qs = organizationId ? `?organizationId=${encodeURIComponent(organizationId)}` : "";
-  return api.get<any[]>(`/api/users/managers${qs}`);
+  return store.findManagers(organizationId);
 }
 
 export async function fetchDepartments(organizationId?: string): Promise<string[]> {
-  const qs = organizationId ? `?organizationId=${encodeURIComponent(organizationId)}` : "";
-  return api.get<string[]>(`/api/users/departments${qs}`);
+  return store.listDepartments(organizationId);
 }
 
 export async function createUser(data: any): Promise<any> {
-  return api.post<any>("/api/admin/users", data);
+  return store.createUserRecord(data);
 }
 
 export async function updateUser(id: string, data: any): Promise<any> {
-  return api.put<any>(`/api/admin/users/${id}`, data);
+  return store.updateUserRecord(id, data);
 }
 
 export async function deleteUser(id: string): Promise<any> {
-  return api.del<any>(`/api/admin/users/${id}`);
+  return store.deleteUserRecord(id);
 }
 
 // ── Admin: Config ─────────────────────────────────────
 export async function fetchConfig(): Promise<any> {
-  return api.get<any>("/api/admin/config");
+  return store.getConfig();
 }
 
 export async function saveConfig(data: any): Promise<any> {
-  return api.put<any>("/api/admin/config", data);
+  return store.saveConfigRecord(data);
 }
 
 // ── Admin: Dropdowns ──────────────────────────────────
 export async function fetchDropdowns(): Promise<any> {
-  return api.get<any>("/api/admin/config/dropdowns");
+  return store.getDropdowns();
 }
 
 export async function updateDropdowns(data: any): Promise<any> {
-  return api.put<any>("/api/admin/config/dropdowns", data);
+  return store.saveDropdownsRecord(data);
 }
 
 // ── Admin: Dashboard ──────────────────────────────────
 export async function fetchAdminDashboard(): Promise<any> {
-  return api.get<any>("/api/admin/dashboard");
+  return store.getAdminDashboard();
 }
 
 // ── Admin: Workflow Rules ─────────────────────────────
 export async function fetchWorkflowRules(): Promise<any[]> {
-  return api.get<any[]>("/api/admin/workflows/rules");
+  return store.listWorkflowRules();
 }
 
 export async function createWorkflowRule(data: any): Promise<any> {
-  return api.post<any>("/api/admin/workflows/rules", data);
+  return store.createWorkflowRuleRecord(data);
 }
 
 export async function updateWorkflowRule(id: string, data: any): Promise<any> {
-  return api.put<any>(`/api/admin/workflows/rules/${id}`, data);
+  return store.updateWorkflowRuleRecord(id, data);
 }
 
 export async function deleteWorkflowRule(id: string): Promise<any> {
-  return api.del<any>(`/api/admin/workflows/rules/${id}`);
+  return store.deleteWorkflowRuleRecord(id);
 }
 
 // ── Workflows ─────────────────────────────────────────
 export async function fetchPendingWorkflows(): Promise<any[]> {
-  const raw = await api.get<any[]>("/api/workflows/pending");
-  return raw.map((item) => ({
-    ...item,
-    declaration: mapDeclaration(item.declaration),
-  }));
+  return store.listPendingWorkflows();
 }
 
 export async function fetchWorkflowInstance(declarationId: string): Promise<any> {
-  return api.get<any>(`/api/workflows/instances/${declarationId}`);
+  return store.findWorkflowInstance(declarationId);
 }
 
 export async function approveWorkflowStep(data: {
@@ -187,100 +132,64 @@ export async function approveWorkflowStep(data: {
   decision: string;
   notes?: string;
 }): Promise<any> {
-  return api.post<any>("/api/workflows/approve", data);
+  return store.decideWorkflowStep(data.declarationId, data.decision, data.notes);
 }
 
 // ── Reports ───────────────────────────────────────────
 export async function fetchReportStatusBreakdown(params?: Record<string, string>): Promise<any> {
-  return api.get<any>(`/api/reports/status-breakdown${params ? `?${new URLSearchParams(params)}` : ""}`);
+  return store.getStatusBreakdown(params);
 }
 
 export async function fetchReportSLA(params?: Record<string, string>): Promise<any[]> {
-  return api.get<any[]>(`/api/reports/sla${params ? `?${new URLSearchParams(params)}` : ""}`);
+  return store.getSLAData(params);
 }
 
 export async function fetchReportCounterpartyConcentration(params?: Record<string, string>): Promise<any[]> {
-  return api.get<any[]>(`/api/reports/counterparty-concentration${params ? `?${new URLSearchParams(params)}` : ""}`);
+  return store.getDestinationConcentration(params);
 }
 
 export async function fetchReportHighValue(): Promise<any[]> {
-  return api.get<any[]>("/api/reports/high-value");
+  return store.getHighValueRows();
 }
 
 export async function fetchReportList(params?: Record<string, string>): Promise<any[]> {
-  return api.get<any[]>(`/api/reports/list${params ? `?${new URLSearchParams(params)}` : ""}`);
+  return store.getReportList(params);
 }
 
 // ── Approval Options ──────────────────────────────────
 export async function fetchApprovalOptions(): Promise<any[]> {
-  return api.get<any[]>("/api/admin/config/approval-options");
+  return store.listApprovalOptions();
 }
 export async function createApprovalOption(data: { id: string; value: string; label: string }): Promise<any> {
-  return api.post<any>("/api/admin/config/approval-options", data);
+  return store.createApprovalOptionRecord(data);
 }
 export async function updateApprovalOption(id: string, data: { value: string; label: string }): Promise<any> {
-  return api.put<any>(`/api/admin/config/approval-options/${id}`, data);
+  return store.updateApprovalOptionRecord(id, data);
 }
 export async function deleteApprovalOption(id: string): Promise<any> {
-  return api.del<any>(`/api/admin/config/approval-options/${id}`);
+  return store.deleteApprovalOptionRecord(id);
 }
 
 // ── Organizations ─────────────────────────────────────
 export async function fetchOrganizations(): Promise<{ id: string; name: string; shortCode: string }[]> {
-  return api.get<{ id: string; name: string; shortCode: string }[]>("/api/users/organizations");
+  return store.listOrganizations();
 }
 
 export async function fetchAdminOrganizations(): Promise<{ id: string; name: string; shortCode: string }[]> {
-  return api.get<{ id: string; name: string; shortCode: string }[]>("/api/admin/config/organizations");
+  return store.listOrganizations();
 }
 
 export async function createOrganization(data: { name: string; shortCode: string }): Promise<any> {
-  return api.post<any>("/api/admin/config/organizations", data);
+  return store.createOrganizationRecord(data);
 }
 
 export async function updateOrganization(id: string, data: { name: string; shortCode: string }): Promise<any> {
-  return api.put<any>(`/api/admin/config/organizations/${id}`, data);
+  return store.updateOrganizationRecord(id, data);
 }
 
 export async function deleteOrganization(id: string): Promise<any> {
-  return api.del<any>(`/api/admin/config/organizations/${id}`);
+  return store.deleteOrganizationRecord(id);
 }
 
-function toApiDeclaration(declaration: Partial<Declaration>) {
-  return {
-    ...(declaration.id !== undefined && { id: declaration.id }),
-    ...(declaration.employee !== undefined && { employee: declaration.employee }),
-    ...(declaration.employeeId !== undefined && { employeeId: declaration.employeeId }),
-    ...(declaration.teamMemberNumber !== undefined && { teamMemberNumber: declaration.teamMemberNumber }),
-    ...(declaration.lineManager !== undefined && { lineManager: declaration.lineManager }),
-    ...(declaration.position !== undefined && { position: declaration.position }),
-    ...(declaration.department !== undefined && { department: declaration.department }),
-    ...(declaration.company !== undefined && { company: declaration.company }),
-    ...(declaration.team !== undefined && { team: declaration.team }),
-    ...(declaration.type !== undefined && { type: declaration.type }),
-    ...(declaration.counterparty !== undefined && { counterparty: declaration.counterparty }),
-    ...(declaration.value !== undefined && { value: declaration.value }),
-    ...(declaration.submitted !== undefined && { submitted: declaration.submitted }),
-    ...(declaration.approver !== undefined && { approver: declaration.approver }),
-    ...(declaration.approverId !== undefined && { approverId: declaration.approverId }),
-    ...(declaration.status !== undefined && { status: declaration.status }),
-    ...(declaration.priority !== undefined && { priority: declaration.priority }),
-    ...(declaration.description !== undefined && { description: declaration.description }),
-    ...(declaration.relationship !== undefined && { relationship: declaration.relationship }),
-    ...(declaration.receivedGiven !== undefined && { receivedGiven: declaration.receivedGiven }),
-    ...(declaration.from !== undefined && { from: declaration.from }),
-    ...(declaration.contactPerson !== undefined && { contactPerson: declaration.contactPerson }),
-    ...(declaration.biddingProcess !== undefined && { biddingProcess: declaration.biddingProcess }),
-    ...(declaration.contractNegotiation !== undefined && { contractNegotiation: declaration.contractNegotiation }),
-    ...(declaration.occasion !== undefined && { occasion: declaration.occasion }),
-    ...(declaration.date !== undefined && { date: declaration.date }),
-    ...(declaration.instances !== undefined && { instances: declaration.instances }),
-    ...(declaration.publicOfficial !== undefined && { publicOfficial: declaration.publicOfficial }),
-    ...(declaration.substantiation !== undefined && { substantiation: declaration.substantiation }),
-    ...(declaration.files !== undefined && { files: declaration.files }),
-    ...(declaration.organizationId !== undefined && { organizationId: declaration.organizationId }),
-  };
-}
-
-
+export { resetLocalStore } from "@/services/localStore";
 

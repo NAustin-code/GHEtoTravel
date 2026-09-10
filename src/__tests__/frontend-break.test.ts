@@ -5,9 +5,12 @@ import {
   fetchDashboardStats, fetchUsers,
 } from "../services/api";
 import { Declaration } from "../types/declaration";
+import { resetLocalStore } from "../services/localStore";
 
 beforeEach(() => {
   clearToken();
+  localStorage.clear();
+  resetLocalStore();
   vi.restoreAllMocks();
 });
 
@@ -163,84 +166,49 @@ describe("httpClient — api.put, api.patch, api.del", () => {
   });
 });
 
-describe("api.ts — high-level wrappers", () => {
-  it("fetchDeclarations builds correct URL with no params", async () => {
-    let capturedUrl = "";
-    vi.spyOn(globalThis, "fetch").mockImplementation(async (url: string) => {
-      capturedUrl = url;
-      return { ok: true, status: 200, json: () => Promise.resolve([]), headers: new Headers() } as Response;
-    });
-    await fetchDeclarations();
-    expect(capturedUrl).toBe("/api/declarations");
+describe("api.ts — high-level wrappers (local store)", () => {
+  it("fetchDeclarations returns seeded records with no params", async () => {
+    const decs = await fetchDeclarations();
+    expect(decs.length).toBeGreaterThan(0);
   });
 
-  it("fetchDeclarations passes status and search params", async () => {
-    let capturedUrl = "";
-    vi.spyOn(globalThis, "fetch").mockImplementation(async (url: string) => {
-      capturedUrl = url;
-      return { ok: true, status: 200, json: () => Promise.resolve([]), headers: new Headers() } as Response;
-    });
-    await fetchDeclarations("Pending", "test");
-    expect(capturedUrl).toContain("status=Pending");
-    expect(capturedUrl).toContain("search=test");
+  it("fetchDeclarations filters by status and search", async () => {
+    const pending = await fetchDeclarations("Pending", "Cape Town");
+    expect(pending.every((d) => d.status === "Pending")).toBe(true);
+    expect(pending.length).toBeGreaterThan(0);
   });
 
-  it("fetchDeclarationById builds correct URL", async () => {
-    let capturedUrl = "";
-    vi.spyOn(globalThis, "fetch").mockImplementation(async (url: string) => {
-      capturedUrl = url;
-      return { ok: true, status: 200, json: () => Promise.resolve({
-        id: "D-001", employee: "x", employeeId: "u1",
-        type: "Gift", value: 100, status: "Draft",
-      }), headers: new Headers() } as Response;
-    });
-    const dec = await fetchDeclarationById("D-001");
-    expect(capturedUrl).toBe("/api/declarations/D-001");
-    expect(dec.id).toBe("D-001");
+  it("fetchDeclarationById returns the requested record", async () => {
+    const dec = await fetchDeclarationById("TR-2026-0001");
+    expect(dec.id).toBe("TR-2026-0001");
   });
 
-  it("createDeclaration sends via POST", async () => {
-    let capturedUrl = ""; let capturedMethod = "";
-    vi.spyOn(globalThis, "fetch").mockImplementation(async (url: string, opts: any) => {
-      capturedUrl = url; capturedMethod = opts.method;
-      return { ok: true, status: 201, json: () => Promise.resolve({
-        id: "D-NEW", employee: "x", employeeId: "u1",
-        type: "Gift", value: 100, status: "Draft",
-      }), headers: new Headers() } as Response;
-    });
+  it("createDeclaration persists without network", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("network must not be used"));
     const dec = await createDeclaration({ employee: "x" } as Declaration);
-    expect(capturedUrl).toBe("/api/declarations");
-    expect(capturedMethod).toBe("POST");
+    expect(dec.id).toMatch(/^TR-/);
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it("fetchDashboardStats builds correct URL", async () => {
-    let capturedUrl = "";
-    vi.spyOn(globalThis, "fetch").mockImplementation(async (url: string) => {
-      capturedUrl = url;
-      return { ok: true, status: 200, json: () => Promise.resolve({ kpis: {}, complianceTrend: [], typeBreakdown: [] }), headers: new Headers() } as Response;
-    });
-    await fetchDashboardStats();
-    expect(capturedUrl).toBe("/api/declarations/stats");
+  it("fetchDashboardStats computes from the store", async () => {
+    const stats = await fetchDashboardStats();
+    expect(stats.kpis.total).toBe(10);
+    expect(stats.complianceTrend.length).toBeGreaterThan(0);
   });
 
-  it("fetchUsers builds URL with params", async () => {
-    let capturedUrl = "";
-    vi.spyOn(globalThis, "fetch").mockImplementation(async (url: string) => {
-      capturedUrl = url;
-      return { ok: true, status: 200, json: () => Promise.resolve([]), headers: new Headers() } as Response;
-    });
-    await fetchUsers("sipho", "approver");
-    expect(capturedUrl).toContain("search=sipho");
-    expect(capturedUrl).toContain("role=approver");
+  it("fetchUsers filters by search and role", async () => {
+    const users = await fetchUsers("sipho", "approver");
+    expect(users).toHaveLength(1);
+    expect(users[0].name).toBe("Sipho Nkosi");
   });
 
-  it("propagates HTTP 403 from httpClient", async () => {
-    mockFetch(403, { error: "Forbidden" });
+  it("propagates ApiClientError from the store", async () => {
     await expect(fetchDeclarationById("D-001")).rejects.toThrow(ApiClientError);
   });
 
-  it("handles empty response array", async () => {
-    mockFetch(200, []);
+  it("handles empty store", async () => {
+    resetLocalStore();
+    localStorage.setItem("trp.v1.declarations", JSON.stringify([]));
     const decs = await fetchDeclarations();
     expect(decs).toEqual([]);
   });

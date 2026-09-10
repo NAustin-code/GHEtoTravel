@@ -1,10 +1,7 @@
-import { useState, useEffect } from "react";
 import { ArrowLeft, Download, Eye, FileText } from "lucide-react";
 import { Card } from "@/app/components/ui/card";
-import { formatRand, DEFAULT_HIGH_VALUE_THRESHOLD, DEFAULT_MEDIUM_VALUE_THRESHOLD } from "@/config/theme";
+import { formatRand } from "@/config/theme";
 import { Declaration, UploadedFile } from "@/types/declaration";
-import { fetchConfig } from "@/services/api";
-import { motion } from "framer-motion";
 
 export function DeclarationDetailView({
   data,
@@ -20,11 +17,6 @@ export function DeclarationDetailView({
   const isRecord = typeof (data as Declaration).value === "number";
   const d = isRecord ? (data as Declaration) : null;
   const record = !d ? (data as Record<string, string>) : null;
-  const [config, setConfig] = useState({ highValueThreshold: DEFAULT_HIGH_VALUE_THRESHOLD, mediumValueThreshold: DEFAULT_MEDIUM_VALUE_THRESHOLD, slaEscalationDays: 7, maxDeclarationsPerCounterparty: 10, emailTemplate: "" });
-
-  useEffect(() => {
-    fetchConfig().then(setConfig).catch(() => { /* config defaults are used as fallback */ });
-  }, []);
 
   const safe = (v: unknown) => (v != null ? String(v) : "—");
 
@@ -36,20 +28,27 @@ export function DeclarationDetailView({
         ["Team Member",            safe(d.employee)],
         ["Team Member Code",       safe(d.teamMemberNumber)],
         ["Team Member Role / Position", safe(d.position)],
-        ["GHE Received/Given",     safe(d.receivedGiven)],
-        ["Category",               safe(d.type)],
-        ["Counter Party Type",     safe(d.from)],
-        ["Counter Party",     safe(d.counterparty)],
-        // ["Counter Party Name",     safe(d.counterparty)],
-        ["Name Of Counter Person", safe(d.contactPerson)],
-        ["Date",                   safe(d.date)],
-        ["Value",                  formatRand(d.value)],
-        ["Reason/Occasion",        safe(d.occasion)],
-        ["Bid In Progress",        safe(d.biddingProcess)],
-        ["Contract In Progress",   safe(d.contractNegotiation)],
-        ["Description",            safe(d.description)],
-        ...(d.value >= config.highValueThreshold
-          ? ([[`Substantiation (> R${config.highValueThreshold})`, safe(d.substantiation || "Required")]] as [string, string][])
+        ["Travel Type",            safe(d.travelType || d.type)],
+        ["Destination",            safe(d.destination || d.counterparty)],
+        ["Reason for Travel",      safe(d.reason || d.description)],
+        ["Traveling From",         safe(d.from)],
+        ["Traveling To",           safe(d.to || d.destination || d.counterparty)],
+        ["Date of Departure",      safe(d.departureDate || d.date)],
+        ["Date of Return",         safe(d.returnDate)],
+        ["Number of Travelers",    safe(d.numberOfPeople ?? d.instances)],
+        ["Travelers",              safe(d.travelers?.map((t) => t.name).filter(Boolean).join(", "))],
+        ["Mode of Transport",      safe(d.transportMode)],
+        ["Transport Details",      safe(d.transportDetails)],
+        ["Flight Cost",            d.flightCost != null ? formatRand(d.flightCost) : "—"],
+        ["Seat Preference",        safe(d.seatPreference)],
+        ["Accommodation Required", d.accommodationRequired ? "Yes" : "No"],
+        ["Accommodation Details",  safe(d.accommodationDetails)],
+        ["Accommodation Cost",     d.accommodationCost != null ? formatRand(d.accommodationCost) : "—"],
+        ["Company To Be Billed",   safe(d.companyToBeBilled)],
+        ["Order Number",           safe(d.orderNumber)],
+        ["Total Cost",             formatRand(d.value)],
+        ...(d.substantiation
+          ? ([["High-Value Motivation", safe(d.substantiation)]] as [string, string][])
           : []),
       ]
     : [
@@ -60,20 +59,22 @@ export function DeclarationDetailView({
         ["Team Member Code",       safe(record?.teamMemberNumber)],
         ["Team",                   safe(record?.team)],
         ["Team Member Role / Position", safe(record?.position)],
-        ["GHE Received/Given",     safe(record?.receivedGiven)],
-        ["Category",               safe(record?.type)],
-        ["Counter Party Type",     safe(record?.from)],
-        ["Counter Party",     safe(record?.counterparty)],
-        // ["Counter Party Name",     safe(record?.counterparty)],
-        ["Name Of Counter Person", safe(record?.contactPerson)],
-        ["Date",                   safe(record?.date)],
-        ["Value",                  safe(record?.value)],
-        ["Reason/Occasion",        safe(record?.occasion)],
-        ["Bid In Progress",        safe(record?.biddingProcess)],
-        ["Contract In Progress",   safe(record?.contractNegotiation)],
-        ["Description",            safe(record?.description)],
-        ...(Number(record?.value) >= config.highValueThreshold
-          ? ([[`Substantiation (> R${config.highValueThreshold})`, safe(record?.substantiation || "Required")]] as [string, string][])
+        ["Travel Type",            safe(record?.travelType || record?.type)],
+        ["Destination",            safe(record?.destination || record?.counterparty)],
+        ["Reason for Travel",      safe(record?.reason || record?.description)],
+        ["Traveling From",         safe(record?.from)],
+        ["Traveling To",           safe(record?.to || record?.destination || record?.counterparty)],
+        ["Date of Departure",      safe(record?.departureDate || record?.date)],
+        ["Date of Return",         safe(record?.returnDate)],
+        ["Number of Travelers",    safe(record?.numberOfPeople || record?.instances)],
+        ["Mode of Transport",      safe(record?.transportMode)],
+        ["Transport Details",      safe(record?.transportDetails)],
+        ["Accommodation Details",  safe(record?.accommodationDetails)],
+        ["Company To Be Billed",   safe(record?.companyToBeBilled)],
+        ["Order Number",           safe(record?.orderNumber)],
+        ["Total Cost",             safe(record?.value)],
+        ...(record?.substantiation
+          ? ([["High-Value Motivation", safe(record?.substantiation)]] as [string, string][])
           : []),
       ];
 
@@ -92,7 +93,7 @@ export function DeclarationDetailView({
 
       <div className="relative z-10">
           <h2 className="mb-6 inline-flex rounded-full border border-purple-200/70 bg-purple-50 px-4 py-1.5 text-sm font-extrabold uppercase tracking-[0.2em] text-purple-900 shadow-sm">
-            Declaration Details
+            Travel Request Details
           </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -105,7 +106,7 @@ export function DeclarationDetailView({
                 border border-slate-200
                 shadow-sm
                 ${
-                  ["Description", "Substantiation (> R2 000)"].includes(k)
+                  ["Reason for Travel", "Transport Details", "Accommodation Details", "High-Value Motivation", "Travelers"].includes(k)
                     ? "sm:col-span-2"
                     : ""
                 }
@@ -208,7 +209,7 @@ export function SupportingDocuments({ data }: { data: Record<string, string> | D
           <div className="space-y-3">
             {supportingDocuments.length === 0 ? (
                   <div className="rounded-xl border border-slate-200 bg-white px-4 py-5 text-sm font-medium text-slate-500">
-                No supporting documents were uploaded for this declaration.
+                No supporting documents were uploaded for this travel request.
               </div>
             ) : (
               supportingDocuments.map((file, i) => (

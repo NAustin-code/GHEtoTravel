@@ -1,17 +1,13 @@
-import { describe, it, expect, vi, beforeAll } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { UserProvider } from "../app/auth/UserContext";
 import { AdminApprovalOptions } from "../app/pages/admin/AdminApprovalOptions";
+import { resetLocalStore } from "../services/localStore";
 
-beforeAll(() => {
-  vi.spyOn(globalThis, "fetch").mockResolvedValue({
-    ok: true, status: 200,
-    json: () => Promise.resolve([
-      { value: "accept", label: "Accept" },
-      { value: "decline", label: "Decline" },
-    ]),
-    headers: new Headers(),
-  } as Response);
+beforeEach(() => {
+  localStorage.clear();
+  resetLocalStore();
+  vi.restoreAllMocks();
 });
 
 describe("AdminApprovalOptions", () => {
@@ -23,9 +19,9 @@ describe("AdminApprovalOptions", () => {
     );
 
     expect(screen.getByText("Approval Options Configuration")).toBeTruthy();
-    const acceptItems = await screen.findAllByText("Accept");
+    const acceptItems = await screen.findAllByText(/Team member travel request approved/);
     expect(acceptItems.length).toBeGreaterThanOrEqual(1);
-    const declineItems = screen.getAllByText("Decline");
+    const declineItems = screen.getAllByText(/Travel request declined/);
     expect(declineItems.length).toBeGreaterThanOrEqual(1);
   });
 });

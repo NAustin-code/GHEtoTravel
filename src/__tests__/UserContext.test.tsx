@@ -2,15 +2,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, act, waitFor } from "@testing-library/react";
 import { UserProvider, useUser } from "../app/auth/UserContext";
 
-function mockFetch(status: number, body: unknown) {
-  return vi.spyOn(globalThis, "fetch").mockResolvedValue({
-    ok: status >= 200 && status < 300,
-    status,
-    headers: new Headers({ "content-type": "application/json" }),
-    json: () => Promise.resolve(body),
-  } as Response);
-}
-
 function TestConsumer() {
   const { user, isAuthenticated, setUser } = useUser();
   return (
@@ -88,13 +79,8 @@ describe("UserContext", () => {
   });
 
   it("restores session from localStorage on mount", async () => {
-    mockFetch(200, {
-      id: "user-3", name: "Sipho Nkosi", email: "sipho@hb.co.za",
-      passwordHash: "", role: "approver", teamMemberNumber: "HB-10001",
-      department: "Marketing", position: "Line Manager", lineManager: null,
-    });
-    localStorage.setItem("ghe.auth.token", "valid-token");
-    localStorage.setItem("ghe.auth.user", JSON.stringify({ id: "user-3" }));
+    localStorage.setItem("ghe.auth.token", "local.user-2.restored");
+    localStorage.setItem("ghe.auth.user", JSON.stringify({ id: "user-2" }));
 
     render(
       <UserProvider>
@@ -111,7 +97,6 @@ describe("UserContext", () => {
   it("handles corrupted localStorage gracefully", async () => {
     localStorage.setItem("ghe.auth.token", "stale-token");
     localStorage.setItem("ghe.auth.user", "not-json-at-all");
-    mockFetch(401, { error: "Unauthorized" });
 
     render(
       <UserProvider>
@@ -128,7 +113,6 @@ describe("UserContext", () => {
   it("handles stale localStorage (deleted user) gracefully", async () => {
     localStorage.setItem("ghe.auth.token", "stale-token");
     localStorage.setItem("ghe.auth.user", JSON.stringify({ id: "user-99999" }));
-    mockFetch(401, { error: "Unauthorized" });
 
     render(
       <UserProvider>

@@ -23,6 +23,6 @@ describe("AdminDashboard loading and failure states", () => {
     unmount();
     render(<AdminDashboard onNavigate={vi.fn()} />);
     await waitFor(() => expect(screen.getByText("System Healthy")).toBeInTheDocument());
-    expect(screen.getByText(/4 users and 8 declarations in the system/)).toBeInTheDocument();
+    expect(screen.getByText(/4 users and 8 travel requests in the system/)).toBeInTheDocument();
   });
 });

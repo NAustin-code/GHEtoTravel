@@ -4,12 +4,12 @@ import { USERS, login } from "./common-helpers";
 test.describe("Mobile interactions", () => {
   test.skip(({ isMobile }) => !isMobile, "Runs in the mobile Playwright project");
 
-  test("team member can open the declaration form and see usable controls", async ({ page }) => {
+  test("team member can open the travel request form and see usable controls", async ({ page }) => {
     await login(page, USERS.nomvula.email);
-    await page.getByRole("button", { name: "New Declaration" }).click();
-    await expect(page.getByText(/New Declaration/i).first()).toBeVisible();
+    await page.getByRole("button", { name: "New Travel Request" }).click();
+    await expect(page.getByText(/New Travel Request/i).first()).toBeVisible();
     await expect(page.locator("main")).toBeVisible();
-    await expect(page.locator("button").filter({ hasText: "Submit Declaration" })).toBeVisible();
+    await expect(page.locator("button").filter({ hasText: "Submit Travel Request" })).toBeVisible();
   });
 
   test("mobile sidebar remains usable for an approver", async ({ page }) => {

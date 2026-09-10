@@ -70,7 +70,7 @@ export function AdminDropdowns() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Dropdown Data Configuration" subtitle="Manage the options available in the declaration form dropdowns." />
+      <PageHeader title="Dropdown Data Configuration" subtitle="Manage the options available in the travel request form dropdowns." />
 
       <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
         {tabs.map((tab) => (

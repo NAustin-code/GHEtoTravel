@@ -87,7 +87,7 @@ describe("MyDeclarationsScreen", () => {
   it("shows loading state initially", () => {
     vi.mocked(fetchDeclarations).mockReturnValue(new Promise(() => {}));
     render(<MyDeclarationsScreen />);
-    expect(screen.getByText("Loading declarations…")).toBeInTheDocument();
+    expect(screen.getByText("Loading travel requests…")).toBeInTheDocument();
   });
 
   it("shows error state when fetch fails", async () => {
@@ -129,7 +129,7 @@ describe("MyDeclarationsScreen", () => {
     fireEvent.click(screen.getByRole("button", { name: "All" }));
     await waitFor(() => expect(screen.getAllByText("GHE-2026-1003").length).toBeGreaterThan(0));
 
-    const searchInput = screen.getByPlaceholderText(/ID, Counterparty/i);
+    const searchInput = screen.getByPlaceholderText(/ID, Destination/i);
     fireEvent.change(searchInput, { target: { value: "CorpC" } });
     await waitFor(() => {
       expect(screen.getAllByText("GHE-2026-1003").length).toBeGreaterThan(0);
@@ -174,7 +174,7 @@ describe("MyDeclarationsScreen", () => {
     fireEvent.click(screen.getByRole("button", { name: "All" }));
     await waitFor(() => expect(screen.getAllByText("GHE-2026-1003").length).toBeGreaterThan(0));
 
-    const searchInput = screen.getByPlaceholderText(/ID, Counterparty/i);
+    const searchInput = screen.getByPlaceholderText(/ID, Destination/i);
     fireEvent.change(searchInput, { target: { value: "ZZZ_NONEXISTENT" } });
     await waitFor(() => {
       expect(screen.queryAllByText("GHE-2026-1001").length).toBe(0);

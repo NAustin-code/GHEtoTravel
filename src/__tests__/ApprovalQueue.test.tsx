@@ -103,7 +103,7 @@ describe("ApprovalQueue", () => {
     render(<ApprovalQueue onReview={vi.fn()} />);
     await waitFor(() => expect(screen.getAllByText("GHE-2026-1001").length).toBeGreaterThan(0));
 
-    const searchInput = screen.getByPlaceholderText("ID, Employee or Counterparty");
+    const searchInput = screen.getByPlaceholderText("ID, Employee or Destination");
     fireEvent.change(searchInput, { target: { value: "CorpC" } });
     await waitFor(() => {
       expect(screen.getAllByText("GHE-2026-1003").length).toBeGreaterThan(0);
@@ -163,11 +163,11 @@ describe("ApprovalQueue", () => {
     render(<ApprovalQueue onReview={vi.fn()} />);
     await waitFor(() => expect(screen.getAllByText("GHE-2026-1001").length).toBeGreaterThan(0));
 
-    const searchInput = screen.getByPlaceholderText("ID, Employee or Counterparty");
+    const searchInput = screen.getByPlaceholderText("ID, Employee or Destination");
     fireEvent.change(searchInput, { target: { value: "ZZZ_NONEXISTENT" } });
     await waitFor(() => {
       const footnote = screen.getByText(/Showing/).closest("div");
-      expect(footnote?.textContent).toMatch(/Showing.*0.*declarations/);
+      expect(footnote?.textContent).toMatch(/Showing.*0.*travel requests/);
     });
   });
 });

@@ -9,15 +9,15 @@ import { PURPLE, formatRand, GRADIENT_PRIMARY } from "../../../config/theme";
 import { fetchReports } from "../../../services/reports";
 import { exportToExcel, ColumnDef } from "../../utils/excelExport";
 
-type ReportType = "High-Value Gifts Report" | "Counterparty Concentration Report";
+type ReportType = "High-Value Travel Report" | "Destination Concentration Report";
 
 const REPORTS: Array<{ title: ReportType; desc: string }> = [
-  { title: "High-Value Gifts Report", desc: "Employee-level summary for declarations at or above the configured high-value threshold in the selected period." },
-  { title: "Counterparty Concentration Report", desc: "Counterparty totals and concentration for the selected period." },
+  { title: "High-Value Travel Report", desc: "Employee-level summary for travel requests at or above the configured high-value threshold in the selected period." },
+  { title: "Destination Concentration Report", desc: "Destination totals and concentration for the selected period." },
 ];
 
 export function AdminReports() {
-  const [reportType, setReportType] = useState<ReportType>("High-Value Gifts Report");
+  const [reportType, setReportType] = useState<ReportType>("High-Value Travel Report");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [department, setDepartment] = useState("All Departments");
@@ -63,9 +63,9 @@ export function AdminReports() {
     handleGenerate();
   }, [handleGenerate]);
 
-  const activeRows = reportType === "High-Value Gifts Report" ? highValueData : counterpartyData;
+  const activeRows = reportType === "High-Value Travel Report" ? highValueData : counterpartyData;
 
-  const exportColumns: ColumnDef[] = reportType === "High-Value Gifts Report"
+  const exportColumns: ColumnDef[] = reportType === "High-Value Travel Report"
     ? [
         { header: "Employee", key: "employee", width: 22 },
         { header: "Line Manager", key: "lineManager", width: 22 },
@@ -78,7 +78,7 @@ export function AdminReports() {
         { header: "Most Frequent Supplier", key: "mostFrequentSupplier", width: 28 },
       ]
     : [
-        { header: "Counterparty", key: "counterparty", width: 26 },
+        { header: "Destination", key: "counterparty", width: 26 },
         { header: "Declarations", key: "count", width: 14 },
         { header: "Total Value", key: "totalValue", width: 14 },
         { header: "Average Value", key: "avgValue", width: 14 },
@@ -114,7 +114,7 @@ export function AdminReports() {
       pdf.setFontSize(10);
       pdf.text(`Generated: ${new Date().toLocaleString("en-ZA")}`, 14, 26);
       let y = 36;
-      const lines = reportType === "High-Value Gifts Report"
+      const lines = reportType === "High-Value Travel Report"
         ? highValueData.map((row) => `${row.employee} | ${row.lineManager} | ${row.declarationCount} | ${formatRand(row.totalValue)} | Avg ${formatRand(row.averageValue)} | G ${row.totalGift} H ${row.totalHospitality} E ${row.totalEntertainment} | ${row.mostFrequentSupplier}`)
         : counterpartyData.map((row) => `${row.counterparty} | ${row.count} declarations | ${formatRand(row.totalValue)} | Avg ${formatRand(row.avgValue)}`);
       lines.forEach((line) => {
@@ -211,10 +211,10 @@ export function AdminReports() {
 
       {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 
-      {generatedAt && reportType === "High-Value Gifts Report" && (
+      {generatedAt && reportType === "High-Value Travel Report" && (
         <Card className="overflow-x-auto p-0"><div ref={tableRef}>
           <div className="flex items-center justify-between border-b border-border px-5 py-4">
-            <h3 className="text-sm font-bold text-foreground">High-Value Gifts Report</h3>
+            <h3 className="text-sm font-bold text-foreground">High-Value Travel Report</h3>
             <span className="text-xs text-muted-foreground">Generated {generatedAt}</span>
           </div>
           <Table>
@@ -245,15 +245,15 @@ export function AdminReports() {
       )}
 
 
-      {generatedAt && reportType === "Counterparty Concentration Report" && (
+      {generatedAt && reportType === "Destination Concentration Report" && (
         <Card className="overflow-x-auto p-0"><div ref={tableRef}>
           <div className="flex items-center justify-between border-b border-border px-5 py-4">
-            <h3 className="text-sm font-bold text-foreground">Counterparty Concentration Report</h3>
+            <h3 className="text-sm font-bold text-foreground">Destination Concentration Report</h3>
             <span className="text-xs text-muted-foreground">Generated {generatedAt}</span>
           </div>
           <Table>
             <Thead>
-              {["Counterparty", "Declarations", "Total Value", "Average Value"].map((label) => (
+              {["Destination", "Declarations", "Total Value", "Average Value"].map((label) => (
                 <Th key={label}>{label}</Th>
               ))}
             </Thead>

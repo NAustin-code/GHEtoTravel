@@ -82,7 +82,7 @@ export function MyDeclarationsScreen({ onEditDraft }: { onEditDraft?: (d: Declar
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="text-sm text-muted-foreground animate-pulse">Loading declarations…</div>
+        <div className="text-sm text-muted-foreground animate-pulse">Loading travel requests…</div>
       </div>
     );
   }
@@ -141,23 +141,23 @@ export function MyDeclarationsScreen({ onEditDraft }: { onEditDraft?: (d: Declar
       ID: d.id,
       Employee: d.employee,
       Type: d.type,
-      Counterparty: d.counterparty,
+      Destination: d.counterparty,
       Value: d.value,
       Submitted: d.submitted,
       Status: d.status,
       Approver: d.approver,
     }));
-    exportRowsToXls("Declarations", "Declarations", data);
+    exportRowsToXls("Travel Requests", "Travel Requests", data);
   };
 
   const exportRow = (d: Declaration) => {
-    exportRowsToXls(d.id, "Declaration", [
+    exportRowsToXls(d.id, "Travel Request", [
       {
         ID: d.id,
         Employee: d.employee,
         Department: d.department,
         Type: d.type,
-        Counterparty: d.counterparty,
+        Destination: d.counterparty,
         Value: d.value,
         Submitted: d.submitted,
         Status: d.status,
@@ -223,8 +223,8 @@ export function MyDeclarationsScreen({ onEditDraft }: { onEditDraft?: (d: Declar
   return (
     <div>
       <PageHeader
-        title={viewMode === "my" ? "My Declarations" : "All Declarations"}
-        subtitle={`${visibleDeclarations.length} ${viewMode === "my" ? "of your" : "Total"} Declarations`}
+        title={viewMode === "my" ? "My Travel Requests" : "All Travel Requests"}
+        subtitle={`${visibleDeclarations.length} ${viewMode === "my" ? "of your" : "Total"} Travel Requests`}
         actions={
           <div className="flex gap-2">
             {!isTeamMember && (
@@ -274,15 +274,14 @@ export function MyDeclarationsScreen({ onEditDraft }: { onEditDraft?: (d: Declar
       <Card className="mb-4 grid grid-cols-1 gap-3 border-white/70 bg-white/85 p-3 sm:grid-cols-2 lg:grid-cols-3">
         <div>
           <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-slate-600">Search</label>
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ID, Counterparty, Employee or Approver" className="table-filter-input" />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ID, Destination, Employee or Approver" className="table-filter-input" />
         </div>
         <div>
           <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-slate-600">Type</label>
           <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="table-filter-select">
-            <option value="All">All GHE</option>
-            <option>Gift</option>
-            <option>Hospitality</option>
-            <option>Entertainment</option>
+            <option value="All">All Travel</option>
+            <option>Domestic</option>
+            <option>International</option>
           </select>
         </div>
         <div>
@@ -318,7 +317,7 @@ export function MyDeclarationsScreen({ onEditDraft }: { onEditDraft?: (d: Declar
 
       <Card className="space-y-3 p-3.5 md:hidden">
         {sorted.length === 0 ? (
-          <div className="py-10 text-center text-sm text-muted-foreground">No declarations found</div>
+          <div className="py-10 text-center text-sm text-muted-foreground">No travel requests found</div>
         ) : (
           sorted.map((d) => (
             <div key={d.id} className="rounded-2xl border border-border bg-white p-4 shadow-sm">
@@ -372,8 +371,8 @@ export function MyDeclarationsScreen({ onEditDraft }: { onEditDraft?: (d: Declar
       <Card className="hidden overflow-x-auto md:block">
         <Table>
           <Thead>
-            {["Declaration ID", "Type", "Counterparty", "Value", "Submitted", "Final Approver", "Status", "Actions"].map((label) => {
-              const key = label === "Declaration ID" ? "id" : label === "Type" ? "type" : label === "Counterparty" ? "counterparty" : label === "Value" ? "value" : label === "Submitted" ? "submitted" : label === "Final Approver" ? "approver" : label === "Status" ? "status" : null;
+            {["Declaration ID", "Type", "Destination", "Value", "Submitted", "Final Approver", "Status", "Actions"].map((label) => {
+              const key = label === "Declaration ID" ? "id" : label === "Type" ? "type" : label === "Destination" ? "counterparty" : label === "Value" ? "value" : label === "Submitted" ? "submitted" : label === "Final Approver" ? "approver" : label === "Status" ? "status" : null;
               const isSortable = key !== null;
               return (
                 <Th
@@ -393,7 +392,7 @@ export function MyDeclarationsScreen({ onEditDraft }: { onEditDraft?: (d: Declar
           </Thead>
           <Tbody>
             {sorted.length === 0 ? (
-              <Tr><Td colSpan={8} className="py-10 text-center">No declarations found</Td></Tr>
+              <Tr><Td colSpan={8} className="py-10 text-center">No travel requests found</Td></Tr>
             ) : (
               paged.map((d) => (
                 <Tr key={d.id}>
@@ -427,7 +426,7 @@ export function MyDeclarationsScreen({ onEditDraft }: { onEditDraft?: (d: Declar
         </Table>
         <div className="flex items-center justify-between border-t border-border bg-table-header-bg px-5 py-3">
           <p className="text-xs text-muted-foreground">
-            Showing <span className="font-semibold text-foreground">{sorted.length}</span> declarations
+            Showing <span className="font-semibold text-foreground">{sorted.length}</span> travel requests
           </p>
           {totalPages > 1 && (
             <div className="flex items-center gap-2">

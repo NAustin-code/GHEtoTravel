@@ -29,14 +29,6 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: "npx tsx src/index.ts",
-      cwd: "../NodejsBackend",
-      port: 3001,
-      timeout: 30000,
-      reuseExistingServer: true,
-      env: { JWT_SECRET: "test-secret" },
-    },
-    {
       command: "npx vite --port 5173",
       cwd: ".",
       port: 5173,

@@ -4,7 +4,7 @@ import { NewDeclarationScreen } from "../app/pages/NewDeclarationScreen";
 import { createDeclaration, submitDeclaration, updateDeclaration, uploadDeclarationFile, fetchConfig, fetchUserById } from "../services/api";
 
 const mockConfig = {
-  highValueThreshold: 1000, mediumValueThreshold: 1000,
+  highValueThreshold: 5000, mediumValueThreshold: 1000,
   slaEscalationDays: 3, maxDeclarationsPerCounterparty: 5, emailTemplate: "",
 };
 
@@ -55,266 +55,129 @@ beforeEach(() => {
   Object.defineProperty(HTMLElement.prototype, "offsetHeight", { configurable: true, value: 600 });
 });
 
-function setSelectValue(select: HTMLElement, value: string) {
-  fireEvent.change(select, { target: { value } });
+function fillTraveler() {
+  fireEvent.change(screen.getByPlaceholderText("Full name"), { target: { value: "Thandi Mokoena" } });
+  fireEvent.change(screen.getByPlaceholderText("ID or passport number"), { target: { value: "9001015800083" } });
+  fireEvent.change(screen.getByPlaceholderText("name@company.co.za"), { target: { value: "thandi@hb.co.za" } });
+  fireEvent.change(screen.getByPlaceholderText("082 000 0000"), { target: { value: "0821234567" } });
 }
 
-async function fillForm() {
-  fireEvent.change(screen.getByPlaceholderText("e.g. HB-204478"), { target: { value: "HB-10001" } });
-  fireEvent.change(screen.getByPlaceholderText("Full legal name"), { target: { value: "Acme Corp" } });
-  fireEvent.change(screen.getByPlaceholderText("e.g. Ahmed Al-Rashid"), { target: { value: "John Doe" } });
-
-  const selects = screen.getAllByRole("combobox");
-  const selectValues = ["Received", "Supplier", "No", "No", "Yes", "Gift", "Business Meeting"];
-  const startIndex = selects.length - selectValues.length;
-  for (let i = 0; i < selectValues.length; i++) {
-    setSelectValue(selects[startIndex + i], selectValues[i]);
-  }
-
-  fireEvent.change(screen.getByPlaceholderText(/Corporate dinner at Sandton Sun/i), { target: { value: "Test gift description" } });
-  fireEvent.change(screen.getByPlaceholderText("0.00"), { target: { value: "500" } });
-  const dateInput = document.querySelector('input[type="date"]') as HTMLInputElement;
-  if (dateInput) fireEvent.change(dateInput, { target: { value: "2026-07-15" } });
+function fillItinerary() {
+  fireEvent.change(screen.getByPlaceholderText("Destination"), { target: { value: "Cape Town" } });
+  fireEvent.change(screen.getByPlaceholderText("Purpose of the trip"), { target: { value: "Client site visit" } });
+  fireEvent.change(screen.getByPlaceholderText("Departure city"), { target: { value: "Durban" } });
+  fireEvent.change(screen.getByPlaceholderText("Destination city"), { target: { value: "Cape Town" } });
+  const dates = document.querySelectorAll('input[type="date"]');
+  fireEvent.change(dates[0], { target: { value: "2026-08-01" } });
+  fireEvent.change(dates[1], { target: { value: "2026-08-05" } });
 }
 
-describe("NewDeclarationScreen", () => {
-  it("renders the form with sections", async () => {
-    render(<NewDeclarationScreen onSubmitSuccess={vi.fn()} onDraftSaved={vi.fn()} />);
-    await waitFor(() => {
-      expect(screen.getByText(/New Declaration/i)).toBeInTheDocument();
-    });
-    const sections = screen.getAllByText(/Team Member Details/i);
-    expect(sections.length).toBeGreaterThanOrEqual(1);
-    const declDetails = screen.getAllByText(/Declaration Details/i);
-    expect(declDetails.length).toBeGreaterThanOrEqual(1);
-    const gheDetails = screen.getAllByText(/Gift, Hospitality or Entertainment Details/i);
-    expect(gheDetails.length).toBeGreaterThanOrEqual(1);
-    const suppDocs = screen.getAllByText(/Supporting Documents/i);
-    expect(suppDocs.length).toBeGreaterThanOrEqual(1);
-    const declUndertaking = screen.getAllByText(/Declaration & Undertaking/i);
-    expect(declUndertaking.length).toBeGreaterThanOrEqual(1);
-  });
+function agreeToUndertaking() {
+  const boxes = screen.getAllByRole("checkbox");
+  fireEvent.click(boxes[boxes.length - 1]);
+}
 
-  it("auto-fills team member name from user context", async () => {
+async function fillValidForm() {
+  fillTraveler();
+  fillItinerary();
+  agreeToUndertaking();
+}
+
+describe("NewDeclarationScreen (Travel Request)", () => {
+  it("renders the travel form with sections", async () => {
     render(<NewDeclarationScreen onSubmitSuccess={vi.fn()} onDraftSaved={vi.fn()} />);
     await waitFor(() => {
-      const nameInput = screen.getByDisplayValue("Test User");
-      expect(nameInput).toBeInTheDocument();
+      expect(screen.getByText(/New Travel Request/i)).toBeInTheDocument();
     });
+    expect(screen.getAllByText("Traveler Details").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Travel Details").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Accommodation & Transport").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Declaration & Undertaking").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Traveler 1")).toBeInTheDocument();
   });
 
   it("shows validation errors when submitting empty form", async () => {
     render(<NewDeclarationScreen onSubmitSuccess={vi.fn()} onDraftSaved={vi.fn()} />);
-    await waitFor(() => expect(screen.getByText(/New Declaration/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/New Travel Request/i)).toBeInTheDocument());
 
-    const submitBtn = screen.getByRole("button", { name: /Submit Declaration/i });
-    fireEvent.click(submitBtn);
+    fireEvent.click(screen.getByRole("button", { name: /Submit Travel Request/i }));
 
     await waitFor(() => {
-      expect(screen.getAllByText(/Required/).length).toBeGreaterThan(0);
+      expect(screen.getByText("Destination is required")).toBeInTheDocument();
+      expect(screen.getByText("Departure date is required")).toBeInTheDocument();
+      expect(screen.getByText("Return date is required")).toBeInTheDocument();
+      expect(screen.getByText("Reason for travel is required")).toBeInTheDocument();
+      expect(screen.getByText("Traveler name is required")).toBeInTheDocument();
     });
+    expect(createDeclaration).not.toHaveBeenCalled();
+  });
+
+  it("rejects a return date before the departure date", async () => {
+    render(<NewDeclarationScreen onSubmitSuccess={vi.fn()} onDraftSaved={vi.fn()} />);
+    await waitFor(() => expect(screen.getByText(/New Travel Request/i)).toBeInTheDocument());
+
+    await fillValidForm();
+    const dates = document.querySelectorAll('input[type="date"]');
+    fireEvent.change(dates[0], { target: { value: "2026-08-10" } });
+    fireEvent.change(dates[1], { target: { value: "2026-08-05" } });
+
+    fireEvent.click(screen.getByRole("button", { name: /Submit Travel Request/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Return date cannot be before departure date")).toBeInTheDocument();
+    });
+    expect(createDeclaration).not.toHaveBeenCalled();
   });
 
   it("calls createDeclaration + submitDeclaration on valid submit", async () => {
-    vi.mocked(createDeclaration).mockResolvedValue({ id: "GHE-2026-9999", status: "Draft" } as any);
-    vi.mocked(uploadDeclarationFile).mockResolvedValue({ id: "file-1", name: "receipt.pdf", size: 5, type: "application/pdf", url: "/api/files/file-1" } as any);
-    vi.mocked(updateDeclaration).mockResolvedValue({ id: "GHE-2026-9999", status: "Draft" } as any);
-    vi.mocked(submitDeclaration).mockResolvedValue({ id: "GHE-2026-9999", status: "Pending", approver: "Sipho Nkosi" } as any);
+    vi.mocked(createDeclaration).mockResolvedValue({ id: "TR-2026-9999", status: "Draft" } as any);
+    vi.mocked(submitDeclaration).mockResolvedValue({ id: "TR-2026-9999", status: "Pending", approver: "Sipho Nkosi" } as any);
 
     const onSuccess = vi.fn();
     render(<NewDeclarationScreen onSubmitSuccess={onSuccess} onDraftSaved={vi.fn()} />);
-    await waitFor(() => expect(screen.getByText(/New Declaration/i)).toBeInTheDocument());
-    await waitFor(() => expect(screen.getByDisplayValue("Test User")).toBeInTheDocument());
-    await waitFor(() => expect(screen.getByDisplayValue("Sipho Nkosi")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/New Travel Request/i)).toBeInTheDocument());
 
-    await fillForm();
-    await waitFor(() => {
-      const submitBtn = screen.getByRole("button", { name: /Submit Declaration/i });
-      fireEvent.click(submitBtn);
-    });
+    await fillValidForm();
+    fireEvent.click(screen.getByRole("button", { name: /Submit Travel Request/i }));
 
     await waitFor(() => {
-      expect(createDeclaration).toHaveBeenCalled();
-      expect(submitDeclaration).toHaveBeenCalled();
+      expect(createDeclaration).toHaveBeenCalledWith(
+        expect.objectContaining({
+          destination: "Cape Town",
+          departureDate: "2026-08-01",
+          returnDate: "2026-08-05",
+          reason: "Client site visit",
+          numberOfPeople: 1,
+          travelType: "Domestic",
+        })
+      );
+      const payload = vi.mocked(createDeclaration).mock.calls[0][0] as any;
+      expect(payload.travelers).toHaveLength(1);
+      expect(payload.travelers[0]).toMatchObject({
+        name: "Thandi Mokoena",
+        email: "thandi@hb.co.za",
+        cellPhone: "0821234567",
+      });
+      expect(submitDeclaration).toHaveBeenCalledWith("TR-2026-9999");
       expect(onSuccess).toHaveBeenCalled();
     });
   });
 
-  it("calls createDeclaration on Save Draft", async () => {
-    vi.mocked(createDeclaration).mockResolvedValue({ id: "GHE-2026-9999", status: "Draft" } as any);
-    vi.mocked(uploadDeclarationFile).mockResolvedValue({ id: "file-1", name: "receipt.pdf", size: 5, type: "application/pdf", url: "/api/files/file-1" } as any);
-    vi.mocked(updateDeclaration).mockResolvedValue({ id: "GHE-2026-9999", status: "Draft" } as any);
+  it("calls createDeclaration on Save Draft without requiring validation", async () => {
+    vi.mocked(createDeclaration).mockResolvedValue({ id: "TR-2026-9999", status: "Draft" } as any);
 
     const onDraftSaved = vi.fn();
     render(<NewDeclarationScreen onSubmitSuccess={vi.fn()} onDraftSaved={onDraftSaved} />);
-    await waitFor(() => expect(screen.getByText(/New Declaration/i)).toBeInTheDocument());
-    await waitFor(() => expect(screen.getByDisplayValue("Test User")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/New Travel Request/i)).toBeInTheDocument());
 
-    const saveDraftBtn = screen.getByRole("button", { name: /Save Draft/i });
-    fireEvent.click(saveDraftBtn);
-
-    await waitFor(() => {
-      expect(createDeclaration).toHaveBeenCalled();
-      expect(onDraftSaved).toHaveBeenCalled();
-    });
-  });
-
-  it("saves partially filled form as draft (J2.2)", async () => {
-    vi.mocked(createDeclaration).mockResolvedValue({ id: "GHE-2026-9999", status: "Draft" } as any);
-    vi.mocked(uploadDeclarationFile).mockResolvedValue({ id: "file-1", name: "receipt.pdf", size: 5, type: "application/pdf", url: "/api/files/file-1" } as any);
-    vi.mocked(updateDeclaration).mockResolvedValue({ id: "GHE-2026-9999", status: "Draft" } as any);
-
-    const onDraftSaved = vi.fn();
-    render(<NewDeclarationScreen onSubmitSuccess={vi.fn()} onDraftSaved={onDraftSaved} />);
-    await waitFor(() => expect(screen.getByText(/New Declaration/i)).toBeInTheDocument());
-
-    fireEvent.change(screen.getByPlaceholderText("e.g. HB-204478"), { target: { value: "HB-10001" } });
-    fireEvent.change(screen.getByPlaceholderText("Full legal name"), { target: { value: "Partial Corp" } });
-
+    fireEvent.change(screen.getByPlaceholderText("Destination"), { target: { value: "Cape Town" } });
     fireEvent.click(screen.getByRole("button", { name: /Save Draft/i }));
 
     await waitFor(() => {
       expect(createDeclaration).toHaveBeenCalledWith(
-        expect.objectContaining({ teamMemberNumber: "HB-10001", counterparty: "Partial Corp" })
+        expect.objectContaining({ destination: "Cape Town", status: "Draft" })
       );
       expect(onDraftSaved).toHaveBeenCalled();
-    });
-  });
-
-  it("saves draft with file upload (J2.3)", async () => {
-    vi.mocked(createDeclaration).mockResolvedValue({ id: "GHE-2026-9999", status: "Draft" } as any);
-    vi.mocked(uploadDeclarationFile).mockResolvedValue({ id: "file-1", name: "receipt.pdf", size: 5, type: "application/pdf", url: "/api/files/file-1" } as any);
-    vi.mocked(updateDeclaration).mockResolvedValue({ id: "GHE-2026-9999", status: "Draft" } as any);
-
-    const onDraftSaved = vi.fn();
-    const { container } = render(<NewDeclarationScreen onSubmitSuccess={vi.fn()} onDraftSaved={onDraftSaved} />);
-    await waitFor(() => expect(screen.getByText(/New Declaration/i)).toBeInTheDocument());
-
-    await fillForm();
-    const fileInput = container.querySelector('input[type="file"]')!;
-    const file = new File(["dummy"], "receipt.pdf", { type: "application/pdf" });
-    Object.defineProperty(fileInput, "files", { value: [file] });
-    fireEvent.change(fileInput);
-
-    await waitFor(() => {
-      expect(screen.queryByText(/Unsupported file type/i)).not.toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByRole("button", { name: /Save Draft/i }));
-
-    await waitFor(() => {
-      expect(createDeclaration).toHaveBeenCalled();
-      expect(onDraftSaved).toHaveBeenCalled();
-    });
-  });
-
-  it("shows error when save draft fails (J2.4)", async () => {
-    vi.mocked(createDeclaration).mockRejectedValue(new Error("Draft save failed"));
-
-    render(<NewDeclarationScreen onSubmitSuccess={vi.fn()} onDraftSaved={vi.fn()} />);
-    await waitFor(() => expect(screen.getByText(/New Declaration/i)).toBeInTheDocument());
-
-    await fillForm();
-    fireEvent.click(screen.getByRole("button", { name: /Save Draft/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText(/Draft save failed/)).toBeInTheDocument();
-    });
-  });
-
-  it("shows substantiation field when value exceeds high threshold", async () => {
-    render(<NewDeclarationScreen onSubmitSuccess={vi.fn()} onDraftSaved={vi.fn()} />);
-    await waitFor(() => expect(screen.getByText(/New Declaration/i)).toBeInTheDocument());
-
-    const valueInput = screen.getByPlaceholderText("0.00");
-    fireEvent.focus(valueInput);
-    fireEvent.change(valueInput, { target: { value: "5000" } });
-
-    await waitFor(() => {
-      expect(screen.getByText(/substantiate why this Gift/i)).toBeInTheDocument();
-    });
-  });
-
-  it("keeps the shared select trigger height aligned with the date input", async () => {
-    render(<NewDeclarationScreen onSubmitSuccess={vi.fn()} onDraftSaved={vi.fn()} />);
-    await waitFor(() => expect(screen.getByText(/New Declaration/i)).toBeInTheDocument());
-
-    const dateInput = document.querySelector('input[type="date"]') as HTMLInputElement;
-    const selectTrigger = screen.getAllByRole("combobox")[0];
-
-    expect(dateInput).toBeInTheDocument();
-    expect(selectTrigger).toBeInTheDocument();
-  });
-
-  it("submits with receivedGiven=Given and includes correct values (J1.5)", async () => {
-    vi.mocked(createDeclaration).mockResolvedValue({ id: "GHE-2026-9999", status: "Draft" } as any);
-    vi.mocked(uploadDeclarationFile).mockResolvedValue({ id: "file-1", name: "receipt.pdf", size: 5, type: "application/pdf", url: "/api/files/file-1" } as any);
-    vi.mocked(updateDeclaration).mockResolvedValue({ id: "GHE-2026-9999", status: "Draft" } as any);
-    vi.mocked(submitDeclaration).mockResolvedValue({ id: "GHE-2026-9999", status: "Pending", approver: "Sipho Nkosi" } as any);
-
-    const onSuccess = vi.fn();
-    render(<NewDeclarationScreen onSubmitSuccess={onSuccess} onDraftSaved={vi.fn()} />);
-    await waitFor(() => expect(screen.getByText(/New Declaration/i)).toBeInTheDocument());
-    await waitFor(() => expect(screen.getByDisplayValue("Sipho Nkosi")).toBeInTheDocument());
-
-    fireEvent.change(screen.getByPlaceholderText("e.g. HB-204478"), { target: { value: "HB-10001" } });
-    fireEvent.change(screen.getByPlaceholderText("Full legal name"), { target: { value: "Acme Corp" } });
-    fireEvent.change(screen.getByPlaceholderText("e.g. Ahmed Al-Rashid"), { target: { value: "John Doe" } });
-
-    const selects = screen.getAllByRole("combobox");
-    const startIdx = selects.length - 7;
-    setSelectValue(selects[startIdx] as HTMLSelectElement, "Given");
-
-    const remaining = ["Supplier", "No", "No", "Yes", "Gift", "Business Meeting"];
-    for (let i = 0; i < remaining.length; i++) {
-      setSelectValue(selects[startIdx + 1 + i] as HTMLSelectElement, remaining[i]);
-    }
-
-    fireEvent.change(screen.getByPlaceholderText(/Corporate dinner at Sandton Sun/i), { target: { value: "Test gift" } });
-    fireEvent.change(screen.getByPlaceholderText("0.00"), { target: { value: "500" } });
-    const dateInput = document.querySelector('input[type="date"]') as HTMLInputElement;
-    if (dateInput) fireEvent.change(dateInput, { target: { value: "2026-07-15" } });
-
-    await waitFor(() => {
-      fireEvent.click(screen.getByRole("button", { name: /Submit Declaration/i }));
-    });
-
-    await waitFor(() => {
-      expect(createDeclaration).toHaveBeenCalledWith(
-        expect.objectContaining({ receivedGiven: "Given", type: "Gift" })
-      );
-      expect(submitDeclaration).toHaveBeenCalled();
-      expect(onSuccess).toHaveBeenCalled();
-    });
-  });
-
-  it("shows network timeout during submit (J1.8)", async () => {
-    vi.mocked(createDeclaration).mockReturnValue(new Promise(() => {}));
-
-    render(<NewDeclarationScreen onSubmitSuccess={vi.fn()} onDraftSaved={vi.fn()} />);
-    await waitFor(() => expect(screen.getByText(/New Declaration/i)).toBeInTheDocument());
-    await waitFor(() => expect(screen.getByDisplayValue("Sipho Nkosi")).toBeInTheDocument());
-
-    await fillForm();
-    const submitBtn = screen.getByRole("button", { name: /Submit Declaration/i });
-    fireEvent.click(submitBtn);
-
-    await new Promise((r) => setTimeout(r, 300));
-    expect(screen.queryByText(/Server error/i)).not.toBeInTheDocument();
-    expect(screen.getByText("Submitting...")).toBeInTheDocument();
-  });
-
-  it("shows upload error for unsupported file type", async () => {
-    const { container } = render(<NewDeclarationScreen onSubmitSuccess={vi.fn()} onDraftSaved={vi.fn()} />);
-    await waitFor(() => expect(screen.getByText(/New Declaration/i)).toBeInTheDocument());
-
-    const fileInput = container.querySelector('input[type="file"]')!;
-    const file = new File(["dummy"], "test.html", { type: "text/html" });
-    Object.defineProperty(fileInput, "files", { value: [file] });
-    fireEvent.change(fileInput);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Unsupported file type/i)).toBeInTheDocument();
     });
   });
 
@@ -322,21 +185,39 @@ describe("NewDeclarationScreen", () => {
     vi.mocked(createDeclaration).mockRejectedValue(new Error("Server error"));
 
     render(<NewDeclarationScreen onSubmitSuccess={vi.fn()} onDraftSaved={vi.fn()} />);
-    await waitFor(() => expect(screen.getByText(/New Declaration/i)).toBeInTheDocument());
-    await waitFor(() => expect(screen.getByDisplayValue("Test User")).toBeInTheDocument());
-    await waitFor(() => expect(screen.getByDisplayValue("Sipho Nkosi")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/New Travel Request/i)).toBeInTheDocument());
 
-    await fillForm();
-    await waitFor(() => {
-      const submitBtn = screen.getByRole("button", { name: /Submit Declaration/i });
-      fireEvent.click(submitBtn);
-    });
+    await fillValidForm();
+    fireEvent.click(screen.getByRole("button", { name: /Submit Travel Request/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Server error/i)).toBeInTheDocument();
     });
   });
+
+  it("shows error when save draft fails", async () => {
+    vi.mocked(createDeclaration).mockRejectedValue(new Error("Draft save failed"));
+
+    render(<NewDeclarationScreen onSubmitSuccess={vi.fn()} onDraftSaved={vi.fn()} />);
+    await waitFor(() => expect(screen.getByText(/New Travel Request/i)).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole("button", { name: /Save Draft/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Draft save failed/)).toBeInTheDocument();
+    });
+  });
+
+  it("adds traveler blocks when number of people increases", async () => {
+    render(<NewDeclarationScreen onSubmitSuccess={vi.fn()} onDraftSaved={vi.fn()} />);
+    await waitFor(() => expect(screen.getByText(/New Travel Request/i)).toBeInTheDocument());
+
+    expect(screen.queryByText("Traveler 2")).not.toBeInTheDocument();
+    const combos = screen.getAllByRole("combobox");
+    fireEvent.change(combos[0], { target: { value: "2" } });
+
+    await waitFor(() => {
+      expect(screen.getByText("Traveler 2")).toBeInTheDocument();
+    });
+  });
 });
-
-
-

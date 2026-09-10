@@ -63,14 +63,14 @@ export function SuccessModal({
         </div>
         <div className="flex items-center justify-center gap-2 mb-2">
           <Sparkles size={18} style={{ color: YELLOW }} />
-          <h2 className="text-2xl font-bold text-foreground">Declaration Submitted!</h2>
+          <h2 className="text-2xl font-bold text-foreground">Travel Request Submitted!</h2>
           <Sparkles size={18} style={{ color: YELLOW }} />
         </div>
         <p className="text-sm text-muted-foreground leading-relaxed mb-1">
           Thank you, <span className="font-semibold text-foreground">{data.employee}</span>.
         </p>
         <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-          Your declaration{" "}
+          Your travel request{" "}
           <span className="font-mono font-bold" style={{ color: PURPLE }}>
             {data.id}
           </span>{" "}
@@ -78,9 +78,9 @@ export function SuccessModal({
         </p>
         <div className="rounded-2xl p-4 mb-6 text-left space-y-2" style={{ background: INFO_BG }}>
           {[
-            ["Declaration ID", data.id],
-            ["Type", data.type],
-            ["Counterparty", data.counterparty],
+            ["Travel Request ID", data.id],
+            ["Travel Type", data.travelType || data.type],
+            ["Destination", data.destination || data.counterparty],
             ["Submitted", new Date().toLocaleDateString("en-ZA")],
             ["Status", "Pending Approval"],
           ].map(([k, v]) => (
@@ -102,7 +102,7 @@ export function SuccessModal({
             className="flex-1 h-11 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-all"
             style={{ background: GRADIENT_PRIMARY }}
           >
-            View Declaration
+            View Travel Request
           </button>
         </div>
       </div>

@@ -88,7 +88,7 @@ export function ApproverDashboard({ onNavigate, onReview }: { onNavigate: (s: Sc
 
   const teamActivity = useMemo(() => {
     type ActivityStatus = { declarations: number; totalValue: number; types: Record<string, number> };
-    const emptyStatus = (): ActivityStatus => ({ declarations: 0, totalValue: 0, types: { Gift: 0, Hospitality: 0, Entertainment: 0 } });
+    const emptyStatus = (): ActivityStatus => ({ declarations: 0, totalValue: 0, types: { Domestic: 0, International: 0 } });
     const map = new Map<string, { totalValue: number; statuses: { Approved: ActivityStatus; Declined: ActivityStatus } }>();
     scopedDeclarations.forEach((d) => {
       const key = d.employee;
@@ -233,7 +233,7 @@ export function ApproverDashboard({ onNavigate, onReview }: { onNavigate: (s: Sc
                       const activity = row.statuses[status];
                       return (
                         <div key={status} className="min-w-0 border-l-2 pl-2" style={{ borderColor: status === "Approved" ? "#16a34a" : "#dc2626" }}>
-                          <p className="truncate text-[10px] text-muted-foreground">G {activity.types.Gift || 0} · H {activity.types.Hospitality || 0} · E {activity.types.Entertainment || 0}</p>
+                          <p className="truncate text-[10px] text-muted-foreground">D {activity.types.Domestic || 0} · I {activity.types.International || 0}</p>
                         </div>
                       );
                     })}
@@ -247,7 +247,7 @@ export function ApproverDashboard({ onNavigate, onReview }: { onNavigate: (s: Sc
         <ModernCard className="flex flex-col p-5" accent={PURPLE}>
           <div className="mb-1 flex items-center gap-2">
             <Coins size={14} style={{ color: PURPLE }} />
-            <p className="text-xs font-bold uppercase tracking-wide text-foreground/70">GHE Distribution</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-foreground/70">Travel Type Distribution</p>
           </div>
           <div className="mt-3 flex-1">
             {typeDistribution.length === 0 ? (

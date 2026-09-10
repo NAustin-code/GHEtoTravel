@@ -1,37 +1,41 @@
-# Enterprise Compliance Platform
+# Enterprise Travel Request Platform
 
-React frontend for the GHE Compliance Dashboard.
+React frontend for the Travel Request System (migrated from the former GHE Compliance Dashboard).
 
 ## Running
 
 ```bash
 npm install
-npm run dev          # Vite dev server (proxies /api to backend:3001)
+npm run dev          # Vite dev server, fully offline via the local store
 ```
 
 ## Testing
 
 ```bash
-npm test             # Run the current frontend Vitest suite
+npm test             # Run the current frontend Vitest suite (245 tests, fully offline)
+npx playwright test  # Run the Playwright e2e suite (offline, local store seeds itself)
 ```
 
-### Current declaration UI
+### Current request UI
 
-The New Declaration form displays Team Member Details in this order: Team Member Name, Team Member Code, Company, Department, Team Member Role/Position, and Approving Manager Name. The Approver Dashboard uses Pending Queue, Approved, Returned, and Declined KPI cards; Returned is counted from declarations with status `Returned`.
+The New Travel Request form captures Traveler Details (up to 10 travelers: name as per ID/passport, ID/passport number, gender, email, cell, job title, employee code, plus company / company to be billed / department / approval manager / order number), Travel Details (departure/return dates, domestic/international, reason, from/to, transport mode and costs, seat preference), and Accommodation & Transport. New requests get `TR-YYYY-####` IDs. The Approver Dashboard uses Pending Queue, Approved, Returned, and Declined KPI cards; Returned is counted from requests with status `Returned`.
 
-### Test Coverage
+### Test Coverage (245 tests, 17 files, fully offline via the local store)
 
 | File | Tests | Focus |
 |------|-------|-------|
-| `auth-edge-cases.test.ts` | 11 | Auth service edge cases (empty/wrong credentials, hashing, screen access) |
-| `db-edge-cases.test.ts` | 24 | Data layer edge cases (null/undefined, missing fields, boundary values) |
-| `fuzz.test.ts` | 17 | Fuzz tests on db functions (random inputs, extreme values) |
-| `fuzz-extended.test.ts` | 15 | Extended fuzz on admin/workflow/config functions |
-| `integration.test.ts` | 19 | Full lifecycle, admin CRUD, config, dashboard KPIs |
-| `ErrorBoundary.test.tsx` | 5 | Component error boundary render tests |
-| `UserContext.test.tsx` | 7 | Auth context state, login/logout, localStorage persistence |
-| `dashboard-render.test.tsx` | 1 | Smoke test for ApproverDashboard component |
-| `frontend-break.test.ts` | 31 | **HTTP client breaking tests** |
+| `api-services.test.ts` | 52 | Local-store service layer: CRUD, submit lifecycle, workflows, reports, errors |
+| `integration.test.ts` | 28 | Auth + journey flows against the local store |
+| `NewDeclarationScreen.test.tsx` | 8 | Travel form render, validation, submit/draft, traveler blocks |
+| `approval-workflow.test.tsx` | 23 | WorkflowTimeline options, decisions, auto-fetch |
+| `ApprovalDetail.test.tsx` | 15 | Approval detail decisions and payloads |
+| `workflow-e2e.test.tsx` | 29 | Approval lifecycle, documents, error paths |
+| `workflow-fix.test.tsx` | 3 | Timeline rendering edge cases |
+| `MyDeclarationsScreen.test.tsx` | 14 | Travel request list, filters, export |
+| `ApprovalQueue.test.tsx` | 9 | Queue filtering, review, export |
+| `frontend-break.test.ts` | 31 | HTTP client breaking tests + offline service wrappers |
+| `auth-edge-cases.test.ts` | 13 | Local auth edge cases, token/session handling, screen access |
+| others (`ErrorBoundary`, `UserContext`, `dashboard-render`, `AdminApprovalOptions`, `admin-dashboard-states`, `org-api`) | 20 | Component/context/smoke/API tests |
 
 ### Breaking Tests (`frontend-break.test.ts` — 31 tests)
 
@@ -47,10 +51,13 @@ Tests the HTTP service layer (`src/services/httpClient.ts` and `src/services/api
 
 ## Architecture
 
-The frontend communicates with the backend REST API via an HTTP service layer:
+The frontend runs entirely on a local store — no backend required:
 
 ```
-Component → api.ts (high-level) → httpClient.ts (fetch wrapper) → Backend REST API
+Component → api.ts (service layer) → localStore.ts (localStorage + seed data)
 ```
 
-The Vite dev server proxies `/api` requests to `http://localhost:3001` (configured in `vite.config.ts`).
+All data (users, travel requests, workflows, config, dropdowns, organizations,
+approval options, files) persists in `localStorage` under the `trp.v1.` namespace
+and is seeded with demo data on first access. Tests reset the store via
+`resetLocalStore()` in `beforeEach`.

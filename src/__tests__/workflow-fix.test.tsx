@@ -84,7 +84,7 @@ describe("WorkflowTimeline - Fix for multiple matching elements", () => {
     await waitFor(() => {
       expect(screen.getByText("Decision")).toBeInTheDocument();
     });
-    expect(screen.getByText(/accept the actual GHE/)).toBeInTheDocument();
+    expect(screen.getByText(/Team member travel request approved/)).toBeInTheDocument();
     expect(screen.getByText(/2026-07-10/)).toBeInTheDocument();
   });
 
@@ -98,9 +98,9 @@ describe("WorkflowTimeline - Fix for multiple matching elements", () => {
       expect(screen.getByText("Decision *")).toBeInTheDocument();
     });
     
-    expect(screen.getAllByText(/Approved - Team Member to accept/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Approved - Team Member to share.*Organisation Pool/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Approved - Team Member to donate.*Hollywood Foundation/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Declined - Team Member to return/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Team member travel request approved/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/organisation pool/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Approved - Travel request approved.").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Declined - Travel request declined/).length).toBeGreaterThan(0);
   });
 });

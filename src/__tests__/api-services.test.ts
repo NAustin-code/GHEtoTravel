@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { setToken, clearToken } from "../services/httpClient";
+import { setToken, clearToken, getAuthToken } from "../services/httpClient";
 import {
   fetchDeclarations, fetchDeclarationById, createDeclaration,
   updateDeclaration, updateDeclarationStatus, submitDeclaration,
@@ -16,383 +16,399 @@ import {
   createApprovalOption, updateApprovalOption, deleteApprovalOption,
   uploadDeclarationFile, fetchOrganizations, fetchAdminOrganizations,
   createOrganization, updateOrganization, deleteOrganization,
+  resetLocalStore,
 } from "../services/api";
 import { Declaration } from "../types/declaration";
 
 beforeEach(() => {
   clearToken();
+  localStorage.clear();
+  resetLocalStore();
   vi.restoreAllMocks();
 });
 
-function mockFetch(status: number, body: unknown) {
-  return vi.spyOn(globalThis, "fetch").mockResolvedValue({
-    ok: status >= 200 && status < 300,
-    status,
-    headers: new Headers({ "content-type": "application/json" }),
-    json: () => Promise.resolve(body),
-  } as Response);
-}
-
-function mockDeclaration(id = "GHE-2026-1000"): Declaration {
+function mockDeclaration(id = "TR-2026-9000"): Declaration {
   return {
     id, employee: "Test User", employeeId: "user-1", department: "IT",
-    type: "Gift", counterparty: "TestCorp", value: 500, submitted: "2026-07-01",
+    type: "Domestic", counterparty: "Cape Town", value: 500, submitted: "2026-07-01",
     approver: "Sipho Nkosi", status: "Draft", priority: "Medium",
     description: "Test", relationship: "Yes", teamMemberNumber: "TM-001",
     lineManager: "Sipho Nkosi", position: "Dev", receivedGiven: "Received",
-    from: "Supplier", contactPerson: "Jane", biddingProcess: "No",
-    occasion: "Business Meeting", date: "2026-07-01", instances: "1",
+    from: "Durban", contactPerson: "Jane", biddingProcess: "No",
+    occasion: "Client visit", date: "2026-07-01", instances: "1",
     publicOfficial: "No",
   };
 }
 
 describe("fetchDeclarations", () => {
-  it("returns mapped declarations on 200", async () => {
-    mockFetch(200, [{ id: "GHE-1", employee: "A", counterparty: "B", value: 100, submitted: "2026-01-01", approver: "X", status: "Draft", priority: "Low" }]);
+  it("returns seeded declarations", async () => {
     const result = await fetchDeclarations();
-    expect(result).toHaveLength(1);
-    expect(result[0].id).toBe("GHE-1");
+    expect(result.length).toBeGreaterThan(0);
+    expect(result[0].id).toBeTruthy();
   });
 
-  it("passes status and search query params", async () => {
-    const spy = mockFetch(200, []);
-    await fetchDeclarations("Pending", "GHE");
-    const url = spy.mock.calls[0][0] as string;
-    expect(url).toContain("status=Pending");
-    expect(url).toContain("search=GHE");
+  it("filters by status", async () => {
+    const result = await fetchDeclarations("Pending");
+    expect(result.length).toBeGreaterThan(0);
+    expect(result.every((d) => d.status === "Pending")).toBe(true);
   });
 
-  it("throws on 500", async () => {
-    mockFetch(500, { error: "Server error" });
-    await expect(fetchDeclarations()).rejects.toThrow("Server error");
+  it("filters by search text across id, destination and employee", async () => {
+    const byDestination = await fetchDeclarations(undefined, "Cape Town");
+    expect(byDestination.length).toBeGreaterThan(0);
+    expect(byDestination.every((d) => (d.destination || d.counterparty) === "Cape Town")).toBe(true);
+    const byId = await fetchDeclarations(undefined, "TR-2026-0001");
+    expect(byId.map((d) => d.id)).toContain("TR-2026-0001");
   });
 });
 
 describe("fetchDeclarationById", () => {
-  it("returns declaration with workflowSteps", async () => {
-    const body = { id: "GHE-1", employee: "A", workflowSteps: [{ role: "lineManager", status: "pending" }] };
-    mockFetch(200, body);
-    const result = await fetchDeclarationById("GHE-1");
-    expect(result.id).toBe("GHE-1");
+  it("returns declaration with workflowSteps array", async () => {
+    const result = await fetchDeclarationById("TR-2026-0001");
+    expect(result.id).toBe("TR-2026-0001");
+    expect(Array.isArray(result.workflowSteps)).toBe(true);
+  });
+
+  it("throws 404 for unknown id", async () => {
+    await expect(fetchDeclarationById("NOPE-1")).rejects.toMatchObject({ status: 404 });
   });
 });
 
 describe("file and organization API wrappers", () => {
   it("uploads a file with the declaration ID", async () => {
-    const spy = mockFetch(201, { id: "file-1", name: "receipt.txt", size: 12, type: "text/plain", url: "/api/files/file-1" });
     const file = new File(["receipt"], "receipt.txt", { type: "text/plain" });
-    const result = await uploadDeclarationFile(file, "GHE-1");
-    expect(result.id).toBe("file-1");
-    const body = spy.mock.calls[0][1]?.body as FormData;
-    expect(body.get("declarationId")).toBe("GHE-1");
-    expect(body.get("file")).toBe(file);
+    const result = await uploadDeclarationFile(file, "TR-2026-0001");
+    expect(result.name).toBe("receipt.txt");
+    expect(result.size).toBe(7);
+    expect(result.url).toContain("TR-2026-0001");
   });
 
   it("covers organization list and admin CRUD wrappers", async () => {
-    mockFetch(200, [{ id: "org-1", name: "HB", shortCode: "HB" }]);
-    expect((await fetchOrganizations())[0].id).toBe("org-1");
-    mockFetch(200, [{ id: "org-1", name: "HB", shortCode: "HB" }]);
-    expect((await fetchAdminOrganizations())[0].shortCode).toBe("HB");
-    mockFetch(201, { id: "org-2" });
-    expect((await createOrganization({ name: "NPN", shortCode: "NPN" })).id).toBe("org-2");
-    mockFetch(200, { id: "org-2", name: "NPN Updated" });
-    expect((await updateOrganization("org-2", { name: "NPN Updated", shortCode: "NPN" })).name).toBe("NPN Updated");
-    mockFetch(200, { message: "Organization deleted" });
-    expect((await deleteOrganization("org-2")).message).toContain("deleted");
+    expect((await fetchOrganizations())[0].id).toBeTruthy();
+    expect((await fetchAdminOrganizations())[0].shortCode).toBeTruthy();
+    const created = await createOrganization({ name: "NPN", shortCode: "NPN" });
+    expect(created.id).toBeTruthy();
+    const updated = await updateOrganization(created.id, { name: "NPN Updated", shortCode: "NPN" });
+    expect(updated.name).toBe("NPN Updated");
+    expect((await deleteOrganization(created.id)).message).toContain("deleted");
+    await expect(fetchOrganizations().then((orgs) => {
+      if (orgs.some((o) => o.id === created.id)) throw new Error("still present");
+    })).resolves.toBeUndefined();
+  });
+
+  it("throws 404 for unknown organization", async () => {
+    await expect(updateOrganization("org-nope", { name: "X", shortCode: "X" })).rejects.toMatchObject({ status: 404 });
+    await expect(deleteOrganization("org-nope")).rejects.toMatchObject({ status: 404 });
   });
 });
 
 describe("createDeclaration", () => {
-  it("POSTs declaration and returns mapped result", async () => {
-    const decl = mockDeclaration();
-    mockFetch(201, { id: "GHE-2026-1000", ...decl, status: "Draft" });
-    const result = await createDeclaration(decl);
-    expect(result.id).toBe("GHE-2026-1000");
+  it("creates a declaration with Draft status by default", async () => {
+    const result = await createDeclaration(mockDeclaration());
+    expect(result.id).toBe("TR-2026-9000");
     expect(result.status).toBe("Draft");
   });
 
-  it("strips undefined fields from request body", async () => {
-    const spy = mockFetch(201, { id: "GHE-1" });
-    const decl = mockDeclaration();
-    delete (decl as any).files;
-    await createDeclaration(decl);
-    const sent = JSON.parse((spy.mock.calls[0][1] as any).body as string);
-    expect(sent.files).toBeUndefined();
+  it("persists the declaration for later fetch", async () => {
+    await createDeclaration(mockDeclaration());
+    const fetched = await fetchDeclarationById("TR-2026-9000");
+    expect(fetched.employee).toBe("Test User");
+  });
+
+  it("assigns a TR- id when none is provided", async () => {
+    const { id, ...rest } = mockDeclaration();
+    void id;
+    const result = await createDeclaration(rest);
+    expect(result.id).toMatch(/^TR-\d{4}-\d+/);
   });
 });
 
 describe("updateDeclaration", () => {
-  it("PUTs declaration and returns mapped result", async () => {
-    mockFetch(200, { id: "GHE-1", description: "Updated" });
-    const result = await updateDeclaration("GHE-1", { description: "Updated" });
+  it("merges changes and returns updated declaration", async () => {
+    await createDeclaration(mockDeclaration());
+    const result = await updateDeclaration("TR-2026-9000", { description: "Updated" });
     expect(result.description).toBe("Updated");
+    expect(result.employee).toBe("Test User");
+  });
+
+  it("throws 404 for unknown id", async () => {
+    await expect(updateDeclaration("NOPE-1", { description: "Updated" })).rejects.toMatchObject({ status: 404 });
   });
 });
 
 describe("updateDeclarationStatus", () => {
-  it("PATCHes status and returns declaration", async () => {
-    mockFetch(200, { id: "GHE-1", status: "Approved" });
-    const result = await updateDeclarationStatus("GHE-1", "Approved");
+  it("sets status and returns declaration", async () => {
+    await createDeclaration(mockDeclaration());
+    const result = await updateDeclarationStatus("TR-2026-9000", "Approved");
     expect(result.status).toBe("Approved");
   });
 });
 
 describe("submitDeclaration", () => {
-  it("PATCHes submit and returns result", async () => {
-    mockFetch(200, { id: "GHE-1", status: "Pending", approver: "Sipho Nkosi" });
-    const result = await submitDeclaration("GHE-1");
+  it("moves Draft to Pending and builds a workflow", async () => {
+    await createDeclaration(mockDeclaration());
+    const result = await submitDeclaration("TR-2026-9000");
     expect(result.status).toBe("Pending");
+    const wf = await fetchWorkflowInstance("TR-2026-9000");
+    expect(wf.steps).toHaveLength(2);
+    expect(wf.steps[0].status).toBe("pending");
+  });
+
+  it("rejects resubmitting a Pending declaration with 409", async () => {
+    await expect(submitDeclaration("TR-2024-0047")).rejects.toMatchObject({ status: 409 });
+  });
+
+  it("rejects submitting an Approved declaration with 409", async () => {
+    await expect(submitDeclaration("TR-2025-0009")).rejects.toThrow("Cannot submit an Approved declaration");
+  });
+
+  it("throws 404 for unknown id", async () => {
+    await expect(submitDeclaration("NOPE-1")).rejects.toMatchObject({ status: 404 });
   });
 });
 
 describe("fetchDashboardStats", () => {
-  it("returns stats on 200", async () => {
-    const stats = { kpis: { total: 10, pending: 3 }, complianceTrend: [], typeBreakdown: [] };
-    mockFetch(200, stats);
+  it("returns stats computed from seed data", async () => {
     const result = await fetchDashboardStats();
     expect(result.kpis.total).toBe(10);
+    expect(result.kpis.pending).toBe(4);
+    expect(result.kpis.approved).toBe(2);
+    expect(result.kpis.declined).toBe(1);
+    expect(result.kpis.totalValue).toBe(26500);
+    expect(result.complianceTrend.length).toBeGreaterThan(0);
+    expect(result.typeBreakdown.length).toBeGreaterThan(0);
   });
 });
 
 describe("fetchUsers", () => {
-  it("passes search and role params", async () => {
-    const spy = mockFetch(200, []);
-    await fetchUsers("Sipho", "approver");
-    const url = spy.mock.calls[0][0] as string;
-    expect(url).toContain("search=Sipho");
-    expect(url).toContain("role=approver");
+  it("searches by name", async () => {
+    const result = await fetchUsers("Sipho");
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe("Sipho Nkosi");
+  });
+
+  it("filters by role", async () => {
+    const result = await fetchUsers(undefined, "approver");
+    expect(result.length).toBe(4);
   });
 });
 
 describe("fetchUserById", () => {
-  it("GETs user by ID", async () => {
-    mockFetch(200, { id: "user-1", name: "Sipho" });
-    const result = await fetchUserById("user-1");
-    expect(result.name).toBe("Sipho");
+  it("returns seeded user without password hash", async () => {
+    const result = await fetchUserById("user-2");
+    expect(result.name).toBe("Sipho Nkosi");
+    expect((result as any).passwordHash).toBeUndefined();
+  });
+
+  it("throws 404 for unknown id", async () => {
+    await expect(fetchUserById("user-nope")).rejects.toMatchObject({ status: 404 });
   });
 });
 
 describe("createUser", () => {
-  it("POSTs and returns new user", async () => {
-    mockFetch(201, { id: "user-new", name: "New User" });
+  it("creates and returns new user", async () => {
     const result = await createUser({ name: "New User", email: "new@test.com", role: "teamMember" });
-    expect(result.id).toBe("user-new");
+    expect(result.id).toBeTruthy();
+    expect(result.name).toBe("New User");
+    expect((await fetchUsers("New User"))).toHaveLength(1);
   });
 });
 
 describe("updateUser", () => {
-  it("PUTs and returns updated user", async () => {
-    mockFetch(200, { id: "user-1", name: "Updated" });
+  it("merges and returns updated user", async () => {
     const result = await updateUser("user-1", { name: "Updated" });
     expect(result.name).toBe("Updated");
+  });
+
+  it("throws 404 for unknown id", async () => {
+    await expect(updateUser("user-nope", { name: "X" })).rejects.toMatchObject({ status: 404 });
   });
 });
 
 describe("deleteUser", () => {
-  it("DELETEs and returns result", async () => {
-    mockFetch(200, { message: "Deleted" });
-    const result = await deleteUser("user-1");
-    expect(result.message).toBe("Deleted");
+  it("deletes and confirms removal", async () => {
+    const result = await deleteUser("user-3");
+    expect(result.message).toBe("User deleted");
+    await expect(fetchUserById("user-3")).rejects.toMatchObject({ status: 404 });
+  });
+
+  it("throws 404 for unknown id", async () => {
+    await expect(deleteUser("user-nope")).rejects.toMatchObject({ status: 404 });
   });
 });
 
 describe("fetchConfig", () => {
-  it("returns config", async () => {
-    mockFetch(200, { highValueThreshold: 1000 });
+  it("returns seeded config", async () => {
     const result = await fetchConfig();
-    expect(result.highValueThreshold).toBe(1000);
+    expect(result.highValueThreshold).toBe(5000);
+    expect(result.slaEscalationDays).toBe(7);
   });
 });
 
 describe("saveConfig", () => {
-  it("PUTs config", async () => {
-    mockFetch(200, { highValueThreshold: 5000 });
-    const result = await saveConfig({ highValueThreshold: 5000 });
-    expect(result.highValueThreshold).toBe(5000);
+  it("persists config changes", async () => {
+    const result = await saveConfig({ highValueThreshold: 8000 });
+    expect(result.highValueThreshold).toBe(8000);
+    expect((await fetchConfig()).highValueThreshold).toBe(8000);
   });
 });
 
 describe("fetchDropdowns / updateDropdowns", () => {
   it("fetchDropdowns returns dropdowns", async () => {
-    mockFetch(200, { departments: ["IT", "HR"] });
     const result = await fetchDropdowns();
-    expect(result.departments).toEqual(["IT", "HR"]);
+    expect(result.departments).toContain("Marketing");
   });
 
-  it("updateDropdowns PUTs dropdowns", async () => {
-    mockFetch(200, { departments: ["IT"] });
+  it("updateDropdowns persists dropdowns", async () => {
     const result = await updateDropdowns({ departments: ["IT"] });
     expect(result.departments).toEqual(["IT"]);
+    expect((await fetchDropdowns()).departments).toEqual(["IT"]);
   });
 });
 
 describe("fetchAdminDashboard", () => {
-  it("returns dashboard data", async () => {
-    mockFetch(200, { users: 5, declarations: 20 });
+  it("returns counts from the store", async () => {
     const result = await fetchAdminDashboard();
-    expect(result.users).toBe(5);
+    expect(result.users).toBe(7);
+    expect(result.declarations).toBe(10);
+    expect(result.threshold).toBe(5000);
   });
 });
 
 describe("workflow rules CRUD", () => {
-  it("fetchWorkflowRules returns rules", async () => {
-    mockFetch(200, [{ id: "rule-1", name: "Low Value" }]);
+  it("fetchWorkflowRules returns seeded rules", async () => {
     const result = await fetchWorkflowRules();
-    expect(result).toHaveLength(1);
+    expect(result).toHaveLength(2);
   });
 
-  it("createWorkflowRule POSTs", async () => {
-    mockFetch(201, { id: "rule-new", name: "New Rule" });
-    const result = await createWorkflowRule({ name: "New Rule", steps: "[]" });
-    expect(result.id).toBe("rule-new");
+  it("createWorkflowRule creates", async () => {
+    const result = await createWorkflowRule({ name: "New Rule" });
+    expect(result.id).toBeTruthy();
+    expect(result.name).toBe("New Rule");
   });
 
-  it("updateWorkflowRule PUTs", async () => {
-    mockFetch(200, { id: "rule-1", name: "Updated" });
+  it("updateWorkflowRule updates", async () => {
     const result = await updateWorkflowRule("rule-1", { name: "Updated" });
     expect(result.name).toBe("Updated");
   });
 
-  it("deleteWorkflowRule DELETEs", async () => {
-    mockFetch(200, { message: "Deleted" });
+  it("deleteWorkflowRule deletes and 404s afterwards", async () => {
     const result = await deleteWorkflowRule("rule-1");
-    expect(result.message).toBe("Deleted");
+    expect(result.message).toContain("deleted");
+    await expect(updateWorkflowRule("rule-1", { name: "X" })).rejects.toMatchObject({ status: 404 });
   });
 });
 
 describe("workflow operations", () => {
-  it("fetchPendingWorkflows returns mapped pending declarations", async () => {
-    mockFetch(200, [{
-      declaration: {
-        id: "GHE-1",
-        employee: "A",
-        employeeId: "user-1",
-        teamMemberNumber: "TM-1",
-        lineManager: "Sipho",
-        position: "Manager",
-        department: "IT",
-        company: "HB",
-        team: "Ops",
-        type: "Gift",
-        counterparty: "B",
-        value: 100,
-        submitted: "2026-01-01",
-        approver: "Sipho",
-        status: "Pending",
-        priority: "Low",
-        description: "Test",
-        relationship: "Yes",
-        receivedGiven: "Received",
-        from: "Supplier",
-        contactPerson: "Jane",
-        biddingProcess: "No",
-        contractNegotiation: "No",
-        occasion: "Business Meeting",
-        date: "2026-01-01",
-        instances: "1",
-        publicOfficial: "No",
-        files: [],
-      },
-      step: { role: "lineManager", status: "pending" },
-    }]);
+  it("fetchPendingWorkflows returns pending declarations with current step", async () => {
     const result = await fetchPendingWorkflows();
-    expect(result).toHaveLength(1);
-    expect(result[0].declaration.counterparty).toBe("B");
-    expect(result[0].declaration.contactPerson).toBe("Jane");
+    expect(result.length).toBe(5);
+    expect(result[0].declaration.counterparty).toBeTruthy();
+    expect(result[0].step?.status).toBe("pending");
   });
 
-  it("fetchWorkflowInstance returns instance", async () => {
-    mockFetch(200, { declarationId: "GHE-1", steps: [] });
-    const result = await fetchWorkflowInstance("GHE-1");
-    expect(result.declarationId).toBe("GHE-1");
+  it("fetchWorkflowInstance returns seeded instance", async () => {
+    const result = await fetchWorkflowInstance("TR-2024-0047");
+    expect(result.declarationId).toBe("TR-2024-0047");
+    expect(result.steps).toHaveLength(2);
+    expect(result.steps[0].role).toBe("lineManager");
   });
 
-  it("approveWorkflowStep POSTs decision", async () => {
-    mockFetch(200, { status: "Approved" });
-    const result = await approveWorkflowStep({ declarationId: "GHE-1", decision: "accept" });
-    expect(result.status).toBe("Approved");
+  it("approveWorkflowStep advances a fresh submission", async () => {
+    await createDeclaration(mockDeclaration("TR-2026-9100"));
+    await submitDeclaration("TR-2026-9100");
+    const first = await approveWorkflowStep({ declarationId: "TR-2026-9100", decision: "accept" });
+    expect(first.status).toBe("Pending");
+    const second = await approveWorkflowStep({ declarationId: "TR-2026-9100", decision: "accept", notes: "Looks good" });
+    expect(second.status).toBe("Approved");
+    expect(second.steps[1].notes).toBe("Looks good");
+    expect(second.newStatus).toBe("Approved");
   });
 
-  it("approveWorkflowStep sends notes when provided", async () => {
-    const spy = mockFetch(200, { status: "Approved" });
-    await approveWorkflowStep({ declarationId: "GHE-1", decision: "accept", notes: "Looks good" });
-    const sent = JSON.parse((spy.mock.calls[0][1] as any).body as string);
-    expect(sent.notes).toBe("Looks good");
+  it("approveWorkflowStep declines terminally", async () => {
+    await createDeclaration(mockDeclaration("TR-2026-9200"));
+    await submitDeclaration("TR-2026-9200");
+    const result = await approveWorkflowStep({ declarationId: "TR-2026-9200", decision: "decline" });
+    expect(result.status).toBe("Declined");
+    await expect(
+      approveWorkflowStep({ declarationId: "TR-2026-9200", decision: "accept" })
+    ).rejects.toMatchObject({ status: 409 });
   });
 });
 
 describe("report endpoints", () => {
   it("fetchReportStatusBreakdown returns breakdown", async () => {
-    mockFetch(200, { Draft: 5, Pending: 3 });
     const result = await fetchReportStatusBreakdown();
-    expect(result.Draft).toBe(5);
+    expect(result.Pending).toBe(4);
+    expect(result.Approved).toBe(2);
   });
 
-  it("fetchReportSLA returns SLA data", async () => {
-    mockFetch(200, [{ role: "hr", avgDays: 2 }]);
+  it("fetchReportSLA returns SLA data from decided steps", async () => {
     const result = await fetchReportSLA();
-    expect(result).toHaveLength(1);
+    expect(result.length).toBeGreaterThan(0);
+    expect(result[0]).toHaveProperty("count");
   });
 
   it("fetchReportCounterpartyConcentration returns data", async () => {
-    mockFetch(200, [{ name: "CorpX", count: 10 }]);
     const result = await fetchReportCounterpartyConcentration();
-    expect(result).toHaveLength(1);
+    expect(result.length).toBeGreaterThan(0);
+    expect(result[0]).toHaveProperty("avgValue");
   });
 
-  it("fetchReportHighValue returns data", async () => {
-    mockFetch(200, [{ id: "GHE-1", value: 5000 }]);
+  it("fetchReportHighValue returns employees above threshold", async () => {
     const result = await fetchReportHighValue();
-    expect(result).toHaveLength(1);
+    expect(result).toHaveLength(2);
+    expect(result[0].totalValue).toBeGreaterThanOrEqual(result[1].totalValue);
   });
 
   it("fetchReportList returns list", async () => {
-    mockFetch(200, [{ id: "GHE-1" }]);
     const result = await fetchReportList();
-    expect(result).toHaveLength(1);
+    expect(result).toHaveLength(10);
   });
 
-  it("fetchApprovalOptions returns options", async () => {
-    mockFetch(200, [{ value: "accept", label: "Accept" }]);
+  it("fetchReportList honors date range params", async () => {
+    const result = await fetchReportList({ startDate: "2026-01-01", endDate: "2026-12-31" });
+    expect(result.length).toBeGreaterThan(0);
+    expect(result.every((d) => d.submitted.slice(0, 10) >= "2026-01-01" && d.submitted.slice(0, 10) <= "2026-12-31")).toBe(true);
+  });
+
+  it("fetchReportStatusBreakdown honors date range params", async () => {
+    const result = await fetchReportStatusBreakdown({ startDate: "2024-01-01", endDate: "2024-12-31" });
+    expect(result.Pending).toBe(3);
+    expect(result.Approved || 0).toBe(0);
+  });
+
+  it("fetchApprovalOptions returns seeded options", async () => {
     const result = await fetchApprovalOptions();
-    expect(result).toHaveLength(1);
+    expect(result).toHaveLength(5);
   });
 
-  it("createApprovalOption POSTs new option", async () => {
-    mockFetch(201, { value: "new-opt", label: "New Option" });
+  it("createApprovalOption creates new option", async () => {
     const result = await createApprovalOption({ id: "new-opt", value: "new-opt", label: "New Option" });
     expect(result.value).toBe("new-opt");
   });
 
-  it("updateApprovalOption PUTs updated option", async () => {
-    mockFetch(200, { value: "updated", label: "Updated" });
-    const result = await updateApprovalOption("accept", { value: "updated", label: "Updated" });
+  it("updateApprovalOption updates option", async () => {
+    const result = await updateApprovalOption("accept", { value: "accept", label: "Updated" });
     expect(result.label).toBe("Updated");
   });
 
-  it("deleteApprovalOption DELETEs option", async () => {
-    mockFetch(200, { message: "Deleted" });
+  it("deleteApprovalOption deletes option", async () => {
     const result = await deleteApprovalOption("accept");
-    expect(result.message).toBe("Deleted");
+    expect(result.message).toBe("Approval option deleted");
+    expect((await fetchApprovalOptions()).find((o) => o.value === "accept")).toBeUndefined();
   });
 });
 
-describe("error handling", () => {
-  it("throws with server error message", async () => {
-    mockFetch(403, { error: "Forbidden" });
-    await expect(fetchDeclarations()).rejects.toThrow("Forbidden");
+describe("local store errors", () => {
+  it("throws 404 with message for unknown declaration", async () => {
+    await expect(fetchDeclarationById("NOPE-1")).rejects.toThrow("Declaration NOPE-1 not found");
   });
 
-  it("throws generic message when no error body", async () => {
-    mockFetch(500, null);
-    await expect(fetchDeclarations()).rejects.toThrow("Request failed with status 500");
-  });
-
-  it("includes auth token when set", async () => {
+  it("auth token helpers still round-trip", async () => {
     setToken("test-token-123");
-    const spy = mockFetch(200, []);
-    await fetchDeclarations();
-    const headers = (spy.mock.calls[0][1] as any).headers as Record<string, string>;
-    expect(headers["Authorization"]).toBe("Bearer test-token-123");
+    expect(getAuthToken()).toBe("test-token-123");
+    clearToken();
+    expect(getAuthToken()).toBeNull();
   });
 });

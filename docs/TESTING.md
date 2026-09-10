@@ -14,14 +14,28 @@ npx vitest --coverage   # With coverage report
 
 | File | Tests | What's tested |
 |------|-------|---------------|
-| `auth-edge-cases.test.ts` | 10 | Login edge cases, token expiry, role-based access, session handling |
-| `integration.test.ts` | 7 | App-level integration: routing, auth flows, API call mocking |
-| `frontend-break.test.ts` | 31 | Component rendering under stress: missing props, invalid data, API errors, empty states |
+| `api-services.test.ts` | 52 | Local-store service layer: CRUD, submit lifecycle, workflows, reports, errors |
+| `integration.test.ts` | 28 | Auth + journey flows against the local store |
+| `NewDeclarationScreen.test.tsx` | 8 | Travel form render, validation, submit/draft, traveler blocks |
+| `approval-workflow.test.tsx` | 23 | WorkflowTimeline options, decisions, auto-fetch |
+| `ApprovalDetail.test.tsx` | 15 | Approval detail decisions and payloads |
+| `workflow-e2e.test.tsx` | 29 | Approval lifecycle, documents, error paths |
+| `workflow-fix.test.tsx` | 3 | Timeline rendering edge cases |
+| `MyDeclarationsScreen.test.tsx` | 14 | Travel request list, filters, export |
+| `ApprovalQueue.test.tsx` | 9 | Queue filtering, review, export |
+| `frontend-break.test.ts` | 31 | HTTP client breaking tests + offline service wrappers |
+| `auth-edge-cases.test.ts` | 13 | Local auth edge cases, token/session handling, screen access |
 | `ErrorBoundary.test.tsx` | 5 | React Error Boundary catches thrown errors, renders fallback UI |
 | `UserContext.test.tsx` | 7 | User context provider: login state, token storage, role switching |
 | `dashboard-render.test.tsx` | 1 | ApproverDashboard mounts without throwing runtime errors |
+| `AdminApprovalOptions.test.tsx` | 1 | Approval options admin screen |
+| `admin-dashboard-states.test.tsx` | 2 | Admin dashboard loading/error states |
+| `org-api.test.ts` | 4 | Organization API helpers |
 
-**Total: 61 tests**
+**Total: 245 tests**
+
+Tests run fully offline — the service layer reads/writes the localStorage-backed
+store, reset via `resetLocalStore()` in `beforeEach`. No backend required.
 
 ## Running Individual Tests
 

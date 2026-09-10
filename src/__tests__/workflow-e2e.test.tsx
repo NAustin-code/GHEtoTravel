@@ -236,7 +236,7 @@ describe("Journey 6: Approve Declaration", () => {
     render(<ApprovalDetail declaration={makeDeclaration()} onBack={vi.fn()} />);
 
     await waitFor(() => expect(screen.getByText("Decision *")).toBeInTheDocument());
-    fireEvent.click(screen.getByText(/accept the actual GHE/));
+    fireEvent.click(screen.getByText(/Team member travel request approved/));
     fireEvent.click(screen.getByText("Submit Decision"));
 
     await waitFor(() => {
@@ -253,7 +253,7 @@ describe("Journey 6: Approve Declaration", () => {
     render(<ApprovalDetail declaration={makeDeclaration()} onBack={vi.fn()} />);
 
     await waitFor(() => expect(screen.getByText("Decision *")).toBeInTheDocument());
-    fireEvent.click(screen.getByText(/share the actual GHE.*Organisation Pool/));
+    fireEvent.click(screen.getByText(/organisation pool/i));
     fireEvent.click(screen.getByText("Submit Decision"));
 
     await waitFor(() => {
@@ -273,7 +273,7 @@ describe("Journey 6: Approve Declaration", () => {
     render(<ApprovalDetail declaration={makeDeclaration()} onBack={vi.fn()} />);
 
     await waitFor(() => expect(screen.getByText("Decision *")).toBeInTheDocument());
-    const acceptOptions = screen.getAllByText(/accept the actual GHE/);
+    const acceptOptions = screen.getAllByText(/Team member travel request approved/);
     fireEvent.click(acceptOptions[acceptOptions.length - 1]);
     fireEvent.click(screen.getByText("Submit Decision"));
 
@@ -291,7 +291,7 @@ describe("Journey 6: Approve Declaration", () => {
     render(<ApprovalDetail declaration={makeDeclaration()} onBack={vi.fn()} />);
 
     await waitFor(() => expect(screen.getByText("Decision *")).toBeInTheDocument());
-    fireEvent.click(screen.getByText(/accept the actual GHE/));
+    fireEvent.click(screen.getByText(/Team member travel request approved/));
     fireEvent.click(screen.getByText("Submit Decision"));
 
     await waitFor(() => {
@@ -306,7 +306,7 @@ describe("Journey 6: Approve Declaration", () => {
     render(<ApprovalDetail declaration={makeDeclaration()} onBack={vi.fn()} />);
 
     await waitFor(() => expect(screen.getByText("Decision *")).toBeInTheDocument());
-    fireEvent.click(screen.getByText(/accept the actual GHE/));
+    fireEvent.click(screen.getByText(/Team member travel request approved/));
     fireEvent.click(screen.getByText("Submit Decision"));
 
     await waitFor(() => {

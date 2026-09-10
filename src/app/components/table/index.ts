@@ -14,7 +14,7 @@ export const COL = {
   ID: "font-mono text-sm font-bold",
   /** Type — renders via <TypeBadge> */
   TYPE: "",
-  /** Counterparty — medium weight + foreground */
+  /** Destination — medium weight + foreground */
   COUNTERPARTY: "font-medium text-foreground",
   /** Monetary value — semibold + tabular-nums */
   VALUE: "font-semibold tabular-nums",

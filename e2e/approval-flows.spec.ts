@@ -2,26 +2,32 @@ import { test, expect } from "@playwright/test";
 import { USERS, LOGIN_INDEX, AppPage, NewDeclarationPage } from "./common-helpers";
 
 test.beforeEach(async ({ context }) => {
+  // Fresh browser context per test already isolates storage; only drop auth
+  // keys here so mid-test re-logins keep seeded + created travel requests.
   await context.addInitScript(() => {
-    try { localStorage.clear(); } catch { /* ignore */ }
+    try {
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith("ghe.auth."))
+        .forEach((k) => localStorage.removeItem(k));
+    } catch { /* ignore */ }
   });
 });
 
 test.describe("Approval Workflow — Full Flow", () => {
   test("Full approval: LM → HR (high-value)", async ({ page }) => {
     const app = new AppPage(page);
-    const declId = "GHE-2024-0047";
+    const declId = "TR-2024-0047";
 
     await app.login(USERS.sipho.email);
     await app.sidebar("Approval Queue");
     await app.clickReviewFor(declId);
-    await app.pickDecision("Accept");
+    await app.pickDecision("Approved");
     await app.submitDecision();
 
     await app.login(USERS.lindiwe.email);
     await app.sidebar("Approval Queue");
     await app.clickReviewFor(declId);
-    await app.pickDecision("Accept");
+    await app.pickDecision("Approved");
     await app.submitDecision();
 
     await app.verifyStatus(declId, "Approved");
@@ -29,12 +35,12 @@ test.describe("Approval Workflow — Full Flow", () => {
 
   test("Rejection at HR step", async ({ page }) => {
     const app = new AppPage(page);
-    const declId = "GHE-2024-0045";
+    const declId = "TR-2024-0045";
 
     await app.login(USERS.sipho.email);
     await app.sidebar("Approval Queue");
     await app.clickReviewFor(declId);
-    await app.pickDecision("Accept");
+    await app.pickDecision("Approved");
     await app.submitDecision();
 
     await app.login(USERS.lindiwe.email);
@@ -48,12 +54,12 @@ test.describe("Approval Workflow — Full Flow", () => {
 
   test("Return at HR step → resubmit → full approval", async ({ page }) => {
     const app = new AppPage(page);
-    const declId = "GHE-2024-0044";
+    const declId = "TR-2024-0044";
 
     await app.login(USERS.sipho.email);
     await app.sidebar("Approval Queue");
     await app.clickReviewFor(declId);
-    await app.pickDecision("Accept");
+    await app.pickDecision("Approved");
     await app.submitDecision();
 
     await app.login(USERS.lindiwe.email);
@@ -64,27 +70,26 @@ test.describe("Approval Workflow — Full Flow", () => {
 
     await app.verifyStatus(declId, "Returned");
 
-    // Team member resubmits
+    // Team member resubmits the returned request via Edit & Resubmit
     await app.login(USERS.nomvula.email);
-    await app.sidebar("My Declarations");
+    await app.sidebar("My Travel Requests");
     await app.search(declId);
-    await app.clickReviewFor(declId);
+    await app.page.getByRole("button", { name: "Edit & Resubmit" }).click();
 
     const declPage = new NewDeclarationPage(page);
-    await declPage.receivedGiven("Received");
-    await declPage.select("Who did you receive it from?", "Supplier");
+    await declPage.agree();
     await declPage.submit();
 
     await app.login(USERS.sipho.email);
     await app.sidebar("Approval Queue");
     await app.clickReviewFor(declId);
-    await app.pickDecision("Accept");
+    await app.pickDecision("Approved");
     await app.submitDecision();
 
     await app.login(USERS.lindiwe.email);
     await app.sidebar("Approval Queue");
     await app.clickReviewFor(declId);
-    await app.pickDecision("Accept");
+    await app.pickDecision("Approved");
     await app.submitDecision();
 
     await app.verifyStatus(declId, "Approved");
@@ -94,37 +99,28 @@ test.describe("Approval Workflow — Full Flow", () => {
     const app = new AppPage(page);
 
     await app.login(USERS.nomvula.email);
-    await app.sidebar("My Declarations");
-    await app.search("GHE-2025-0009");
+    await app.sidebar("My Travel Requests");
+    await app.search("TR-2025-0009");
 
     await app.page.locator("table button:has-text('View')").first().click();
     await app.page.waitForLoadState("networkidle");
 
     await app.assertVisible("Approval Workflow");
-    await app.assertVisible("Completed");
+    await app.assertVisible("Approved");
   });
 });
 
-test.describe("Declaration Creation", () => {
-  test("Team member creates and submits a declaration", async ({ page }) => {
+test.describe("Travel Request Creation", () => {
+  test("Team member creates and submits a travel request", async ({ page }) => {
     const app = new AppPage(page);
     const decl = new NewDeclarationPage(page);
 
     await app.login(USERS.nomvula.email);
-    await app.sidebar("New Declaration");
+    await app.sidebar("New Travel Request");
     await decl.autoFilled(USERS.nomvula.name, USERS.sipho.name);
-    await decl.receivedGiven("Given");
-    await decl.select("Who did you give it to?", "Supplier");
-    await decl.fill("Name of the Supplier", "E2E Test Supplies");
-    await decl.fill("Name of the person giving", "Test Contact");
-    await decl.select("Are we currently negotiating", "No");
-    await decl.select("Is the Supplier or potential Supplier", "No");
-    await decl.select("Is there an existing or imminent", "No");
-    await decl.select("What category does the nature", "Gift");
-    await decl.textarea("E2E test gift for automated testing");
-    await decl.select("Reason/Occasion for the gift", "Business Meeting");
-    await decl.date("2026-07-15");
-    await decl.number("Enter the R amount", "100");
+    await decl.fillTraveler("Nomvula Dlamini", "9001015800083", "nomvula@hb.co.za", "0821234567");
+    await decl.itinerary("Cape Town", "E2E test travel for automated testing", "Durban", "Cape Town", "2026-07-15", "2026-07-18");
+    await decl.agree();
     await decl.submit();
 
     const declId = await decl.getId();
@@ -138,25 +134,16 @@ test.describe("Declaration Creation", () => {
     await app.assertVisible(`table td span:has-text("Pending")`);
   });
 
-  test("Approver creates and submits a declaration (LM verifies)", async ({ page }) => {
+  test("Approver creates and submits a travel request (LM verifies)", async ({ page }) => {
     const app = new AppPage(page);
     const decl = new NewDeclarationPage(page);
 
     await app.login(USERS.lindiwe.email);
-    await app.sidebar("New Declaration");
+    await app.sidebar("New Travel Request");
     await decl.autoFilled(USERS.lindiwe.name, USERS.sipho.name);
-    await decl.receivedGiven("Received");
-    await decl.select("Who did you receive it from?", "Supplier");
-    await decl.fill("Name of the Supplier", "E2E Approver Supplies");
-    await decl.fill("Name of the person giving", "Approver Contact");
-    await decl.select("Are we currently negotiating", "N/A");
-    await decl.select("Is the Supplier or potential Supplier", "N/A");
-    await decl.select("Is there an existing or imminent", "Yes");
-    await decl.select("What category does the nature", "Hospitality");
-    await decl.textarea("E2E test hospitality for approver flow");
-    await decl.select("Reason/Occasion for the gift", "Milestone");
-    await decl.date("2026-07-15");
-    await decl.number("Enter the R amount", "100");
+    await decl.fillTraveler("Lindiwe Zulu", "8505055800084", "lindiwe@hb.co.za", "0831234567");
+    await decl.itinerary("Johannesburg", "E2E test travel for approver flow", "Durban", "Johannesburg", "2026-07-15", "2026-07-18");
+    await decl.agree();
     await decl.submit();
 
     const declId = await decl.getId();
@@ -272,18 +259,18 @@ test.describe("Edge Cases & Error Handling", () => {
     const app = new AppPage(page);
 
     await app.login(USERS.nomvula.email);
-    await app.sidebar("My Declarations");
+    await app.sidebar("My Travel Requests");
 
-    await app.assertVisible("My Declarations", { timeout: 5000 });
+    await app.assertVisible("My Travel Requests", { timeout: 5000 });
     await app.assertVisible("table");
   });
 
-  test("New declaration form pre-fills user fields", async ({ page }) => {
+  test("New travel request form renders traveler and itinerary fields", async ({ page }) => {
     const app = new AppPage(page);
     const decl = new NewDeclarationPage(page);
 
     await app.login(USERS.nomvula.email);
-    await app.sidebar("New Declaration");
+    await app.sidebar("New Travel Request");
     await decl.autoFilled(USERS.nomvula.name, USERS.sipho.name);
   });
 

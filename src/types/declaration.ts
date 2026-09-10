@@ -10,10 +10,11 @@ export type Screen =
   | "admin-dashboard"
   | "admin-users"
   | "admin-workflows"
-  | "admin-config"
   | "admin-dropdowns"
+  | "admin-config"
   | "admin-reports"
-  | "admin-approval-options";
+  | "admin-approval-options"
+  | "travel-request";
 
 export type Role = "teamMember" | "approver" | "admin";
 
@@ -25,6 +26,18 @@ export type StatusType =
   | "Escalated"
   | "Returned";
 
+export type TravelStatus = StatusType | "Cancelled";
+
+export type TravelPurpose = "Business" | "Leisure" | "Visiting" | "Other";
+
+export type TransportMode =
+  | "None"
+  | "Flight"
+  | "Bus"
+  | "Train"
+  | "Car"
+  | "Other";
+
 export type ApprovalDecision =
   | "return"
   | "accept"
@@ -32,6 +45,8 @@ export type ApprovalDecision =
   | "foundation"
   | "decline"
   | null;
+
+export type TravelApprovalDecision = "accept" | "decline" | "return";
 
 export interface User {
   id: string;
@@ -44,6 +59,25 @@ export interface User {
   position: string;
   lineManager: string | null;
   organizationId?: string;
+}
+
+export interface Traveler {
+  id: string;
+  name: string;
+  employeeId?: string;
+  teamMemberNumber: string;
+  department: string;
+  position: string;
+  idDocument: string;
+  idDocumentType: "ID" | "Passport";
+  email: string;
+  cellPhone: string;
+  cellNumber?: string;
+  jobTitle: string;
+  jobPosition?: string;
+  company: string;
+  gender?: string;
+  companyToBeBilled?: string;
 }
 
 export interface Declaration {
@@ -74,11 +108,70 @@ export interface Declaration {
   instances: string;
   publicOfficial: string;
   company?: string;
+  companyToBeBilled?: string;
+  orderNumber?: string;
   team?: string;
   substantiation?: string;
   files?: UploadedFile[];
   organizationId?: string;
   workflowSteps?: WorkflowStep[];
+  // Travel-request extensions (optional so legacy screens keep working)
+  travelers?: Traveler[];
+  numberOfPeople?: number;
+  destination?: string;
+  departureDate?: string;
+  returnDate?: string;
+  travelType?: "Domestic" | "International";
+  reason?: string;
+  to?: string;
+  transportMode?: TransportMode;
+  transportDetails?: string;
+  flightCost?: number;
+  seatPreference?: "Aisle" | "Window" | "Other";
+  firstTimeFlying?: boolean | string;
+  accommodationRequired?: boolean;
+  accommodationDetails?: string;
+  accommodationCost?: number;
+  enterTravellerDetails?: boolean;
+  purpose?: TravelPurpose;
+}
+
+export interface TravelRequest {
+  id: string;
+  employee: string;
+  employeeId: string;
+  department: string;
+  purpose: TravelPurpose;
+  counterparty?: string;
+  travelers: Traveler[];
+  submitted: string;
+  approver: string;
+  approverId?: string;
+  status: TravelStatus;
+  priority: "High" | "Medium" | "Low";
+  destination: string;
+  departureDate: string;
+  returnDate: string;
+  travelType: "Domestic" | "International";
+  reason: string;
+  from?: string;
+  to?: string;
+  transportMode: TransportMode;
+  transportDetails: string;
+  flightCost?: number;
+  seatPreference: "Aisle" | "Window" | "Other";
+  firstTimeFlying: boolean | string;
+  accommodationRequired: boolean;
+  accommodationDetails: string;
+  accommodationCost?: number;
+  numberOfPeople: number;
+  enterTravellerDetails: boolean;
+  company?: string;
+  organizationId?: string;
+  lineManager?: string;
+  files?: UploadedFile[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface WorkflowStep {
@@ -98,6 +191,25 @@ export interface WorkflowStep {
 export interface WorkflowInstance {
   declarationId: string;
   steps: WorkflowStep[];
+}
+
+export interface TravelWorkflowStep {
+  order: number;
+  role: "lineManager" | "hr";
+  assignee: string;
+  assigneeName: string;
+  label: string;
+  status: "pending" | "approved" | "declined";
+  decision: TravelApprovalDecision;
+  notes: string;
+  decidedAt: string | null;
+  decidedById: string | null;
+  decidedByName: string | null;
+}
+
+export interface TravelWorkflowInstance {
+  declarationId: string;
+  steps: TravelWorkflowStep[];
 }
 
 export interface WorkflowRule {

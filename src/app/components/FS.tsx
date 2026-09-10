@@ -3,11 +3,11 @@ import { Card } from "./Card";
 import { PURPLE, GRADIENT_PRIMARY } from "@/config/theme";
 
 export const FORM_SECTIONS = [
-  { id: "sec-team",        num: "1", label: "Team Member Details" },
-  { id: "sec-declaration", num: "2", label: "Declaration Details" },
-  { id: "sec-ghe",         num: "3", label: "Gift, Hospitality or Entertainment Details" },
-  { id: "sec-docs",        num: "4", label: "Supporting Documents" },
-  { id: "sec-undertaking", num: "5", label: "Declaration & Undertaking" },
+  { id: "sec-traveler",     num: "1", label: "Traveler Details" },
+  { id: "sec-travel",       num: "2", label: "Travel Details" },
+  { id: "sec-accommodation", num: "3", label: "Accommodation & Transport" },
+  { id: "sec-docs",         num: "4", label: "Supporting Documents" },
+  { id: "sec-undertaking",  num: "5", label: "Declaration & Undertaking" },
 ];
 
 export function FS({

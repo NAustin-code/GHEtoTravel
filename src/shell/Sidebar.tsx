@@ -1,4 +1,4 @@
-import { Gift, FileText, Home, CheckSquare, Menu, ChevronLeft, Settings, Users, Activity, List, BarChart3, CheckCircle2 } from "lucide-react";
+import { Home, Plane, FileText, CheckSquare, Menu, ChevronLeft, Settings, Users, Activity, List, BarChart3, CheckCircle2 } from "lucide-react";
 import { ImageWithFallback } from "@/app/components/ImageWithFallback";
 import logoImg from "@/assets/HB-Logo-NO-BG.png";
 import { YELLOW, GRADIENT_SIDEBAR } from "@/config/theme";
@@ -33,15 +33,15 @@ export function Sidebar({
         ]
       : role === "teamMember"
       ? [
-          { screen: "new-declaration" as Screen, icon: Gift,        label: "New Declaration" },
-          { screen: "my-declarations"  as Screen, icon: FileText,   label: "My Declarations" },
+          { screen: "new-declaration" as Screen, icon: Plane,        label: "New Travel Request" },
+          { screen: "my-declarations"  as Screen, icon: FileText,   label: "My Travel Requests" },
         ]
       : (() => {
           const base: { screen: Screen; icon: any; label: string }[] = [
             { screen: "approver-dashboard" as Screen, icon: Home,        label: "Dashboard" },
-            { screen: "new-declaration"    as Screen, icon: Gift,        label: "New Declaration" },
+            { screen: "new-declaration"    as Screen, icon: Plane,       label: "New Travel Request" },
             { screen: "approval-queue"     as Screen, icon: CheckSquare, label: "Approval Queue" },
-            { screen: "my-declarations"    as Screen, icon: FileText,    label: "All Declarations" },
+            { screen: "my-declarations"    as Screen, icon: FileText,    label: "All Travel Requests" },
           ];
           if (user && canAccessScreen(user, "admin-reports")) {
             base.push({ screen: "admin-reports" as Screen, icon: BarChart3, label: "Reports" });

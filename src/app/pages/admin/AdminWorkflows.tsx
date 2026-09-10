@@ -63,7 +63,7 @@ export function AdminWorkflows() {
     <div className="space-y-6">
       <PageHeader
         title="Approval Workflows"
-        subtitle="Configure conditional routing and approver tiers for declarations."
+        subtitle="Configure conditional routing and approver tiers for travel requests."
         actions={
           <button onClick={handleAdd}
             className="flex h-10 w-full items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(79,29,149,0.28)] sm:w-auto"

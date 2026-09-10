@@ -8,24 +8,24 @@ import { SystemConfig, NotificationTemplates } from "../../../types/declaration"
 
 const DEFAULT_NOTIFICATION_TEMPLATES: NotificationTemplates = {
   managerApproval: {
-    subject: "GHE Declaration – Approval Required - [Declaration ID]",
-    body: "Hi [Approving Manager Name],\n\nA new Gift, Hospitality and Entertainment (GHE) declaration has been submitted by [Team Member Name] and requires your attention.\n\nPlease access the GHE Declaration App using the link below to review and action the declaration.\n\n[Review Declaration]\n\nKind regards,\nGHE Declaration System\n\nThis is an automated notification. Please do not reply to this email.",
+    subject: "Travel Request – Approval Required - [Declaration ID]",
+    body: "Hi [Approving Manager Name],\n\nA new travel request has been submitted by [Team Member Name] and requires your attention.\n\nPlease access the Travel Request App using the link below to review and action the request.\n\n[Review Travel Request]\n\nKind regards,\nTravel Request System\n\nThis is an automated notification. Please do not reply to this email.",
   },
   hrApproval: {
-    subject: "GHE Declaration – HR Approval Required - [Declaration ID]",
-    body: "Hi [HR Approver Name],\n\nA Gift, Hospitality and Entertainment (GHE) declaration has been submitted for HR approval and requires your attention.\n\nPlease access the GHE Declaration App using the link below to review and action the declaration.\n\n[Review Declaration]\n\nKind regards,\nGHE Declaration System\n\nThis is an automated notification. Please do not reply to this email.",
+    subject: "Travel Request – HR Approval Required - [Declaration ID]",
+    body: "Hi [HR Approver Name],\n\nA travel request has been submitted for HR approval and requires your attention.\n\nPlease access the Travel Request App using the link below to review and action the request.\n\n[Review Travel Request]\n\nKind regards,\nTravel Request System\n\nThis is an automated notification. Please do not reply to this email.",
   },
   declarationReturned: {
-    subject: "GHE Declaration – Action Required - [Declaration ID]",
-    body: "Hi [Team Member Name],\n\nYour Gift, Hospitality and Entertainment (GHE) declaration has been returned and requires your attention.\n\nPlease access the GHE Declaration App using the link below to review the feedback, make the required changes and resubmit your declaration.\n\n[Review Declaration]\n\nKind regards,\nGHE Declaration System\n\nThis is an automated notification. Please do not reply to this email.",
+    subject: "Travel Request – Action Required - [Declaration ID]",
+    body: "Hi [Team Member Name],\n\nYour travel request has been returned and requires your attention.\n\nPlease access the Travel Request App using the link below to review the feedback, make the required changes and resubmit your request.\n\n[Review Travel Request]\n\nKind regards,\nTravel Request System\n\nThis is an automated notification. Please do not reply to this email.",
   },
   declarationDeclined: {
-    subject: "GHE Declaration – Declined - [Declaration ID]",
-    body: "Hi [Team Member Name],\n\nYour Gift, Hospitality and Entertainment (GHE) declaration has been reviewed and declined.\n\nPlease access the GHE Declaration App using the link below to view the outcome and any relevant feedback.\n\n[View Declaration]\n\nKind regards,\nGHE Declaration System\n\nThis is an automated notification. Please do not reply to this email.",
+    subject: "Travel Request – Declined - [Declaration ID]",
+    body: "Hi [Team Member Name],\n\nYour travel request has been reviewed and declined.\n\nPlease access the Travel Request App using the link below to view the outcome and any relevant feedback.\n\n[View Travel Request]\n\nKind regards,\nTravel Request System\n\nThis is an automated notification. Please do not reply to this email.",
   },
   declarationApproved: {
-    subject: "GHE Declaration – Approved - [Declaration ID]",
-    body: "Hi [Team Member Name],\n\nYour Gift, Hospitality and Entertainment (GHE) declaration has completed the required approval process and has been [Manager Approval Option].\n\nPlease access the GHE Declaration App using the link below to view your declaration.\n\n[View Declaration]\n\nKind regards,\nGHE Declaration System\n\nThis is an automated notification. Please do not reply to this email.",
+    subject: "Travel Request – Approved - [Declaration ID]",
+    body: "Hi [Team Member Name],\n\nYour travel request has completed the required approval process and has been [Manager Approval Option].\n\nPlease access the Travel Request App using the link below to view your request.\n\n[View Travel Request]\n\nKind regards,\nTravel Request System\n\nThis is an automated notification. Please do not reply to this email.",
   },
 };
 
@@ -149,21 +149,21 @@ export function AdminConfig() {
           </div>
           <div className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-foreground">High Value Gift Threshold (ZAR)</label>
+              <label className="mb-1.5 block text-sm font-semibold text-foreground">High Value Travel Threshold (ZAR)</label>
               <input type="number" value={config.highValueThreshold} onChange={(e) => setConfig({ ...config, highValueThreshold: Number(e.target.value) })} className="h-11 w-full rounded-xl border border-border bg-white/90 px-4 transition-all focus:border-purple-300 focus:outline-none focus:ring-4 focus:ring-purple-500/10" />
               <p className="mt-1 text-xs text-muted-foreground">Declarations above this value require HR approval. Affects new declarations’ workflow routing (LM → HR). Existing workflows are frozen.</p>
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-semibold text-foreground">Maximum Value (ZAR)</label>
               <input type="number" value={config.maximumValue ?? 1000000} onChange={(e) => setConfig({ ...config, maximumValue: Number(e.target.value) })} className="h-11 w-full rounded-xl border border-border bg-white/90 px-4 transition-all focus:border-purple-300 focus:outline-none focus:ring-4 focus:ring-purple-500/10" />
-              <p className="mt-1 text-xs text-muted-foreground">Declarations above this value are blocked. Shown as “Maximum value exceeded” in the New Declaration form.</p>
+              <p className="mt-1 text-xs text-muted-foreground">Declarations above this value are blocked. Shown as “Maximum value exceeded” in the travel request form.</p>
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-semibold text-foreground">SLA Escalation Time (Days)</label>
               <input type="number" value={config.slaEscalationDays} onChange={(e) => setConfig({ ...config, slaEscalationDays: Number(e.target.value) })} className="h-11 w-full rounded-xl border border-border bg-white/90 px-4 transition-all focus:border-purple-300 focus:outline-none focus:ring-4 focus:ring-purple-500/10" />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-foreground">Max Declarations per Counterparty (Annual)</label>
+              <label className="mb-1.5 block text-sm font-semibold text-foreground">Max Requests per Destination (Annual)</label>
               <input type="number" value={config.maxDeclarationsPerCounterparty} onChange={(e) => setConfig({ ...config, maxDeclarationsPerCounterparty: Number(e.target.value) })} className="h-11 w-full rounded-xl border border-border bg-white/90 px-4 transition-all focus:border-purple-300 focus:outline-none focus:ring-4 focus:ring-purple-500/10" />
             </div>
           </div>

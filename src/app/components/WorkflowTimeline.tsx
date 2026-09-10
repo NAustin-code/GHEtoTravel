@@ -303,7 +303,7 @@ export function WorkflowTimeline({
                   {step.state === "pending" && <PendingDetails />}
 
                   {step.state === "skipped" && (
-                    <div className="text-sm text-gray-400 italic">Not required for this declaration.</div>
+                    <div className="text-sm text-gray-400 italic">Not required for this travel request.</div>
                   )}
                 </div>
               </div>

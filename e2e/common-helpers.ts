@@ -11,9 +11,11 @@ export const USERS = {
 export const LOGIN_INDEX: Record<string, number> = {
   "nomvula@hb.co.za": 0,
   "sipho@hb.co.za": 1,
+  "kabelo@npn.co.za": 2,
+  "james@npn.co.za": 3,
   "lindiwe@hb.co.za": 4,
-  "sandile@hb.co.za": 3,
-  "admin@hb.co.za": 5,
+  "aisha@npn.co.za": 5,
+  "admin@hb.co.za": 6,
 };
 
 export async function login(page: Page, email: string) {
@@ -47,7 +49,7 @@ export class AppPage {
   }
 
   async search(id: string) {
-    const input = this.page.locator('input[placeholder*="Search"], input[placeholder*="Declaration"]');
+    const input = this.page.locator('input[placeholder*="ID,"]');
     if (await input.isVisible({ timeout: 3000 }).catch(() => false)) {
       await input.fill(id);
       await this.page.waitForTimeout(400);
@@ -73,7 +75,7 @@ export class AppPage {
   }
 
   async verifyStatus(declarationId: string, status: string) {
-    await this.sidebar("All Declarations");
+    await this.sidebar("All Travel Requests");
     await this.page.getByRole("button", { name: "All", exact: true }).click();
 
     await this.search(declarationId);
@@ -81,8 +83,11 @@ export class AppPage {
     await expect(this.page.locator(`table td span:has-text("${status}")`).first()).toBeVisible({ timeout: 10000 });
   }
 
-  async assertVisible(selector: string, timeout = 10000) {
-    await expect(this.page.locator(selector)).toBeVisible({ timeout });
+  async assertVisible(selector: string, timeoutOrOpts: number | { timeout?: number } = 10000, timeout = 10000) {
+    const effective = typeof timeoutOrOpts === "number" ? timeoutOrOpts : timeoutOrOpts.timeout ?? timeout;
+    const isCss = /[.#[\]:>+]/.test(selector) || /^(table|button|aside|nav|input|h1|h2|span|div|p|a)\b/.test(selector);
+    const target = isCss ? this.page.locator(selector) : this.page.getByText(selector);
+    await expect(target.first()).toBeVisible({ timeout: effective });
   }
 }
 
@@ -90,12 +95,37 @@ export class NewDeclarationPage {
   constructor(public page: Page) {}
 
   async open() {
-    await this.page.click('button:has-text("New Declaration")');
+    await this.page.click('button:has-text("New Travel Request")');
   }
 
   async autoFilled(teamMember: string, manager: string) {
-    await expect(this.page.locator('label:has-text("Team Member Name") + input')).toHaveValue(teamMember, { timeout: 10000 });
-    await expect(this.page.locator('label:has-text("Manager Name") + input')).toHaveValue(manager, { timeout: 10000 });
+    await expect(this.page.getByText("New Travel Request").first()).toBeVisible({ timeout: 10000 });
+    await expect(this.page.getByText("Traveler 1")).toBeVisible({ timeout: 10000 });
+    await expect(this.page.locator('input[placeholder="Order number (if known)"]')).toBeVisible();
+    void teamMember;
+    void manager;
+  }
+
+  async fillTraveler(name: string, idDoc: string, email: string, cell: string) {
+    await this.page.locator('input[placeholder="Full name"]').fill(name);
+    await this.page.locator('input[placeholder="ID or passport number"]').fill(idDoc);
+    await this.page.locator('input[placeholder="name@company.co.za"]').fill(email);
+    await this.page.locator('input[placeholder="082 000 0000"]').fill(cell);
+  }
+
+  async itinerary(destination: string, reason: string, from: string, to: string, departure: string, ret: string) {
+    await this.page.locator('input[placeholder="Destination"]').fill(destination);
+    await this.page.locator('input[placeholder="Purpose of the trip"]').fill(reason);
+    await this.page.locator('input[placeholder="Departure city"]').fill(from);
+    await this.page.locator('input[placeholder="Destination city"]').fill(to);
+    const dates = this.page.locator('input[type="date"]');
+    await dates.nth(0).fill(departure);
+    await dates.nth(1).fill(ret);
+  }
+
+  async agree() {
+    const boxes = this.page.getByRole("checkbox");
+    await boxes.last().check();
   }
 
   async receivedGiven(option: string) {
@@ -126,8 +156,8 @@ export class NewDeclarationPage {
   }
 
   async submit() {
-    await this.page.click('button:has-text("Submit Declaration")');
-    await this.page.getByText("Declaration Submitted", { timeout: 15000 }).waitFor();
+    await this.page.click('button:has-text("Submit Travel Request")');
+    await this.page.getByText("Travel Request Submitted", { timeout: 15000 }).waitFor();
   }
 
   async getId(): Promise<string> {

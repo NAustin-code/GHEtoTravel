@@ -52,7 +52,7 @@ export function LandingScreen({ onEnter }: { onEnter: (role: Role, name: string)
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-[#0f0225]" style={F}>
       <div className="absolute inset-0 z-0">
-        <ImageWithFallback src={bannerImg} alt="GHE Declaration" className="block w-full h-full object-contain object-left" />
+        <ImageWithFallback src={bannerImg} alt="Travel Request" className="block w-full h-full object-contain object-left" />
       </div>
       <div className="absolute inset-0 z-10 pointer-events-none">
         <div className="absolute inset-0 pointer-events-none" aria-hidden>
@@ -77,7 +77,7 @@ export function LandingScreen({ onEnter }: { onEnter: (role: Role, name: string)
         <div className="relative z-10 w-full max-w-[320px] rounded-[2rem] bg-white/45 px-1 py-2 sm:px-3 sm:py-5 lg:bg-transparent lg:px-0">
           <div className="mb-8">
             <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Welcome back!</h1>
-            <p className="text-sm text-slate-600 mt-2 leading-6">GHE Declaration Portal</p>
+            <p className="text-sm text-slate-600 mt-2 leading-6">Travel Request Portal</p>
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

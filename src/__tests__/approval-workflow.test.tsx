@@ -73,10 +73,10 @@ describe("WorkflowTimeline", () => {
     render(<WorkflowTimeline steps={mockSteps()} decision={null} onDecision={onDecision} />);
     expect(screen.getByText("Decision *")).toBeInTheDocument();
     expect(screen.getByText(/Return - Team member/)).toBeInTheDocument();
-    expect(screen.getByText(/Approved.*accept the actual GHE/)).toBeInTheDocument();
-    expect(screen.getByText(/Approved.*Organisation Pool/)).toBeInTheDocument();
-    expect(screen.getByText(/Approved.*Hollywood Foundation/)).toBeInTheDocument();
-    expect(screen.getByText(/Declined.*return the actual GHE/)).toBeInTheDocument();
+    expect(screen.getByText(/Approved.*Team member travel/)).toBeInTheDocument();
+    expect(screen.getByText(/organisation pool/i)).toBeInTheDocument();
+    expect(screen.getByText("Approved - Travel request approved.")).toBeInTheDocument();
+    expect(screen.getByText(/Declined.*Travel request declined/)).toBeInTheDocument();
   });
 
   it("shows notes textarea when onNotesChange is provided", () => {
@@ -87,7 +87,7 @@ describe("WorkflowTimeline", () => {
   it("calls onDecision when a radio option is clicked", () => {
     const onDecision = vi.fn();
     render(<WorkflowTimeline steps={mockSteps()} decision={null} onDecision={onDecision} onNotesChange={vi.fn()} />);
-    fireEvent.click(screen.getByText(/Approved.*accept the actual GHE/));
+    fireEvent.click(screen.getByText(/Approved.*Team member travel/));
     expect(onDecision).toHaveBeenCalledWith("accept");
   });
 
@@ -143,7 +143,7 @@ describe("WorkflowTimeline", () => {
     ];
     render(<WorkflowTimeline steps={steps} />);
     expect(screen.getByText("Not Required")).toBeInTheDocument();
-    expect(screen.getByText("Not required for this declaration.")).toBeInTheDocument();
+    expect(screen.getByText("Not required for this travel request.")).toBeInTheDocument();
   });
 
   it("displays completed step notes", () => {
@@ -158,15 +158,15 @@ describe("WorkflowTimeline", () => {
     const onDecision = vi.fn();
     render(<WorkflowTimeline steps={mockSteps()} decision={null} onDecision={onDecision} />);
     expect(screen.getByText(/Return - Team member/)).toBeInTheDocument();
-    expect(screen.getByText(/Approved.*accept the actual GHE/)).toBeInTheDocument();
-    expect(screen.getByText(/Approved.*Organisation Pool/)).toBeInTheDocument();
-    expect(screen.getByText(/Approved.*Hollywood Foundation/)).toBeInTheDocument();
-    expect(screen.getByText(/Declined.*return the actual GHE/)).toBeInTheDocument();
+    expect(screen.getByText(/Approved.*Team member travel/)).toBeInTheDocument();
+    expect(screen.getByText(/organisation pool/i)).toBeInTheDocument();
+    expect(screen.getByText("Approved - Travel request approved.")).toBeInTheDocument();
+    expect(screen.getByText(/Declined.*Travel request declined/)).toBeInTheDocument();
   });
 
   it("highlights actively selected radio option", () => {
     render(<WorkflowTimeline steps={mockSteps()} decision="accept" onDecision={vi.fn()} />);
-    const label = screen.getByText(/Approved.*accept the actual GHE/).closest("label")!;
+    const label = screen.getByText(/Approved.*Team member travel/).closest("label")!;
     expect(label.className).toContain("border-purple-600");
   });
 
@@ -194,18 +194,18 @@ describe("ApprovalDetail handleSubmit logic", () => {
   it("APPROVAL_OPTIONS labels are descriptive", () => {
     const opt = (v: string) => APPROVAL_OPTIONS.find((o) => o.value === v)!;
     expect(opt("return").label).toContain("Return");
-    expect(opt("accept").label).toContain("accept");
-    expect(opt("org").label).toContain("Organisation Pool");
-    expect(opt("foundation").label).toContain("Foundation");
+    expect(opt("accept").label).toContain("travel request approved");
+    expect(opt("org").label).toContain("organisation pool");
+    expect(opt("foundation").label).toContain("Travel request approved");
     expect(opt("decline").label).toContain("Declined");
   });
 
   it("DECISION_LABELS maps decisions correctly", () => {
-    expect(DECISION_LABELS.accept).toBe("Approved - Team Member to accept the actual GHE or offered GHE in their personal capacity.");
+    expect(DECISION_LABELS.accept).toBe("Approved - Team member travel request approved.");
     expect(DECISION_LABELS.return).toBe("Returned - Team member to provide additional information.");
-    expect(DECISION_LABELS.org).toBe("Approved - Team Member to share the actual GHE or offered GHE with the Organisation Pool.");
-    expect(DECISION_LABELS.foundation).toBe("Approved - Team Member to donate the actual GHE or offered GHE to the Hollywood Foundation.");
-    expect(DECISION_LABELS.decline).toBe("Declined - Team Member to return the actual GHE or regret the offered GHE.");
+    expect(DECISION_LABELS.org).toBe("Approved - Travel request approved and shared with the organisation pool.");
+    expect(DECISION_LABELS.foundation).toBe("Approved - Travel request approved.");
+    expect(DECISION_LABELS.decline).toBe("Declined - Travel request declined.");
   });
 });
 

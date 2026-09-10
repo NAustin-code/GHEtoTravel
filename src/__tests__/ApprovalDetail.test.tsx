@@ -104,7 +104,7 @@ describe("ApprovalDetail", () => {
       expect(screen.getByText("Decision *")).toBeInTheDocument();
     });
 
-    const acceptLabel = screen.getByText(/accept the actual GHE or offered GHE in their personal capacity/);
+    const acceptLabel = screen.getByText(/Team member travel request approved/);
     fireEvent.click(acceptLabel);
     const labelEl = acceptLabel.closest("label")!;
     expect(labelEl.className).toContain("border-purple-600");
@@ -118,7 +118,7 @@ describe("ApprovalDetail", () => {
       expect(screen.getByText("Decision *")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByText(/accept the actual GHE or offered GHE in their personal capacity/));
+    fireEvent.click(screen.getByText(/Team member travel request approved/));
     fireEvent.click(screen.getByText("Submit Decision"));
 
     await waitFor(() => {
@@ -136,7 +136,7 @@ describe("ApprovalDetail", () => {
       expect(screen.getByText("Decision *")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByText(/accept the actual GHE or offered GHE in their personal capacity/));
+    fireEvent.click(screen.getByText(/Team member travel request approved/));
     fireEvent.click(screen.getByText("Submit Decision"));
 
     await waitFor(() => {
@@ -169,7 +169,7 @@ describe("ApprovalDetail", () => {
     render(<ApprovalDetail declaration={mockDeclaration} onBack={vi.fn()} />);
     await waitFor(() => expect(screen.getByText("Decision *")).toBeInTheDocument());
 
-    fireEvent.click(screen.getByText(/Declined - Team member to return/i));
+    fireEvent.click(screen.getByText(/Travel request declined/));
     fireEvent.click(screen.getByText("Submit Decision"));
 
     await waitFor(() => {
@@ -212,7 +212,7 @@ describe("ApprovalDetail", () => {
     render(<ApprovalDetail declaration={mockDeclaration} onBack={vi.fn()} />);
     await waitFor(() => expect(screen.getByText("Decision *")).toBeInTheDocument());
 
-    fireEvent.click(screen.getByText(/accept the actual GHE or offered GHE in their personal capacity/));
+    fireEvent.click(screen.getByText(/Team member travel request approved/));
     fireEvent.change(screen.getByPlaceholderText("Add notes or reasoning..."), { target: { value: "Looks good" } });
     fireEvent.click(screen.getByText("Submit Decision"));
 
@@ -229,7 +229,7 @@ describe("ApprovalDetail", () => {
     render(<ApprovalDetail declaration={mockDeclaration} onBack={vi.fn()} />);
     await waitFor(() => expect(screen.getByText("Decision *")).toBeInTheDocument());
 
-    fireEvent.click(screen.getByText(/share the actual GHE or offered GHE with the Organisation Pool/));
+    fireEvent.click(screen.getByText(/organisation pool/i));
     fireEvent.click(screen.getByText("Submit Decision"));
 
     await waitFor(() => {
@@ -245,7 +245,7 @@ describe("ApprovalDetail", () => {
     render(<ApprovalDetail declaration={mockDeclaration} onBack={vi.fn()} />);
     await waitFor(() => expect(screen.getByText("Decision *")).toBeInTheDocument());
 
-    fireEvent.click(screen.getByText(/donate the actual GHE or offered GHE to the Hollywood Foundation/));
+    fireEvent.click(screen.getByText("Approved - Travel request approved."));
     fireEvent.click(screen.getByText("Submit Decision"));
 
     await waitFor(() => {

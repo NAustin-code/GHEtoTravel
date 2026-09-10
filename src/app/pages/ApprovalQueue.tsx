@@ -73,7 +73,7 @@ export function ApprovalQueue({ onReview }: { onReview: (d: Declaration) => void
   });
   const sortFieldMap: Record<string, string> = {
     "Declaration ID": "id", TeamMember: "employee", Dept: "department", Type: "type",
-    Counterparty: "counterparty", Value: "value", Submitted: "submitted",
+    Destination: "counterparty", Value: "value", Submitted: "submitted",
     Priority: "priority", Status: "status",
   };
   const sorted = sortKey
@@ -100,7 +100,7 @@ export function ApprovalQueue({ onReview }: { onReview: (d: Declaration) => void
         Employee: d.employee,
         Department: d.department,
         Type: d.type,
-        Counterparty: d.counterparty,
+        Destination: d.counterparty,
         Value: d.value,
         Submitted: d.submitted,
         Priority: d.priority,
@@ -130,7 +130,7 @@ export function ApprovalQueue({ onReview }: { onReview: (d: Declaration) => void
     <div>
       <PageHeader
         title="Approval Queue"
-        subtitle={`${filteredQueue.length} Declarations awaiting your review`}
+        subtitle={`${filteredQueue.length} Travel requests awaiting your review`}
         actions={
           <div className="flex flex-wrap gap-2">
             <button
@@ -157,7 +157,7 @@ export function ApprovalQueue({ onReview }: { onReview: (d: Declaration) => void
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="ID, Employee or Counterparty"
+              placeholder="ID, Employee or Destination"
               className="table-filter-input table-filter-with-icon"
             />
           </div>
@@ -239,12 +239,12 @@ export function ApprovalQueue({ onReview }: { onReview: (d: Declaration) => void
 
       {allDeclarations.length === 0 && !loading && (
         <div className="rounded-xl border border-dashed border-border bg-white/50 p-10 text-center text-sm text-muted-foreground">
-          No Declarations awaiting your review.
+          No travel requests awaiting your review.
         </div>
       )}
       <Card className="space-y-3 p-3.5 md:hidden">
         {pagedQueue.length === 0 && !loading ? (
-          <div className="py-10 text-center text-sm text-muted-foreground">No Declarations match your filters.</div>
+          <div className="py-10 text-center text-sm text-muted-foreground">No travel requests match your filters.</div>
         ) : null}
         {pagedQueue.length > 0 && pagedQueue.map((d) => (
           <div key={d.id} className="rounded-2xl border border-border bg-white p-4 shadow-sm">
@@ -292,7 +292,7 @@ export function ApprovalQueue({ onReview }: { onReview: (d: Declaration) => void
       <Card className="hidden overflow-x-auto md:block">
         <Table>
           <Thead>
-            {["Declaration ID", "TeamMember", "Dept", "Type", "Counterparty", "Value", "Submitted", "Priority", "Status", "Step"].map((label) => (
+            {["Declaration ID", "TeamMember", "Dept", "Type", "Destination", "Value", "Submitted", "Priority", "Status", "Step"].map((label) => (
               <Th
                 key={label}
                 sortable
@@ -310,7 +310,7 @@ export function ApprovalQueue({ onReview }: { onReview: (d: Declaration) => void
           </Thead>
           <Tbody>
             {pagedQueue.length === 0 ? (
-              <Tr><Td colSpan={11} className="py-10 text-center text-sm text-muted-foreground">No declarations match your filters.</Td></Tr>
+              <Tr><Td colSpan={11} className="py-10 text-center text-sm text-muted-foreground">No travel requests match your filters.</Td></Tr>
             ) : pagedQueue.map((d) => (
               <Tr key={d.id}>
                 <Td><span className={COL.ID} style={{ color: PURPLE }}>{d.id}</span></Td>
@@ -340,7 +340,7 @@ export function ApprovalQueue({ onReview }: { onReview: (d: Declaration) => void
         </Table>
         <div className="flex items-center justify-between border-t border-border bg-table-header-bg px-5 py-3">
           <p className="text-xs text-muted-foreground">
-            Showing <span className="font-semibold text-foreground">{filteredQueue.length}</span> declarations
+            Showing <span className="font-semibold text-foreground">{filteredQueue.length}</span> travel requests
           </p>
           {totalPages > 1 && (
             <div className="flex items-center gap-2">

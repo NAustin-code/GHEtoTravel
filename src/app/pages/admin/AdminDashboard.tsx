@@ -39,7 +39,7 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (s: Screen) => void
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         <KpiCard label="Total Users" value={String(stats.users)} icon={Users} color="#7c3aed" onClick={() => onNavigate("admin-users")} active />
         <KpiCard label="Active Workflows" value={String(stats.workflows)} icon={Activity} color="#10b981" onClick={() => onNavigate("admin-workflows")} />
-        <KpiCard label="Declarations" value={String(stats.declarations)} icon={FileText} color="#f59e0b" onClick={() => onNavigate("admin-reports")} />
+        <KpiCard label="Travel Requests" value={String(stats.declarations)} icon={FileText} color="#f59e0b" onClick={() => onNavigate("admin-reports")} />
         <KpiCard label="Value Threshold" value={`R${stats.threshold}`} icon={Activity} color="#ef4444" />
       </div>
 
@@ -55,7 +55,7 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (s: Screen) => void
             {[
               { label: "User Management", desc: "Add, edit, or remove system users and roles.", screen: "admin-users" as Screen },
               { label: "Workflow Config", desc: "Setup conditional routing and approver tiers.", screen: "admin-workflows" as Screen },
-              { label: "Dropdown Data", desc: "Manage categories, occasions, and departments.", screen: "admin-dropdowns" as Screen },
+              { label: "Dropdown Data", desc: "Manage travel types, departments, and companies.", screen: "admin-dropdowns" as Screen },
               { label: "System Config", desc: "Update compliance thresholds and configuration.", screen: "admin-config" as Screen },
             ].map((link, idx) => (
               <div key={idx}
@@ -80,7 +80,7 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (s: Screen) => void
           </div>
           <h3 className="text-lg font-bold text-foreground mb-2">System Healthy</h3>
           <p className="text-sm text-muted-foreground max-w-sm mb-6">
-            All services are running normally. {stats.users} users and {stats.declarations} declarations in the system.
+            All services are running normally. {stats.users} users and {stats.declarations} travel requests in the system.
           </p>
         </Card>
       </div>

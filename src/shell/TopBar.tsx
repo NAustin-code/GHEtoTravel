@@ -17,13 +17,13 @@ export function TopBar({
     .join("")
     .slice(0, 2)
     .toUpperCase();
-  const headerText = 'Gift, Hospitality or Entertainment ("GHE") Declaration System';
+  const headerText = 'Travel Request System';
 
   return (
     <header className="relative z-20 flex min-h-16 items-center justify-between gap-2 border-b border-white/60 bg-white/60 px-3 shadow-[0_2px_10px_rgba(0,0,0,0.02)] backdrop-blur-xl sm:gap-3 sm:px-6">
       <div className="flex min-w-0 flex-1 items-center gap-3 sm:mr-3 lg:mr-6">
-        <div className="flex min-w-0 flex-1 items-center justify-center gap-2 overflow-hidden rounded-full border border-[#6d28d9]/50 bg-gradient-to-r from-[#0f0225] via-[#2f0b63] to-[#4f1d95] px-3 py-2 shadow-[0_10px_24px_rgba(79,29,149,0.18)] transition-all hover:shadow-[0_14px_30px_rgba(79,29,149,0.25)] lg:px-8">
-          <span className="hidden sm:block w-2.5 h-2.5 rounded-full bg-purple-600 animate-pulse shadow-[0_0_8px_rgba(147,51,234,0.6)] flex-shrink-0" />
+        <div className="flex min-w-0 flex-1 items-center justify-center gap-2 overflow-hidden rounded-full border border-[#0D9488]/50 bg-gradient-to-r from-[#06251f] via-[#0b3b36] to-[#0D9488] px-3 py-2 shadow-[0_10px_24px_rgba(13,148,136,0.18)] transition-all hover:shadow-[0_14px_30px_rgba(13,148,136,0.25)] lg:px-8">
+          <span className="hidden sm:block w-2.5 h-2.5 rounded-full bg-teal-500 animate-pulse shadow-[0_0_8px_rgba(20,184,166,0.6)] flex-shrink-0" />
           <div className="hidden min-w-0 flex-1 xl:flex xl:justify-center">
             <span className="text-[11px] font-black uppercase tracking-wide text-white whitespace-nowrap sm:text-xs lg:text-sm lg:tracking-widest">
               {headerText}
@@ -53,7 +53,7 @@ export function TopBar({
           </div>
           <div className="hidden md:block">
             <p className="text-sm font-bold text-slate-800 leading-none">{userName}</p>
-            <p className="text-[10px] font-semibold text-purple-600 mt-0.5 uppercase tracking-wider">
+            <p className="text-[10px] font-semibold text-teal-700 mt-0.5 uppercase tracking-wider">
               {role === "teamMember" ? "Team Member" : role === "admin" ? "Administrator" : "Approver"}
             </p>
           </div>
