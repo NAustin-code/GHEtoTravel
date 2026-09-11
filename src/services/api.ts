@@ -32,6 +32,10 @@ export async function submitDeclaration(id: string): Promise<Declaration> {
 export async function uploadDeclarationFile(file: File, declarationId: string): Promise<UploadedFile> {
   return store.uploadFileRecord(file, declarationId);
 }
+
+export async function downloadStoredFile(declarationId: string, file: UploadedFile): Promise<Blob> {
+  return store.readStoredFile(declarationId, file);
+}
 export interface DashboardStats {
   kpis: {
     total: number;

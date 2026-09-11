@@ -1,22 +1,20 @@
 import React, { useId } from "react";
 import { FileText, Clock, Check, Undo, X, ArrowUp } from "lucide-react";
-import { STATUS_COLORS } from "@/config/theme";
 
 export interface KpiDef {
   key: string;
   label: string;
   icon: React.ElementType;
-  color: string;
   filterValue: string;
 }
 
 export const STATUS_KPI: Record<string, KpiDef> = {
-  Total:     { key: "Total",     label: "Total",     icon: FileText, color: "#7c3aed",             filterValue: "All" },
-  Pending:   { key: "Pending",   label: "Pending",   icon: Clock,    color: STATUS_COLORS.Pending.hex,   filterValue: "Pending" },
-  Approved:  { key: "Approved",  label: "Approved",  icon: Check,    color: STATUS_COLORS.Approved.hex,  filterValue: "Approved" },
-  Returned:  { key: "Returned",  label: "Returned",  icon: Undo,     color: STATUS_COLORS.Returned.hex,  filterValue: "Returned" },
-  Declined:  { key: "Declined",  label: "Declined",  icon: X,        color: STATUS_COLORS.Declined.hex,  filterValue: "Declined" },
-  Escalated: { key: "Escalated", label: "Escalated", icon: ArrowUp,  color: STATUS_COLORS.Escalated.hex, filterValue: "Escalated" },
+  Total:     { key: "Total",     label: "Total",     icon: FileText, filterValue: "All" },
+  Pending:   { key: "Pending",   label: "Pending",   icon: Clock,    filterValue: "Pending" },
+  Approved:  { key: "Approved",  label: "Approved",  icon: Check,    filterValue: "Approved" },
+  Returned:  { key: "Returned",  label: "Returned",  icon: Undo,     filterValue: "Returned" },
+  Declined:  { key: "Declined",  label: "Declined",  icon: X,        filterValue: "Declined" },
+  Escalated: { key: "Escalated", label: "Escalated", icon: ArrowUp,  filterValue: "Escalated" },
 };
 
 // kpi.html gradients (125deg / 110deg + radial for Returned)
@@ -176,7 +174,6 @@ export function KpiCard({
   value: string;
   secondaryValue?: string;
   icon: React.ElementType;
-  color: string;
   active?: boolean;
   onClick?: () => void;
   delta?: { text: string; positive?: boolean; negative?: boolean };

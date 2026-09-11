@@ -262,7 +262,6 @@ export function MyDeclarationsScreen({ onEditDraft }: { onEditDraft?: (d: Declar
               label={k === "Total" ? "Total Value" : def.label}
               value={k === "Total" ? formatRand(totalValue) : String(count)}
               icon={def.icon}
-              color={def.color}
               active={activeKpi === def.filterValue}
               onClick={() => handleKpiClick(def.filterValue)}
             />

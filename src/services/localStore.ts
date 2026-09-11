@@ -1,4 +1,4 @@
-import { ApiClientError } from "./httpClient";
+import { ApiClientError, clearAuthState } from "./httpClient";
 import type {
   ApprovalDecision,
   Declaration,
@@ -333,6 +333,10 @@ export function resetLocalStore(): void {
     Object.keys(localStorage)
       .filter((k) => k.startsWith(PREFIX))
       .forEach((k) => localStorage.removeItem(k));
+    // Auth lives outside the store namespace; a reset must not leave a stale login.
+    clearAuthState();
+    // Session file bytes belong to pre-reset declarations.
+    fileBlobs.clear();
   } catch { /* ignore */ }
   seedAll();
 }
@@ -835,8 +839,51 @@ export function uploadFileRecord(file: File, declarationId: string): UploadedFil
     declarationId,
   };
   write("files", [...files, record]);
+  registerFileBlob(declarationId, file.name, file);
   const { declarationId: _ignored, ...uploaded } = record;
   return uploaded;
+}
+
+// ─── File content (session registry) ────────────────────────────────────────
+// File bytes are intentionally NOT persisted: localStorage (~5 MB) cannot hold
+// 20 MB attachments. Uploaded blobs are kept in a session registry so View /
+// Download work until reload; only metadata (name/size/type/url) is persisted.
+
+const fileBlobs = new Map<string, Blob>();
+
+function fileKey(declarationId: string, name: string): string {
+  return `${declarationId}/${name}`;
+}
+
+/** Stashes an uploaded file's bytes for this session. Called by uploadFileRecord. */
+export function registerFileBlob(declarationId: string, name: string, blob: Blob): void {
+  try {
+    fileBlobs.set(fileKey(declarationId, name), blob);
+  } catch { /* ignore */ }
+}
+
+export function getFileBlob(declarationId: string, name: string): Blob | null {
+  return fileBlobs.get(fileKey(declarationId, name)) ?? null;
+}
+
+/**
+ * Resolves downloadable content for a stored file: session blob first, then
+ * the stored URL (data:, http(s), blob: or legacy relative paths). Throws an
+ * Error with a user-facing message when content is unavailable — e.g. after a
+ * reload the in-memory bytes are gone and metadata alone cannot be downloaded.
+ */
+export async function readStoredFile(declarationId: string, file: UploadedFile): Promise<Blob> {
+  const fromSession = getFileBlob(declarationId, file.name);
+  if (fromSession) return fromSession;
+  try {
+    const res = await fetch(file.url);
+    if (!res.ok) throw new Error(`status ${res.status}`);
+    return await res.blob();
+  } catch {
+    throw new Error(
+      `${file.name} is no longer available. File contents are kept for this session only — please re-attach the document.`,
+    );
+  }
 }
 
 // ─── Dashboards & reports ─────────────────────────────────────────────────────

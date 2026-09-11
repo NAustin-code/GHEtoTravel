@@ -52,7 +52,7 @@ export const typeCfg: Record<string, { bg: string; text: string }> = {
 //         bg / text / ring = Tailwind classes for StatusBadge
 //         hex              = hex colour for KPI cards, icons, gradients
 //         dot / rail       = Tailwind classes for WorkflowTimeline
-export const STATUS_COLORS: Record<string, { bg: string; text: string; ring: string; hex: string; dot: string; rail: string }> = {
+export const STATUS_COLORS: Record<StatusType, { bg: string; text: string; ring: string; hex: string; dot: string; rail: string }> = {
   Draft:            { bg: "bg-slate-100",  text: "text-slate-600",   ring: "bg-slate-400", hex: "#94a3b8", dot: "bg-slate-400", rail: "bg-slate-300" },
   Pending:          { bg: "bg-amber-50",   text: "text-amber-700",   ring: "bg-amber-400", hex: "#f59e0b", dot: "bg-amber-500", rail: "bg-amber-300" },
   Approved:         { bg: "bg-emerald-50", text: "text-emerald-700", ring: "bg-emerald-500", hex: "#10b981", dot: "bg-emerald-500", rail: "bg-emerald-300" },
@@ -100,6 +100,6 @@ export function formatRand(v: number) {
 
 // ─── Shared input class strings ─────────────────────────────────────────────────
 export const inp =
-  "w-full h-11 rounded-xl px-4 text-sm border border-slate-200 bg-slate-50 text-foreground focus:outline-none focus:ring-4 focus:ring-purple-500/20 focus:border-purple-600 focus:bg-white hover:border-purple-300 transition-all duration-200 ease-out placeholder:text-muted-foreground/50";
+  "w-full h-11 rounded-xl px-4 text-sm border border-slate-200 bg-slate-50 text-foreground focus:outline-none focus:ring-4 focus:ring-teal-500/20 focus:border-teal-600 focus:bg-white hover:border-teal-300 transition-all duration-200 ease-out placeholder:text-muted-foreground/50";
 
-export const sel = `${inp} appearance-none pr-10 cursor-pointer bg-white border-slate-200 hover:bg-purple-50 hover:border-purple-400 hover:text-[15.5px] hover:font-semibold hover:text-purple-900 focus:bg-white focus:border-purple-600 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_14px_rgba(79,29,149,0.12)] transition-all duration-300`;
+export const sel = `${inp} appearance-none pr-10 cursor-pointer bg-white border-slate-200 hover:bg-teal-50 hover:border-teal-400 hover:text-[15.5px] hover:font-semibold hover:text-teal-900 focus:bg-white focus:border-teal-600 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_14px_rgba(13,148,136,0.12)] transition-all duration-300`;

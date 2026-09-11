@@ -22,6 +22,11 @@ type OptionProps = {
   children?: ReactNode;
 };
 
+// Radix Select.Item requires a non-empty value, so the conventional empty
+// ("") placeholder option is mapped to a sentinel that translates back to ""
+// on change. This keeps optional selects clearable.
+const CLEAR_VALUE = "__none";
+
 export const Sel: FC<SelProps> = ({
   value,
   onChange,
@@ -37,12 +42,16 @@ export const Sel: FC<SelProps> = ({
     options.find((o) => o.value === "")?.label ??
     "Select...";
 
-  const items = options.filter((o) => o.value !== "");
+  const items = options.map((o, i) => ({
+    key: `${o.value || "none"}-${i}`,
+    value: o.value === "" ? CLEAR_VALUE : o.value,
+    label: o.label,
+  }));
 
   return (
     <Select
-      value={value}
-      onValueChange={onChange}
+      value={value === "" ? CLEAR_VALUE : value}
+      onValueChange={(v) => onChange(v === CLEAR_VALUE ? "" : v)}
       disabled={disabled}
     >
       <SelectTrigger className={`${inp} data-[size=default]:h-11 data-[size=sm]:h-10 ${className}`}>
@@ -51,7 +60,7 @@ export const Sel: FC<SelProps> = ({
 
       <SelectContent>
         {items.map((opt) => (
-          <SelectItem key={opt.value} value={opt.value}>
+          <SelectItem key={opt.key} value={opt.value}>
             {opt.label}
           </SelectItem>
         ))}

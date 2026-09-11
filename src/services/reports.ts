@@ -1,4 +1,4 @@
-import { getDestinationConcentration, getHighValueRows, getReportList, getSLAData, getStatusBreakdown, listDeclarations } from "./localStore";
+import { getDestinationConcentration, getHighValueRows, getReportList, getSLAData, getStatusBreakdown } from "./localStore";
 import type { Declaration } from "@/types/declaration";
 
 export interface ReportsData {
@@ -19,8 +19,8 @@ function buildParams(params?: Record<string, string>): Record<string, string> | 
 
 export async function fetchReports(params?: Record<string, string>): Promise<ReportsData> {
   const query = buildParams(params);
-  const declarations = listDeclarations(query?.status, query?.search);
-  const departments = [...new Set(declarations.map((d: Declaration) => d.department).filter(Boolean))].sort();
+  const filtered = getReportList(query);
+  const departments = [...new Set(filtered.map((d: Declaration) => d.department).filter(Boolean))].sort();
   return {
     statusBreakdown: getStatusBreakdown(query),
     slaData: getSLAData(query),

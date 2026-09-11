@@ -116,7 +116,7 @@ describe("ApprovalDetail", () => {
     const acceptLabel = screen.getByText(/Team member travel request approved/);
     fireEvent.click(acceptLabel);
     const labelEl = acceptLabel.closest("label")!;
-    expect(labelEl.className).toContain("border-purple-600");
+    expect(labelEl.className).toContain("border-teal-600");
   });
 
   it("submits decision and calls approveWorkflowStep", async () => {

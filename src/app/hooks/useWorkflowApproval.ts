@@ -70,36 +70,37 @@ export function useWorkflowApproval({ declarationId, userId, initialWorkflowStep
   const isLmApproved = lmStep?.status === "approved";
   const isHrEnabled = hasHr && isLmApproved;
 
-  const allRoles = useMemo(() => [
-    {
-      roleKey: "lineManager" as const,
-      title: "1. Line Manager Approval",
-      defaultActor: "Line Manager",
-      get decision() { return lmStep?.status !== "pending" ? (lmStep?.decision ?? null) : lmDecision; },
-      setDecision: setLmDecision,
-      get notes() { return lmNotes; },
-      setNotes: setLmNotes,
-      get step() { return lmStep; },
-      get exists() { return hasLm; },
-      get enabled() { return lmStep?.status === "pending"; },
-      get completed() { return lmStep && lmStep.status !== "pending"; },
-      get decidedAt() { return lmStep?.decidedAt || null; },
-    },
-    {
-      roleKey: "hr" as const,
-      title: "2. Head of HR Approval",
-      defaultActor: "Head of HR",
-      get decision() { return hrStep?.status !== "pending" ? (hrStep?.decision ?? null) : hrDecision; },
-      setDecision: setHrDecision,
-      get notes() { return hrNotes; },
-      setNotes: setHrNotes,
-      get step() { return hrStep; },
-      get exists() { return hasHr; },
-      get enabled() { return isHrEnabled && hrStep?.status === "pending"; },
-      get completed() { return hrStep && hrStep.status !== "pending"; },
-      get decidedAt() { return hrStep?.decidedAt || null; },
-    },
-  ], [lmStep, hrStep, hasLm, hasHr, isLmApproved, isHrEnabled, lmDecision, hrDecision, lmNotes, hrNotes]);
+  const lineManagerRole = useMemo(() => ({
+    roleKey: "lineManager" as const,
+    title: "1. Line Manager Approval",
+    defaultActor: "Line Manager",
+    get decision() { return lmStep?.status !== "pending" ? (lmStep?.decision ?? null) : lmDecision; },
+    setDecision: setLmDecision,
+    get notes() { return lmNotes; },
+    setNotes: setLmNotes,
+    get step() { return lmStep; },
+    get exists() { return hasLm; },
+    get enabled() { return lmStep?.status === "pending"; },
+    get completed() { return lmStep && lmStep.status !== "pending"; },
+    get decidedAt() { return lmStep?.decidedAt || null; },
+  }), [lmStep, lmDecision, lmNotes, hasLm]);
+
+  const hrRole = useMemo(() => ({
+    roleKey: "hr" as const,
+    title: "2. Head of HR Approval",
+    defaultActor: "Head of HR",
+    get decision() { return hrStep?.status !== "pending" ? (hrStep?.decision ?? null) : hrDecision; },
+    setDecision: setHrDecision,
+    get notes() { return hrNotes; },
+    setNotes: setHrNotes,
+    get step() { return hrStep; },
+    get exists() { return hasHr; },
+    get enabled() { return isHrEnabled && hrStep?.status === "pending"; },
+    get completed() { return hrStep && hrStep.status !== "pending"; },
+    get decidedAt() { return hrStep?.decidedAt || null; },
+  }), [hrStep, hrDecision, hrNotes, hasHr, isLmApproved]);
+
+  const allRoles = useMemo(() => [lineManagerRole, hrRole], [lineManagerRole, hrRole]);
 
   const wfSteps: StepView[] = useMemo(() => {
     let hasTerminal = false;

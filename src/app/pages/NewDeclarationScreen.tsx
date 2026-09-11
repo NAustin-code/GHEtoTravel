@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Upload, Trash2, Paperclip } from "lucide-react";
 import { Sel } from "@/app/components/Sel";
 import { FL } from "@/app/components/FL";
@@ -264,12 +264,12 @@ export function NewDeclarationScreen({
     return Object.keys(next).length === 0;
   };
 
-  const buildDeclaration = (status: "Draft" | "Pending", idOverride?: string, uploadedFiles?: UploadedFile[]): Declaration => {
+  const buildDeclaration = (status: "Draft" | "Pending", idOverride?: string, _uploadedFiles?: UploadedFile[]): Declaration => {
     const flight = Number(formState.flightCost) || 0;
     const stay = Number(formState.accommodationCost) || 0;
     const active = travelers.slice(0, numberOfPeople);
     const total = flight + stay;
-    const base: Omit<Declaration, "id" | "travelers" | "numberOfPeople" | "files"> = {
+const base: Omit<Declaration, "travelers" | "id" | "numberOfPeople"> = {
       employee: user?.name || draft?.employee || "Employee",
       employeeId: user?.id || draft?.employeeId || "user-1",
       teamMemberNumber: user?.teamMemberNumber || draft?.teamMemberNumber || "",
@@ -288,15 +288,15 @@ export function NewDeclarationScreen({
       status,
       priority: total >= config.highValueThreshold ? "High" : total >= config.mediumValueThreshold ? "Medium" : "Low",
       description: formState.reason,
-      relationship: `${formState.from} → ${formState.to}`.trim(),
+      relationship: `${formState.from}  ${formState.to}`.trim(),
       receivedGiven: "",
       from: formState.from,
       contactPerson: active[0]?.name || "",
       biddingProcess: "",
       occasion: formState.reason,
       date: formState.departureDate,
+      instances: String(numberOfPeople),
       publicOfficial: "",
-      files: uploadedFiles ?? [],
     };
     return {
       ...base,
@@ -445,8 +445,9 @@ const onDraftSave = async () => {
             </Sel>
           </div>
           <div>
-            <FL>Company</FL>
+            <FL htmlFor="company">Company</FL>
             <input
+              id="company"
               className={inp}
               value={formState.company}
               onChange={(e) => set("company", e.target.value)}
@@ -465,8 +466,9 @@ const onDraftSave = async () => {
             </Sel>
           </div>
           <div>
-            <FL>Department Team Member Falls Under</FL>
+            <FL htmlFor="department">Department Team Member Falls Under</FL>
             <input
+              id="department"
               className={inp}
               value={formState.department}
               onChange={(e) => set("department", e.target.value)}
@@ -480,8 +482,9 @@ const onDraftSave = async () => {
             </datalist>
           </div>
           <div>
-            <FL>Name of Approval Manager</FL>
+            <FL htmlFor="line-manager">Name of Approval Manager</FL>
             <input
+              id="line-manager"
               className={inp}
               value={formState.lineManager}
               onChange={(e) => set("lineManager", e.target.value)}
@@ -489,8 +492,9 @@ const onDraftSave = async () => {
             />
           </div>
           <div>
-            <FL>Order Number</FL>
+            <FL htmlFor="order-number">Order Number</FL>
             <input
+              id="order-number"
               className={inp}
               value={formState.orderNumber}
               onChange={(e) => set("orderNumber", e.target.value)}
@@ -505,10 +509,11 @@ const onDraftSave = async () => {
               <p className="text-sm font-bold text-foreground mb-3">Traveler {i + 1}</p>
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="md:col-span-1">
-                  <FL required error={err(`traveler-name-${i}`)}>
+                  <FL required htmlFor={`traveler-${i}-name`} error={err(`traveler-name-${i}`)}>
                     Name (As Per ID/Passport)
                   </FL>
                   <input
+                    id={`traveler-${i}-name`}
                     className={`${inp} ${err(`traveler-name-${i}`) ? "border-red-500 bg-red-50" : ""}`}
                     value={t.name}
                     onChange={(e) => updateTraveler(i, { name: e.target.value })}
@@ -516,10 +521,11 @@ const onDraftSave = async () => {
                   />
                 </div>
                 <div>
-                  <FL required error={err(`traveler-id-${i}`)}>
+                  <FL required htmlFor={`traveler-${i}-iddoc`} error={err(`traveler-id-${i}`)}>
                     ID / Passport No
                   </FL>
                   <input
+                    id={`traveler-${i}-iddoc`}
                     className={`${inp} ${err(`traveler-id-${i}`) ? "border-red-500 bg-red-50" : ""}`}
                     value={t.idDocument}
                     onChange={(e) => updateTraveler(i, { idDocument: e.target.value })}
@@ -537,10 +543,11 @@ const onDraftSave = async () => {
                   </Sel>
                 </div>
                 <div>
-                  <FL required error={err(`traveler-email-${i}`)}>
+                  <FL required htmlFor={`traveler-${i}-email`} error={err(`traveler-email-${i}`)}>
                     Email Address
                   </FL>
                   <input
+                    id={`traveler-${i}-email`}
                     className={`${inp} ${err(`traveler-email-${i}`) ? "border-red-500 bg-red-50" : ""}`}
                     value={t.email}
                     onChange={(e) => updateTraveler(i, { email: e.target.value })}
@@ -551,10 +558,11 @@ const onDraftSave = async () => {
                   />
                 </div>
                 <div>
-                  <FL required error={err(`traveler-phone-${i}`)}>
+                  <FL required htmlFor={`traveler-${i}-phone`} error={err(`traveler-phone-${i}`)}>
                     Cell Number
                   </FL>
                   <input
+                    id={`traveler-${i}-phone`}
                     className={`${inp} ${err(`traveler-phone-${i}`) ? "border-red-500 bg-red-50" : ""}`}
                     value={t.cellPhone}
                     onChange={(e) => updateTraveler(i, { cellPhone: e.target.value })}
@@ -562,8 +570,9 @@ const onDraftSave = async () => {
                   />
                 </div>
                 <div>
-                  <FL>Job Title</FL>
+                  <FL htmlFor={`traveler-${i}-job`}>Job Title</FL>
                   <input
+                    id={`traveler-${i}-job`}
                     className={inp}
                     value={t.jobTitle}
                     onChange={(e) => updateTraveler(i, { jobTitle: e.target.value })}
@@ -571,8 +580,9 @@ const onDraftSave = async () => {
                   />
                 </div>
                 <div>
-                  <FL>Employee Code</FL>
+                  <FL htmlFor={`traveler-${i}-empcode`}>Employee Code</FL>
                   <input
+                    id={`traveler-${i}-empcode`}
                     className={inp}
                     value={t.teamMemberNumber}
                     onChange={(e) => updateTraveler(i, { teamMemberNumber: e.target.value })}
@@ -588,10 +598,11 @@ const onDraftSave = async () => {
       <FS id="sec-travel" num="2" title="Travel Details">
         <div className="grid gap-4 md:grid-cols-3">
           <div>
-            <FL required error={err("departureDate")}>
+            <FL required htmlFor="departure-date" error={err("departureDate")}>
               Date Of Departure
             </FL>
             <input
+              id="departure-date"
               type="date"
               className={`${inp} ${err("departureDate") ? "border-red-500 bg-red-50" : ""}`}
               value={formState.departureDate}
@@ -599,10 +610,11 @@ const onDraftSave = async () => {
             />
           </div>
           <div>
-            <FL required error={err("returnDate")}>
+            <FL required htmlFor="return-date" error={err("returnDate")}>
               Date Of Return
             </FL>
             <input
+              id="return-date"
               type="date"
               className={`${inp} ${err("returnDate") ? "border-red-500 bg-red-50" : ""}`}
               value={formState.returnDate}
@@ -620,10 +632,11 @@ const onDraftSave = async () => {
             </Sel>
           </div>
           <div className="md:col-span-3">
-            <FL required error={err("reason")}>
+            <FL required htmlFor="reason" error={err("reason")}>
               Reason For Travel
             </FL>
             <input
+              id="reason"
               className={`${inp} ${err("reason") ? "border-red-500 bg-red-50" : ""}`}
               value={formState.reason}
               onChange={(e) => set("reason", e.target.value)}
@@ -631,8 +644,9 @@ const onDraftSave = async () => {
             />
           </div>
           <div>
-            <FL>Where Are You Traveling From</FL>
+            <FL htmlFor="from-city">Where Are You Traveling From</FL>
             <input
+              id="from-city"
               className={inp}
               value={formState.from}
               onChange={(e) => set("from", e.target.value)}
@@ -640,8 +654,9 @@ const onDraftSave = async () => {
             />
           </div>
           <div>
-            <FL>Where Are You Traveling To</FL>
+            <FL htmlFor="to-city">Where Are You Traveling To</FL>
             <input
+              id="to-city"
               className={inp}
               value={formState.to}
               onChange={(e) => set("to", e.target.value)}
@@ -649,10 +664,11 @@ const onDraftSave = async () => {
             />
           </div>
           <div>
-            <FL required error={err("destination")}>
+            <FL required htmlFor="destination" error={err("destination")}>
               Destination
             </FL>
             <input
+              id="destination"
               className={`${inp} ${err("destination") ? "border-red-500 bg-red-50" : ""}`}
               value={formState.destination}
               onChange={(e) => set("destination", e.target.value)}
@@ -670,8 +686,9 @@ const onDraftSave = async () => {
             </Sel>
           </div>
           <div>
-            <FL>Transport Details</FL>
+            <FL htmlFor="transport-details">Transport Details</FL>
             <input
+              id="transport-details"
               className={inp}
               value={formState.transportDetails}
               onChange={(e) => set("transportDetails", e.target.value)}
@@ -679,8 +696,9 @@ const onDraftSave = async () => {
             />
           </div>
           <div>
-            <FL>Flight Cost (R)</FL>
+            <FL htmlFor="flight-cost">Flight Cost (R)</FL>
             <input
+              id="flight-cost"
               type="number"
               min="0"
               className={inp}
@@ -740,8 +758,9 @@ const onDraftSave = async () => {
             </Sel>
           </div>
           <div className="md:col-span-2">
-            <FL>Car Hire Details</FL>
+            <FL htmlFor="car-hire-details">Car Hire Details</FL>
             <input
+              id="car-hire-details"
               className={inp}
               value={formState.transportMode === "Car" ? formState.transportDetails : ""}
               onChange={(e) => {
@@ -759,8 +778,9 @@ const onDraftSave = async () => {
             </Sel>
           </div>
           <div>
-            <FL>Accommodation Cost (R)</FL>
+            <FL htmlFor="accommodation-cost">Accommodation Cost (R)</FL>
             <input
+              id="accommodation-cost"
               type="number"
               min="0"
               className={inp}
@@ -770,8 +790,9 @@ const onDraftSave = async () => {
             />
           </div>
           <div>
-            <FL>Accommodation Details</FL>
+            <FL htmlFor="accommodation-details">Accommodation Details</FL>
             <input
+              id="accommodation-details"
               className={inp}
               value={formState.accommodationDetails}
               onChange={(e) => set("accommodationDetails", e.target.value)}
@@ -824,7 +845,7 @@ const onDraftSave = async () => {
                   <Paperclip size={14} className="flex-shrink-0 text-muted-foreground" />
                   <span className="truncate font-medium text-foreground">{f.name}</span>
                   <span className="flex-shrink-0 text-xs text-muted-foreground">
-                    {(f.size / 1024).toFixed(0)} KB · uploads on save
+                    {(f.size / 1024).toFixed(0)} KB � uploads on save
                   </span>
                 </span>
                 <button
@@ -876,7 +897,7 @@ const onDraftSave = async () => {
           disabled={saving}
           className="rounded-xl bg-gradient-to-r from-teal-600 to-orange-500 px-6 py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
         >
-          {saving ? "Submitting…" : "Submit Travel Request"}
+          {saving ? "Submitting." : "Submit Travel Request"}
         </button>
       </div>
     </form>

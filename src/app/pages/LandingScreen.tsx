@@ -7,21 +7,22 @@ import { Role } from "@/types/declaration";
 import { useUser } from "@/app/auth/UserContext";
 import { authenticate } from "@/app/auth/authService";
  
+const DEMO_PASSWORD = "password";
+
 const QUICK_LOGIN_USERS = [
-  { label: "HB — Team Member — Nomvula Dlamini",  email: "nomvula@hb.co.za",  role: "teamMember" as const },
-  { label: "HB — Line Manager — Sipho Nkosi",     email: "sipho@hb.co.za",    role: "approver" as const },
-  { label: "NPN — Team Member — Kabelo Molefe",   email: "kabelo@npn.co.za",  role: "teamMember" as const },
-  { label: "NPN — Line Manager — James van Wyk",  email: "james@npn.co.za",   role: "approver" as const },
-  { label: "HR — Lindiwe Zulu (Global)",           email: "lindiwe@hb.co.za",  role: "approver" as const },
-  { label: "NPN — Head of HR — Aisha Patel",        email: "aisha@npn.co.za",   role: "approver" as const },
-  { label: "Admin — System Admin (Global)",        email: "admin@hb.co.za",    role: "admin" as const },
+  { label: "HB — Team Member — Nomvula Dlamini",  email: "nomvula@hb.co.za" },
+  { label: "HB — Line Manager — Sipho Nkosi",     email: "sipho@hb.co.za" },
+  { label: "NPN — Team Member — Kabelo Molefe",   email: "kabelo@npn.co.za" },
+  { label: "NPN — Line Manager — James van Wyk",  email: "james@npn.co.za" },
+  { label: "HR — Lindiwe Zulu (Global)",           email: "lindiwe@hb.co.za" },
+  { label: "NPN — Head of HR — Aisha Patel",        email: "aisha@npn.co.za" },
+  { label: "Admin — System Admin (Global)",        email: "admin@hb.co.za" },
 ];
 
-export function LandingScreen({ onEnter }: { onEnter: (role: Role, name: string) => void }) {
+export function LandingScreen({ onEnter }: { onEnter: (role: Role) => void }) {
   const { setUser } = useUser();
   const [selectedIdx, setSelectedIdx] = useState(0);
   const email = QUICK_LOGIN_USERS[selectedIdx].email;
-  const [password, setPassword] = useState("password");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -29,18 +30,17 @@ export function LandingScreen({ onEnter }: { onEnter: (role: Role, name: string)
     e.preventDefault();
     setError("");
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 400));
 
     try {
-      const user = await authenticate(email, password);
+      const user = await authenticate(email, DEMO_PASSWORD);
       if (!user) {
-        setError("Invalid credentials. Default password: password");
+        setError("Invalid credentials. Please try again.");
         setLoading(false);
         return;
       }
 
       setUser(user);
-      onEnter(user.role, user.name);
+      onEnter(user.role);
     } catch {
       setError("Authentication failed. Please try again.");
     } finally {
@@ -86,12 +86,12 @@ export function LandingScreen({ onEnter }: { onEnter: (role: Role, name: string)
 
             <div>
               <label className="block text-sm font-semibold text-foreground mb-1.5">Demo user</label>
-              <select value={selectedIdx} onChange={(e) => { setSelectedIdx(Number(e.target.value)); setPassword("password"); setError(""); }}
+              <select value={selectedIdx} onChange={(e) => { setSelectedIdx(Number(e.target.value)); setError(""); }}
                 className={`${inp} cursor-pointer`}
               >
                 {QUICK_LOGIN_USERS.map((u, i) => <option key={i} value={i}>{u.label}</option>)}
               </select>
-              <p className="mt-1.5 text-[11px] text-muted-foreground">Demo sign-in — pick a user, no password required.</p>
+              <p className="mt-1.5 text-[11px] text-muted-foreground">Demo sign-in — pick a user to continue.</p>
             </div>
             {error && (
               <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div>

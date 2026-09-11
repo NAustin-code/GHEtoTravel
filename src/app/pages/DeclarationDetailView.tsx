@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { ArrowLeft, Download, Eye, FileText } from "lucide-react";
 import { Card } from "@/app/components/ui/card";
 import { formatRand } from "@/config/theme";
 import { Declaration, UploadedFile } from "@/types/declaration";
+import { downloadStoredFile } from "@/services/api";
 
 export function DeclarationDetailView({
   data,
@@ -14,69 +16,43 @@ export function DeclarationDetailView({
   hideBackButton?: boolean;
   hideDocuments?: boolean;
 }) {
-  const isRecord = typeof (data as Declaration).value === "number";
-  const d = isRecord ? (data as Declaration) : null;
-  const record = !d ? (data as Record<string, string>) : null;
-
+  // `data` is always a Declaration from current callers; the casts below tolerate
+  // legacy string-record payloads (missing fields render as "—").
+  const d = data as Declaration;
   const safe = (v: unknown) => (v != null ? String(v) : "—");
+  const cost = (v: unknown) => (typeof v === "number" ? formatRand(v) : safe(v));
 
-  const fields: [string, string][] = d
-    ? [
-        ["Company",                safe(d.company)],
-        ["Department",             safe(d.department)],
-        ["Approving Manager Name", safe(d.lineManager)],
-        ["Team Member",            safe(d.employee)],
-        ["Team Member Code",       safe(d.teamMemberNumber)],
-        ["Team Member Role / Position", safe(d.position)],
-        ["Travel Type",            safe(d.travelType || d.type)],
-        ["Destination",            safe(d.destination || d.counterparty)],
-        ["Reason for Travel",      safe(d.reason || d.description)],
-        ["Traveling From",         safe(d.from)],
-        ["Traveling To",           safe(d.to || d.destination || d.counterparty)],
-        ["Date of Departure",      safe(d.departureDate || d.date)],
-        ["Date of Return",         safe(d.returnDate)],
-        ["Number of Travelers",    safe(d.numberOfPeople ?? d.instances)],
-        ["Travelers",              safe(d.travelers?.map((t) => t.name).filter(Boolean).join(", "))],
-        ["Mode of Transport",      safe(d.transportMode)],
-        ["Transport Details",      safe(d.transportDetails)],
-        ["Flight Cost",            d.flightCost != null ? formatRand(d.flightCost) : "—"],
-        ["Seat Preference",        safe(d.seatPreference)],
-        ["Accommodation Required", d.accommodationRequired ? "Yes" : "No"],
-        ["Accommodation Details",  safe(d.accommodationDetails)],
-        ["Accommodation Cost",     d.accommodationCost != null ? formatRand(d.accommodationCost) : "—"],
-        ["Company To Be Billed",   safe(d.companyToBeBilled)],
-        ["Order Number",           safe(d.orderNumber)],
-        ["Total Cost",             formatRand(d.value)],
-        ...(d.substantiation
-          ? ([["High-Value Motivation", safe(d.substantiation)]] as [string, string][])
-          : []),
-      ]
-    : [
-        ["Company",                safe(record?.company)],
-        ["Department",             safe(record?.department)],
-        ["Approving Manager Name", safe(record?.lineManager)],
-        ["Team Member",            safe(record?.employee)],
-        ["Team Member Code",       safe(record?.teamMemberNumber)],
-        ["Team",                   safe(record?.team)],
-        ["Team Member Role / Position", safe(record?.position)],
-        ["Travel Type",            safe(record?.travelType || record?.type)],
-        ["Destination",            safe(record?.destination || record?.counterparty)],
-        ["Reason for Travel",      safe(record?.reason || record?.description)],
-        ["Traveling From",         safe(record?.from)],
-        ["Traveling To",           safe(record?.to || record?.destination || record?.counterparty)],
-        ["Date of Departure",      safe(record?.departureDate || record?.date)],
-        ["Date of Return",         safe(record?.returnDate)],
-        ["Number of Travelers",    safe(record?.numberOfPeople || record?.instances)],
-        ["Mode of Transport",      safe(record?.transportMode)],
-        ["Transport Details",      safe(record?.transportDetails)],
-        ["Accommodation Details",  safe(record?.accommodationDetails)],
-        ["Company To Be Billed",   safe(record?.companyToBeBilled)],
-        ["Order Number",           safe(record?.orderNumber)],
-        ["Total Cost",             safe(record?.value)],
-        ...(record?.substantiation
-          ? ([["High-Value Motivation", safe(record?.substantiation)]] as [string, string][])
-          : []),
-      ];
+  const fields: [string, string][] = [
+    ["Company",                safe(d.company)],
+    ["Department",             safe(d.department)],
+    ["Approving Manager Name", safe(d.lineManager)],
+    ["Team Member",            safe(d.employee)],
+    ["Team Member Code",       safe(d.teamMemberNumber)],
+    ["Team",                   safe(d.team)],
+    ["Team Member Role / Position", safe(d.position)],
+    ["Travel Type",            safe(d.travelType || d.type)],
+    ["Destination",            safe(d.destination || d.counterparty)],
+    ["Reason for Travel",      safe(d.reason || d.description)],
+    ["Traveling From",         safe(d.from)],
+    ["Traveling To",           safe(d.to || d.destination || d.counterparty)],
+    ["Date of Departure",      safe(d.departureDate || d.date)],
+    ["Date of Return",         safe(d.returnDate)],
+    ["Number of Travelers",    safe(d.numberOfPeople ?? d.instances)],
+    ["Travelers",              safe(Array.isArray(d.travelers) ? d.travelers.map((t) => t.name).filter(Boolean).join(", ") : undefined)],
+    ["Mode of Transport",      safe(d.transportMode)],
+    ["Transport Details",      safe(d.transportDetails)],
+    ["Flight Cost",            d.flightCost != null ? formatRand(d.flightCost) : "—"],
+    ["Seat Preference",        safe(d.seatPreference)],
+    ["Accommodation Required", d.accommodationRequired ? "Yes" : "No"],
+    ["Accommodation Details",  safe(d.accommodationDetails)],
+    ["Accommodation Cost",     d.accommodationCost != null ? formatRand(d.accommodationCost) : "—"],
+    ["Company To Be Billed",   safe(d.companyToBeBilled)],
+    ["Order Number",           safe(d.orderNumber)],
+    ["Total Cost",             cost(d.value)],
+    ...(d.substantiation
+      ? ([["High-Value Motivation", safe(d.substantiation)]] as [string, string][])
+      : []),
+  ];
 
   return (
     <div className="h-full flex flex-col gap-5">
@@ -100,7 +76,7 @@ export function DeclarationDetailView({
               <ArrowLeft size={14} /> Back
             </button>
           )}
-          <h2 className="mb-6 inline-flex rounded-full border border-purple-200/70 bg-purple-50 px-4 py-1.5 text-sm font-extrabold uppercase tracking-[0.2em] text-purple-900 shadow-sm">
+          <h2 className="mb-6 inline-flex rounded-full border border-teal-200/70 bg-teal-50 px-4 py-1.5 text-sm font-extrabold uppercase tracking-[0.2em] text-teal-900 shadow-sm">
             Travel Request Details
           </h2>
 
@@ -139,45 +115,31 @@ export function DeclarationDetailView({
   );
 }
 
-async function downloadFile(file: UploadedFile) {
+async function downloadFile(file: UploadedFile, declarationId: string, onError: (msg: string) => void) {
   try {
-    if (!file.url || file.url.startsWith("data:")) {
-      const a = document.createElement("a");
-      a.href = file.url;
-      a.download = file.name;
-      a.click();
-      return;
-    }
-    const response = await fetch(file.url);
-    if (!response.ok) throw new Error(`Failed to fetch file: ${response.status}`);
-    const blob = await response.blob();
+    const blob = await downloadStoredFile(declarationId, file);
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = file.name;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = file.name;
+    // Detached-anchor clicks are ignored by Safari — attach first.
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 30000);
   } catch (err) {
-    console.error("Download failed:", err);
+    onError(err instanceof Error ? err.message : `Could not download ${file.name}.`);
   }
 }
 
-async function viewFile(file: UploadedFile) {
+async function viewFile(file: UploadedFile, declarationId: string, onError: (msg: string) => void) {
   try {
-    if (!file.url || file.url.startsWith("data:")) {
-      window.open(file.url, "_blank", "noopener,noreferrer");
-      return;
-    }
-    const response = await fetch(file.url);
-    if (!response.ok) throw new Error(`Failed to fetch file: ${response.status}`);
-    const blob = await response.blob();
+    const blob = await downloadStoredFile(declarationId, file);
     const url = URL.createObjectURL(blob);
     window.open(url, "_blank", "noopener,noreferrer");
     setTimeout(() => URL.revokeObjectURL(url), 30000);
   } catch (err) {
-    console.error("View file failed:", err);
+    onError(err instanceof Error ? err.message : `Could not open ${file.name}.`);
   }
 }
 
@@ -197,6 +159,8 @@ function parseFiles(data: Record<string, string> | Declaration): UploadedFile[] 
 
 export function SupportingDocuments({ data }: { data: Record<string, string> | Declaration }) {
   const supportingDocuments = parseFiles(data);
+  const [fileError, setFileError] = useState("");
+  const declarationId = (data as Declaration).id ?? (data as Record<string, string>).id ?? "";
   return (
     <div>
       <div className="detail-panel-shell">
@@ -210,11 +174,14 @@ export function SupportingDocuments({ data }: { data: Record<string, string> | D
       >
 
         <div className="relative z-10">
-          <h3 className="mb-6 inline-flex rounded-full border border-purple-200/70 bg-purple-50 px-4 py-1.5 text-sm font-extrabold uppercase tracking-[0.2em] text-purple-900 shadow-sm">
+          <h3 className="mb-6 inline-flex rounded-full border border-teal-200/70 bg-teal-50 px-4 py-1.5 text-sm font-extrabold uppercase tracking-[0.2em] text-teal-900 shadow-sm">
             Supporting Documents
           </h3>
 
           <div className="space-y-3">
+            {fileError && (
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{fileError}</div>
+            )}
             {supportingDocuments.length === 0 ? (
                   <div className="rounded-xl border border-slate-200 bg-white px-4 py-5 text-sm font-medium text-slate-500">
                 No supporting documents were uploaded for this travel request.
@@ -239,14 +206,14 @@ export function SupportingDocuments({ data }: { data: Record<string, string> | D
                   <div className="flex gap-2 sm:flex-shrink-0">
                     <button
                       type="button"
-                      onClick={() => viewFile(file)}
+                      onClick={() => { setFileError(""); viewFile(file, declarationId, setFileError); }}
                       className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg border border-indigo-100 bg-white px-3 text-xs font-semibold text-indigo-700 transition-colors hover:bg-indigo-50 sm:flex-none"
                     >
                       <Eye size={13} /> View
                     </button>
                     <button
                       type="button"
-                      onClick={() => downloadFile(file)}
+                      onClick={() => { setFileError(""); downloadFile(file, declarationId, setFileError); }}
                       className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg border border-indigo-100 bg-white px-3 text-xs font-semibold text-indigo-700 transition-colors hover:bg-indigo-50 sm:flex-none"
                     >
                       <Download size={13} /> Download

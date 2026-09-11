@@ -16,7 +16,7 @@ import {
   createApprovalOption, updateApprovalOption, deleteApprovalOption,
   uploadDeclarationFile, fetchOrganizations, fetchAdminOrganizations,
   createOrganization, updateOrganization, deleteOrganization,
-  resetLocalStore,
+  downloadStoredFile, resetLocalStore,
 } from "../services/api";
 import { Declaration } from "../types/declaration";
 
@@ -81,6 +81,19 @@ describe("file and organization API wrappers", () => {
     expect(result.name).toBe("receipt.txt");
     expect(result.size).toBe(7);
     expect(result.url).toContain("TR-2026-0001");
+  });
+
+  it("downloads uploaded bytes back within the session", async () => {
+    const file = new File(["receipt-bytes"], "roundtrip.txt", { type: "text/plain" });
+    const uploaded = await uploadDeclarationFile(file, "TR-2026-0001");
+    const blob = await downloadStoredFile("TR-2026-0001", uploaded);
+    await expect(blob.text()).resolves.toBe("receipt-bytes");
+  });
+
+  it("rejects with a user-facing message when file content is gone", async () => {
+    await expect(
+      downloadStoredFile("TR-2026-0001", { name: "ghost.pdf", size: 0, type: "", url: "local:file/TR-2026-0001/ghost.pdf" }),
+    ).rejects.toThrow(/no longer available/);
   });
 
   it("covers organization list and admin CRUD wrappers", async () => {

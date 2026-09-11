@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { ApprovalDetail } from "../app/pages/ApprovalDetail";
 import { MyDeclarationsScreen } from "../app/pages/MyDeclarationsScreen";
-import { fetchWorkflowInstance, approveWorkflowStep, fetchDeclarations } from "../services/api";
+import { fetchWorkflowInstance, approveWorkflowStep, fetchDeclarations, downloadStoredFile } from "../services/api";
 import type { Declaration, WorkflowStep } from "../types/declaration";
 import type { WorkflowDecisionResult } from "../services/api";
 
@@ -67,6 +67,7 @@ vi.mock("../services/api", () => ({
     slaEscalationDays: 3, maxDeclarationsPerCounterparty: 5, emailTemplate: "",
   })),
   fetchDeclarations: vi.fn(),
+  downloadStoredFile: vi.fn(),
 }));
 
 // ── Helpers ──
@@ -198,6 +199,7 @@ describe("Journey 5: Review Declaration", () => {
     URL.createObjectURL = createObjectURL;
     URL.revokeObjectURL = revokeObjectURL;
     globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, blob: () => Promise.resolve(fakeBlob) });
+    vi.mocked(downloadStoredFile).mockResolvedValue(fakeBlob);
 
     vi.mocked(fetchWorkflowInstance).mockResolvedValue(makeWorkflow());
     const decl = makeDeclaration({ files: "report.pdf" });
@@ -216,6 +218,7 @@ describe("Journey 5: Review Declaration", () => {
     URL.createObjectURL = vi.fn(() => "blob:http://localhost/test-view");
     URL.revokeObjectURL = vi.fn();
     globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, blob: () => Promise.resolve(new Blob()) });
+    vi.mocked(downloadStoredFile).mockResolvedValue(new Blob());
 
     vi.mocked(fetchWorkflowInstance).mockResolvedValue(makeWorkflow());
     const decl = makeDeclaration({ files: "report.pdf" });

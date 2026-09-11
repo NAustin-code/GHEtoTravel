@@ -5,10 +5,11 @@ export interface FLProps {
   required?: boolean;
   hint?: string;
   error?: string;
+  htmlFor?: string;
 }
 
-export const FL: FC<FLProps> = ({ children, required, hint, error }) => (
-  <label className="block">
+export const FL: FC<FLProps> = ({ children, required, hint, error, htmlFor }) => (
+  <label htmlFor={htmlFor} className="block">
     <div className="flex items-center gap-1.5 mb-1.5">
       <span className="text-sm font-semibold text-foreground">{children}</span>
       {required && <span className="text-red-400 font-bold" aria-hidden="true">*</span>}

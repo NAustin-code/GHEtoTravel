@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from "react";
 import { Download, Search, AlertTriangle } from "lucide-react";
-import { fetchPendingWorkflows } from "@/services/api";
+import { fetchPendingWorkflows, fetchConfig } from "@/services/api";
 import { Declaration } from "@/types/declaration";
 import { PURPLE, formatRand, PRIORITY_COLORS } from "@/config/theme";
 import { Card } from "@/app/components/Card";
@@ -49,7 +49,7 @@ export function ApprovalQueue({ onReview }: { onReview: (d: Declaration) => void
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
     // Fetch SLA threshold for overdue calculation
-    import("@/services/api").then(({ fetchConfig }) => fetchConfig().then((c) => setSlaDays(c.slaEscalationDays ?? 3)).catch(() => {}));
+    fetchConfig().then((c) => setSlaDays(c.slaEscalationDays ?? 3)).catch(() => {});
   }, []);
 
   useEffect(() => { setPage(0); }, [search, department, status, priority, employeeFilter, overdueOnly, sortKey, sortDir]);
@@ -203,7 +203,6 @@ export function ApprovalQueue({ onReview }: { onReview: (d: Declaration) => void
               <option value="All">All Statuses</option>
               <option>Pending</option>
               <option>Escalated</option>
-              <option>Returned</option>
             </select>
           </div>
         </div>
@@ -295,7 +294,7 @@ export function ApprovalQueue({ onReview }: { onReview: (d: Declaration) => void
             {["Request ID", "TeamMember", "Dept", "Type", "Destination", "Value", "Submitted", "Priority", "Status", "Step"].map((label) => (
               <Th
                 key={label}
-                sortable
+                sortable={label !== "Step"}
                 active={sortKey === label}
                 direction={sortDir}
                 onClick={() => {

@@ -51,10 +51,9 @@ function AppInner() {
   const getRoleForScreen = (s: Screen): Role =>
     s === "admin-dashboard" || s === "admin-users" || s === "admin-workflows" || s === "admin-dropdowns" || s === "admin-config" || s === "admin-reports" || s === "admin-approval-options" ? "admin"
     : s === "approver-dashboard" || s === "approval-queue" || s === "approval-detail" ? "approver"
-    : s === "travel-request" ? "teamMember"
     : "teamMember";
 
-  const handleLogin = (r: Role, _name: string) => {
+  const handleLogin = (r: Role) => {
     setScreen(r === "admin" ? "admin-dashboard" : r === "approver" ? "approver-dashboard" : "new-declaration");
   };
 
@@ -85,6 +84,16 @@ function AppInner() {
     setScreen(s);
   };
 
+  const handleEditDraft = (d: Declaration) => {
+    setEditingDraft(d);
+    setFormKey((k) => k + 1);
+    if (!canAccessScreen(user, "new-declaration")) {
+      setScreen("landing");
+      return;
+    }
+    setScreen("new-declaration");
+  };
+
   if (screen === "landing" || screen === "login") {
     return <LandingScreen onEnter={handleLogin} />;
   }
@@ -98,7 +107,7 @@ function AppInner() {
       {showDraftBanner && <DraftBanner onDismiss={() => setShowDraftBanner(false)} />}
 
       <AppShell role={user?.role || getRoleForScreen(screen)} screen={screen} userName={user?.name || ""} onNavigate={guardedNavigate} onSignOut={handleSignOut} user={user}>
-        {screen === "new-declaration" && !showSubmittedView && (
+        {(screen === "new-declaration" || screen === "travel-request") && !showSubmittedView && (
           <NewDeclarationScreen
             key={formKey}
             onSubmitSuccess={(data) => { setEditingDraft(null); handleSubmitSuccess(data); }}
@@ -106,21 +115,10 @@ function AppInner() {
             draft={editingDraft}
           />
         )}
-        {screen === "new-declaration" && showSubmittedView && submittedData && (
+        {(screen === "new-declaration" || screen === "travel-request") && showSubmittedView && submittedData && (
           <ApprovalDetail declaration={submittedData} onBack={() => setShowSubmittedView(false)} readOnly />
         )}
-        {screen === "my-declarations" && <MyDeclarationsScreen onEditDraft={(d) => { setEditingDraft(d); setScreen("new-declaration"); }} />}
-        {screen === "travel-request" && !showSubmittedView && (
-          <NewDeclarationScreen
-            key={formKey}
-            onSubmitSuccess={(data) => { setEditingDraft(null); handleSubmitSuccess(data); }}
-            onDraftSaved={() => setShowDraftBanner(true)}
-            draft={editingDraft}
-          />
-        )}
-        {screen === "travel-request" && showSubmittedView && submittedData && (
-          <ApprovalDetail declaration={submittedData} onBack={() => setShowSubmittedView(false)} readOnly />
-        )}
+        {screen === "my-declarations" && <MyDeclarationsScreen onEditDraft={handleEditDraft} />}
         {screen === "approver-dashboard" && <ApproverDashboard onNavigate={guardedNavigate} onReview={(d) => { setSelectedDecl(d); guardedNavigate("approval-detail"); }} />}
         {screen === "approval-queue" && <ApprovalQueue onReview={(d) => { setSelectedDecl(d); guardedNavigate("approval-detail"); }} />}
         {screen === "approval-detail" && selectedDecl && <ApprovalDetail declaration={selectedDecl} onBack={() => guardedNavigate("approval-queue")} />}

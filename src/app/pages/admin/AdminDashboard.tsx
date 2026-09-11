@@ -37,10 +37,10 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (s: Screen) => void
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-        <KpiCard label="Total Users" value={String(stats.users)} icon={Users} color="#7c3aed" onClick={() => onNavigate("admin-users")} active />
-        <KpiCard label="Active Workflows" value={String(stats.workflows)} icon={Activity} color="#10b981" onClick={() => onNavigate("admin-workflows")} />
-        <KpiCard label="Travel Requests" value={String(stats.declarations)} icon={FileText} color="#f59e0b" onClick={() => onNavigate("admin-reports")} />
-        <KpiCard label="Value Threshold" value={`R${stats.threshold}`} icon={Activity} color="#ef4444" />
+        <KpiCard label="Total Users" value={String(stats.users)} icon={Users} onClick={() => onNavigate("admin-users")} active />
+        <KpiCard label="Active Workflows" value={String(stats.workflows)} icon={Activity} onClick={() => onNavigate("admin-workflows")} />
+        <KpiCard label="Travel Requests" value={String(stats.declarations)} icon={FileText} onClick={() => onNavigate("admin-reports")} />
+        <KpiCard label="Value Threshold" value={`R${stats.threshold}`} icon={Activity} />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">

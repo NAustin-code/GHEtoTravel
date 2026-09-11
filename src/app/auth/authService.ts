@@ -1,5 +1,5 @@
 import { User } from "@/types/declaration";
-import { setToken } from "@/services/httpClient";
+import { setToken, getAuthToken } from "@/services/httpClient";
 import { authenticateUser, getUserByToken } from "@/services/localStore";
 
 export async function authenticate(email: string, password: string): Promise<User | null> {
@@ -12,8 +12,7 @@ export async function authenticate(email: string, password: string): Promise<Use
 
 export async function fetchCurrentUser(): Promise<User | null> {
   try {
-    const token = localStorage.getItem("ghe.auth.token");
-    return getUserByToken(token);
+    return getUserByToken(getAuthToken());
   } catch {
     return null;
   }

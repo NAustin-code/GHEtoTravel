@@ -101,12 +101,35 @@ export function AdminReports() {
     if (!el) return;
     try {
       const canvas = await html2canvas(el, { scale: 2, useCORS: true });
-      const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("l", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`${reportType.replace(/\s+/g, "_")}_${new Date().toISOString().slice(0, 10)}.pdf`);
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const fileName = `${reportType.replace(/\s+/g, "_")}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      const fullHeightMm = (canvas.height * pdfWidth) / canvas.width;
+      if (fullHeightMm <= pageHeight) {
+        pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, pdfWidth, fullHeightMm);
+      } else {
+        // Long tables span multiple pages: slice the canvas into page-height chunks.
+        const pxPerPage = Math.floor((canvas.width * pageHeight) / pdfWidth);
+        const pageCanvas = document.createElement("canvas");
+        const ctx = pageCanvas.getContext("2d");
+        if (!ctx) throw new Error("Canvas 2D context unavailable");
+        let rendered = 0;
+        let first = true;
+        while (rendered < canvas.height) {
+          const sliceH = Math.min(pxPerPage, canvas.height - rendered);
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = sliceH;
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+          ctx.drawImage(canvas, 0, rendered, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+          if (!first) pdf.addPage();
+          pdf.addImage(pageCanvas.toDataURL("image/png"), "PNG", 0, 0, pdfWidth, (sliceH * pdfWidth) / canvas.width);
+          first = false;
+          rendered += sliceH;
+        }
+      }
+      pdf.save(fileName);
     } catch {
       const pdf = new jsPDF("l", "mm", "a4");
       pdf.setFontSize(16);

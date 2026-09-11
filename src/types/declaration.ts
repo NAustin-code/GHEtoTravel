@@ -25,8 +25,6 @@ export type StatusType =
   | "Escalated"
   | "Returned";
 
-export type TravelStatus = StatusType | "Cancelled";
-
 export type TravelPurpose = "Business" | "Leisure" | "Visiting" | "Other";
 
 export type TransportMode =
@@ -44,8 +42,6 @@ export type ApprovalDecision =
   | "foundation"
   | "decline"
   | null;
-
-export type TravelApprovalDecision = "accept" | "decline" | "return";
 
 export interface User {
   id: string;
@@ -135,44 +131,6 @@ export interface Declaration {
   purpose?: TravelPurpose;
 }
 
-export interface TravelRequest {
-  id: string;
-  employee: string;
-  employeeId: string;
-  department: string;
-  purpose: TravelPurpose;
-  counterparty?: string;
-  travelers: Traveler[];
-  submitted: string;
-  approver: string;
-  approverId?: string;
-  status: TravelStatus;
-  priority: "High" | "Medium" | "Low";
-  destination: string;
-  departureDate: string;
-  returnDate: string;
-  travelType: "Domestic" | "International";
-  reason: string;
-  from?: string;
-  to?: string;
-  transportMode: TransportMode;
-  transportDetails: string;
-  flightCost?: number;
-  seatPreference: "Aisle" | "Window" | "Other";
-  firstTimeFlying: boolean | string;
-  accommodationRequired: boolean;
-  accommodationDetails: string;
-  accommodationCost?: number;
-  numberOfPeople: number;
-  enterTravellerDetails: boolean;
-  company?: string;
-  organizationId?: string;
-  lineManager?: string;
-  files?: UploadedFile[];
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface WorkflowStep {
   order: number;
   role: "lineManager" | "hr";
@@ -190,25 +148,6 @@ export interface WorkflowStep {
 export interface WorkflowInstance {
   declarationId: string;
   steps: WorkflowStep[];
-}
-
-export interface TravelWorkflowStep {
-  order: number;
-  role: "lineManager" | "hr";
-  assignee: string;
-  assigneeName: string;
-  label: string;
-  status: "pending" | "approved" | "declined";
-  decision: TravelApprovalDecision;
-  notes: string;
-  decidedAt: string | null;
-  decidedById: string | null;
-  decidedByName: string | null;
-}
-
-export interface TravelWorkflowInstance {
-  declarationId: string;
-  steps: TravelWorkflowStep[];
 }
 
 export interface WorkflowRule {

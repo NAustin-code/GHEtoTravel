@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from "react";
 import { User } from "@/types/declaration";
-import { clearToken } from "@/services/httpClient";
+import { clearAuthState, getAuthToken, CACHED_USER_KEY } from "@/services/httpClient";
 import { fetchCurrentUser } from "./authService";
 
 interface UserContextValue {
@@ -22,52 +22,75 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("ghe.auth.token");
+    let mounted = true;
+    let timedOut = false;
+    const done = () => { if (mounted) setLoading(false); };
+    const token = getAuthToken();
     if (!token) {
-      localStorage.removeItem("ghe.auth.user");
-      setLoading(false);
+      localStorage.removeItem(CACHED_USER_KEY);
+      done();
       return;
     }
-    const cached = localStorage.getItem("ghe.auth.user");
+    const cached = localStorage.getItem(CACHED_USER_KEY);
     if (cached) {
-      try { setUser(JSON.parse(cached)); setLoading(false); } catch { /* ignore */ }
+      try {
+        if (mounted) setUser(JSON.parse(cached));
+      } catch {
+        localStorage.removeItem(CACHED_USER_KEY);
+      }
+      done();
     }
-    const fetchUserWithTimeout = Promise.race([
-      fetchCurrentUser(),
-      new Promise<null>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 8000)),
-    ]);
-    fetchUserWithTimeout.then((u) => {
+    // Session restore is local and should resolve instantly; the timeout only
+    // guards against a stalled main thread. A timeout must never destroy a
+    // valid session, so it only unblocks rendering — reconciliation below
+    // still runs when the lookup completes.
+    const timer = setTimeout(() => {
+      timedOut = true;
+      done();
+    }, 8000);
+    fetchCurrentUser().then((u) => {
+      clearTimeout(timer);
+      if (!mounted) return;
       if (u) {
         setUser(u);
-        localStorage.setItem("ghe.auth.user", JSON.stringify(u));
+        localStorage.setItem(CACHED_USER_KEY, JSON.stringify(u));
       } else {
         setUser(null);
-        clearToken();
-        localStorage.removeItem("ghe.auth.user");
+        clearAuthState();
       }
+      done();
     }).catch(() => {
-      clearToken();
-      localStorage.removeItem("ghe.auth.user");
+      clearTimeout(timer);
+      if (!mounted || timedOut) {
+        // Post-timeout failure: leave the cached session alone.
+        done();
+        return;
+      }
       setUser(null);
-    }).finally(() => setLoading(false));
+      clearAuthState();
+      done();
+    });
+    return () => {
+      mounted = false;
+      clearTimeout(timer);
+    };
   }, []);
 
-  const login = useCallback((u: User | null) => {
+  const persistUser = useCallback((u: User | null) => {
     setUser(u);
     if (u) {
-      localStorage.setItem("ghe.auth.user", JSON.stringify(u));
+      localStorage.setItem(CACHED_USER_KEY, JSON.stringify(u));
     } else {
-      localStorage.removeItem("ghe.auth.user");
+      localStorage.removeItem(CACHED_USER_KEY);
     }
   }, []);
 
   const logout = useCallback(() => {
     setUser(null);
-    clearToken();
-    localStorage.removeItem("ghe.auth.user");
+    clearAuthState();
   }, []);
 
-  const ctxValue = useMemo(() => ({ user, setUser: login, isAuthenticated: !!user, logout }), [user, login, logout]);
+  const ctxValue = useMemo(() => ({ user, setUser: persistUser, isAuthenticated: !!user, logout }), [user, persistUser, logout]);
 
   if (loading) {
     return (

@@ -181,14 +181,13 @@ export function ApproverDashboard({ onNavigate, onReview }: { onNavigate: (s: Sc
               label={def.label}
               value={value}
               icon={def.icon}
-              color={def.color}
               decorKey={def.key}
               active={activeFilter === def.filterValue}
               onClick={() => setActiveFilter(def.filterValue as DashboardFilter)}
             />
           );
         })}
-        <KpiCard label="Total Value" value={formatRand(kpisData.totalValue)} icon={Coins} color="#6366f1" decorKey="Total Value" />
+        <KpiCard label="Total Value" value={formatRand(kpisData.totalValue)} icon={Coins} decorKey="Total Value" />
       </div>
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">

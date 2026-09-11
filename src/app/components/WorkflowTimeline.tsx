@@ -72,11 +72,11 @@ function buildStepsFromWorkflow(wf: WorkflowInstance | null | undefined): StepVi
 
 function dotColor(step: StepView): string {
   if (step.state !== "completed") {
-    if (step.state === "active") return "bg-purple-600";
+    if (step.state === "active") return "bg-teal-600";
     if (step.state === "skipped") return "bg-gray-100 border border-gray-300";
-    return "bg-purple-600";
+    return "bg-teal-600";
   }
-  if (!step.decision?.label) return "bg-purple-600";
+  if (!step.decision?.label) return "bg-teal-600";
   return STATUS_COLORS[labelToStatus(step.decision.label)].dot;
 }
 
@@ -94,7 +94,7 @@ function Dot({ step }: { step: StepView }) {
 function getRailColor(step: StepView): string {
   if (step.state === "pending") return STATUS_COLORS.Pending.rail;
   if (step.state !== "completed") return "bg-gray-200";
-  if (!step.decision?.label) return "bg-purple-300";
+  if (!step.decision?.label) return "bg-teal-300";
   return STATUS_COLORS[labelToStatus(step.decision.label)].rail;
 }
 
@@ -108,7 +108,7 @@ function Badge({ state, decision }: { state: "completed" | "active" | "pending" 
     return <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-600 inline-flex items-center gap-1 whitespace-nowrap">Completed</span>;
   }
   if (state === "active") {
-    return <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-purple-100 text-purple-700 inline-flex items-center gap-1 whitespace-nowrap">In Progress</span>;
+    return <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-teal-100 text-teal-700 inline-flex items-center gap-1 whitespace-nowrap">In Progress</span>;
   }
   if (state === "skipped") {
     return <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-400 inline-flex items-center gap-1 whitespace-nowrap">Not Required</span>;
@@ -169,7 +169,7 @@ function PendingDetails() {
 function WaitingDetails({ actor }: { actor: string }) {
   return (
     <>
-      <p className="text-sm text-purple-700 font-semibold mb-3">Awaiting action from <strong>{actor}</strong></p>
+      <p className="text-sm text-teal-700 font-semibold mb-3">Awaiting action from <strong>{actor}</strong></p>
       <PendingDetails />
     </>
   );
@@ -204,7 +204,7 @@ export function WorkflowTimeline({
       <div className="detail-panel-card bg-white p-7 flex flex-col" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif", height: "auto", minHeight: "100%" }}>
       <div className="relative z-10 flex flex-col flex-1">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-[34px] h-[34px] rounded-[10px] bg-gradient-to-br from-purple-600 to-purple-500 flex items-center justify-center flex-shrink-0">
+        <div className="w-[34px] h-[34px] rounded-[10px] bg-gradient-to-br from-teal-600 to-teal-500 flex items-center justify-center flex-shrink-0">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="6" cy="6" r="2.5" />
             <circle cx="18" cy="6" r="2.5" />
@@ -213,7 +213,7 @@ export function WorkflowTimeline({
             <path d="M15.8 7.2 L13 16" />
           </svg>
         </div>
-        <h1 className="inline-flex rounded-full border border-purple-200/70 bg-purple-50 px-4 py-1.5 text-sm font-extrabold uppercase tracking-[0.2em] text-purple-900 shadow-sm m-0">Approval Workflow</h1>
+        <h1 className="inline-flex rounded-full border border-teal-200/70 bg-teal-50 px-4 py-1.5 text-sm font-extrabold uppercase tracking-[0.2em] text-teal-900 shadow-sm m-0">Approval Workflow</h1>
       </div>
 
       <div className="flex-1">
@@ -241,8 +241,8 @@ export function WorkflowTimeline({
 
                   {step.state === "active" && onDecision && (
                     <>
-                      <p className="text-xs font-semibold text-purple-700 mb-0.5">Status</p>
-                      <p className="text-sm font-semibold text-purple-700 mb-3">Waiting for approval from {step.actor}</p>
+                      <p className="text-xs font-semibold text-teal-700 mb-0.5">Status</p>
+                      <p className="text-sm font-semibold text-teal-700 mb-3">Waiting for approval from {step.actor}</p>
 
                       <p className="text-xs font-semibold text-gray-500 mb-2">Decision *</p>
                       <div className="space-y-1.5 mb-3">
@@ -251,18 +251,18 @@ export function WorkflowTimeline({
                             key={opt.value}
                             className={`flex min-h-[64px] items-start gap-3 rounded-xl border-2 p-2.5 transition-colors ${
                               decision === opt.value
-                                ? "border-purple-600 bg-purple-50/50"
+                                ? "border-teal-600 bg-teal-50/50"
                                 : "border-transparent hover:border-gray-200 hover:bg-gray-50"
                             }`}
                           >
                             <div className="flex-shrink-0 mt-0.5">
                               <div
                                 className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                                  decision === opt.value ? "border-purple-600" : "border-gray-300"
+                                  decision === opt.value ? "border-teal-600" : "border-gray-300"
                                 }`}
                               >
                                 {decision === opt.value && (
-                                  <div className="w-2 h-2 rounded-full bg-purple-600" />
+                                  <div className="w-2 h-2 rounded-full bg-teal-600" />
                                 )}
                               </div>
                             </div>
@@ -310,14 +310,14 @@ export function WorkflowTimeline({
       </div>
 
       {onSubmit && (
-        <div className="mt-5 bg-purple-50 rounded-[14px] p-4 text-center">
-          <p className="text-xs text-purple-700 mb-3">
+        <div className="mt-5 bg-teal-50 rounded-[14px] p-4 text-center">
+          <p className="text-xs text-teal-700 mb-3">
             {submitted ? "Decision submitted. Awaiting next approval." : "Complete the current step before proceeding."}
           </p>
           <button
             onClick={onSubmit}
             disabled={submitDisabled}
-            className="w-full py-3 border-none rounded-[10px] bg-gradient-to-br from-purple-700 to-purple-500 text-white text-sm font-bold cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed"
+            className="w-full py-3 border-none rounded-[10px] bg-gradient-to-br from-teal-700 to-teal-500 text-white text-sm font-bold cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed"
           >
             {submitted ? "Decision Submitted" : "Submit Decision"}
           </button>
