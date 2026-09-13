@@ -121,6 +121,7 @@ export class NewDeclarationPage {
     const dates = this.page.locator('input[type="date"]');
     await dates.nth(0).fill(departure);
     await dates.nth(1).fill(ret);
+    await this.select("Trip Type", "Return");
   }
 
   async agree() {

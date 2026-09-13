@@ -2,8 +2,9 @@ import { useState } from "react";
 import { ArrowLeft, Download, Eye, FileText } from "lucide-react";
 import { Card } from "@/app/components/ui/card";
 import { formatRand } from "@/config/theme";
-import { Declaration, UploadedFile } from "@/types/declaration";
+import { Declaration, UploadedFile, Traveler } from "@/types/declaration";
 import { downloadStoredFile } from "@/services/api";
+import { travelDurationDays, weekOfYear } from "@/utils/travel";
 
 export function DeclarationDetailView({
   data,
@@ -31,23 +32,27 @@ export function DeclarationDetailView({
     ["Team",                   safe(d.team)],
     ["Team Member Role / Position", safe(d.position)],
     ["Travel Type",            safe(d.travelType || d.type)],
+    ["Trip Type",              safe(d.tripType)],
     ["Destination",            safe(d.destination || d.counterparty)],
     ["Reason for Travel",      safe(d.reason || d.description)],
     ["Traveling From",         safe(d.from)],
     ["Traveling To",           safe(d.to || d.destination || d.counterparty)],
     ["Date of Departure",      safe(d.departureDate || d.date)],
     ["Date of Return",         safe(d.returnDate)],
+    ["Travel Duration",        (() => { const n = travelDurationDays(d.departureDate, d.returnDate); return n == null ? "—" : `${n} day${n === 1 ? "" : "s"}`; })()],
+    ["Week Number",            (() => { const w = weekOfYear(d.departureDate); return w == null ? "—" : `Week ${w}`; })()],
     ["Number of Travelers",    safe(d.numberOfPeople ?? d.instances)],
-    ["Travelers",              safe(Array.isArray(d.travelers) ? d.travelers.map((t) => t.name).filter(Boolean).join(", ") : undefined)],
     ["Mode of Transport",      safe(d.transportMode)],
     ["Transport Details",      safe(d.transportDetails)],
     ["Flight Cost",            d.flightCost != null ? formatRand(d.flightCost) : "—"],
     ["Seat Preference",        safe(d.seatPreference)],
+    ["First Time Flying",      d.firstTimeFlying != null ? (d.firstTimeFlying ? "Yes" : "No") : "—"],
     ["Accommodation Required", d.accommodationRequired ? "Yes" : "No"],
     ["Accommodation Details",  safe(d.accommodationDetails)],
     ["Accommodation Cost",     d.accommodationCost != null ? formatRand(d.accommodationCost) : "—"],
     ["Company To Be Billed",   safe(d.companyToBeBilled)],
     ["Order Number",           safe(d.orderNumber)],
+    ["Travel Reference",       safe(d.travelReference)],
     ["Total Cost",             cost(d.value)],
     ...(d.substantiation
       ? ([["High-Value Motivation", safe(d.substantiation)]] as [string, string][])
@@ -90,7 +95,7 @@ export function DeclarationDetailView({
                 border border-slate-200
                 shadow-sm
                 ${
-                  ["Reason for Travel", "Transport Details", "Accommodation Details", "High-Value Motivation", "Travelers"].includes(k)
+                  ["Reason for Travel", "Transport Details", "Accommodation Details", "High-Value Motivation"].includes(k)
                     ? "sm:col-span-2"
                     : ""
                 }
@@ -106,11 +111,48 @@ export function DeclarationDetailView({
             </div>
           ))}
         </div>
+
+        {Array.isArray(d.travelers) && d.travelers.length > 0 && (
+          <div className="mt-6">
+            <h4 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">Traveler Details</h4>
+            <div className="space-y-3">
+              {d.travelers.map((t, i) => (
+                <TravelerCard key={t.id || i} traveler={t} index={i} />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </Card>
     </div>
 
     {!hideDocuments && <SupportingDocuments data={data} />}
+    </div>
+  );
+}
+
+function TravelerCard({ traveler, index }: { traveler: Traveler; index: number }) {
+  const rows: [string, string][] = [
+    ["Full Name", traveler.name || "—"],
+    ["ID/Passport", traveler.idDocument || "—"],
+    ["Email", traveler.email || "—"],
+    ["Cell Phone", traveler.cellPhone || "—"],
+    ["Job Title", traveler.jobTitle || "—"],
+    ["Internal/External", traveler.internalExternal || "—"],
+  ];
+  if (traveler.companyToBeBilled) rows.push(["Company To Be Billed", traveler.companyToBeBilled]);
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+      <p className="mb-3 text-xs font-bold text-slate-600">Traveler {index + 1}</p>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        {rows.map(([k, v]) => (
+          <div key={k}>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{k}</p>
+            <p className="mt-0.5 text-xs font-medium text-slate-700">{v}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

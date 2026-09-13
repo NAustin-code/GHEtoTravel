@@ -14,6 +14,7 @@ import { WorkflowTimeline } from "@/app/components/WorkflowTimeline";
 import { Table, Thead, Th, Tbody, Tr, Td, COL } from "@/app/components/table";
 import { PURPLE } from "@/config/theme";
 import { exportRowsToXls } from "@/utils/excel";
+import { travelDurationDays, weekOfYear } from "@/utils/travel";
 import { useWorkflowApproval } from "@/app/hooks/useWorkflowApproval";
 import type {
     StatusType,
@@ -139,8 +140,21 @@ export function MyDeclarationsScreen({ onEditDraft }: { onEditDraft?: (d: Declar
     const data = filtered.map((d) => ({
       ID: d.id,
       Employee: d.employee,
-      Type: d.type,
+      Department: d.department,
+      TravelType: d.travelType || d.type,
+      TripType: d.tripType || "",
       Destination: d.counterparty,
+      From: d.from || "",
+      To: d.to || "",
+      Duration: travelDurationDays(d.departureDate, d.returnDate) ?? "",
+      Week: weekOfYear(d.departureDate) ?? "",
+      TransportMode: d.transportMode || "",
+      FlightCost: d.flightCost ?? "",
+      AccommodationRequired: d.accommodationRequired ? "Yes" : "No",
+      AccommodationCost: d.accommodationCost ?? "",
+      TravelReference: d.travelReference || "",
+      CompanyToBeBilled: d.companyToBeBilled || "",
+      OrderNumber: d.orderNumber || "",
       Value: d.value,
       Submitted: d.submitted,
       Status: d.status,
@@ -155,8 +169,20 @@ export function MyDeclarationsScreen({ onEditDraft }: { onEditDraft?: (d: Declar
         ID: d.id,
         Employee: d.employee,
         Department: d.department,
-        Type: d.type,
+        TravelType: d.travelType || d.type,
+        TripType: d.tripType || "",
         Destination: d.counterparty,
+        From: d.from || "",
+        To: d.to || "",
+        Duration: travelDurationDays(d.departureDate, d.returnDate) ?? "",
+        Week: weekOfYear(d.departureDate) ?? "",
+        TransportMode: d.transportMode || "",
+        FlightCost: d.flightCost ?? "",
+        AccommodationRequired: d.accommodationRequired ? "Yes" : "No",
+        AccommodationCost: d.accommodationCost ?? "",
+        TravelReference: d.travelReference || "",
+        CompanyToBeBilled: d.companyToBeBilled || "",
+        OrderNumber: d.orderNumber || "",
         Value: d.value,
         Submitted: d.submitted,
         Status: d.status,

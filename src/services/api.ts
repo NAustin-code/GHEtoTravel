@@ -165,7 +165,7 @@ export async function fetchReportCounterpartyConcentration(params?: Record<strin
   return store.getDestinationConcentration(params);
 }
 
-export async function fetchReportHighValue(): Promise<{ employee: string; lineManager: string; declarationCount: number; totalValue: number; averageValue: number; totalGift: number; totalHospitality: number; totalEntertainment: number; mostFrequentSupplier: string }[]> {
+export async function fetchReportHighValue(): Promise<{ employee: string; lineManager: string; declarationCount: number; totalValue: number; averageValue: number; totalDomestic: number; totalInternational: number; totalOther: number; mostFrequentSupplier: string }[]> {
   return store.getHighValueRows();
 }
 

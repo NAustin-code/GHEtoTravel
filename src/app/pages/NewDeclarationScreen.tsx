@@ -4,7 +4,7 @@ import { Sel } from "@/app/components/Sel";
 import { FL } from "@/app/components/FL";
 import { FS } from "@/app/components/FS";
 import { inp } from "@/config/theme";
-import { Declaration, Traveler, TransportMode, UploadedFile } from "@/types/declaration";
+import { Declaration, Traveler, TransportMode, TripType, UploadedFile } from "@/types/declaration";
 import {
   createDeclaration,
   submitDeclaration,
@@ -21,6 +21,8 @@ const GENDER_OPTIONS = ["Male", "Female"];
 const SEAT_PREFERENCE_OPTIONS = ["Aisle", "Window", "Other"];
 const FIRST_TIME_FLYING_OPTIONS = ["Yes", "No"];
 const TRAVEL_TYPE_OPTIONS = ["Domestic", "International"];
+const TRIP_TYPE_OPTIONS: TripType[] = ["One Way", "Return"];
+const INTERNAL_EXTERNAL_OPTIONS = ["Internal", "External"];
 const TRANSPORT_OPTIONS: TransportMode[] = ["None", "Flight", "Bus", "Train", "Car", "Other"];
 
 const BILLED_COMPANIES = [
@@ -60,6 +62,8 @@ interface TravelFormState {
   departureDate: string;
   returnDate: string;
   travelType: "Domestic" | "International";
+  tripType: TripType | "";
+  travelReference: string;
   reason: string;
   from: string;
   to: string;
@@ -85,6 +89,8 @@ const EMPTY_FORM: TravelFormState = {
   departureDate: "",
   returnDate: "",
   travelType: "Domestic",
+  tripType: "",
+  travelReference: "",
   reason: "",
   from: "",
   to: "",
@@ -113,6 +119,7 @@ function blankTraveler(index: number): Traveler {
     jobTitle: "",
     company: "",
     gender: "Male",
+    internalExternal: "Internal",
   };
 }
 
@@ -202,6 +209,8 @@ export function NewDeclarationScreen({
       departureDate: draft.departureDate || "",
       returnDate: draft.returnDate || "",
       travelType: draft.travelType || "Domestic",
+      tripType: draft.tripType || "",
+      travelReference: draft.travelReference ?? "",
       reason: draft.reason || draft.description || "",
       from: draft.from || "",
       to: draft.to || "",
@@ -247,6 +256,7 @@ export function NewDeclarationScreen({
     if (!formState.departureDate) next.departureDate = "Departure date is required";
     if (!formState.returnDate) next.returnDate = "Return date is required";
     if (!formState.reason.trim()) next.reason = "Reason for travel is required";
+    if (!formState.tripType) next.tripType = "Trip type is required";
     if (formState.departureDate && formState.returnDate && formState.returnDate < formState.departureDate) {
       next.returnDate = "Return date cannot be before departure date";
     }
@@ -307,6 +317,8 @@ const base: Omit<Declaration, "travelers" | "id" | "numberOfPeople"> = {
       departureDate: formState.departureDate,
       returnDate: formState.returnDate,
       travelType: formState.travelType,
+      tripType: formState.tripType as TripType,
+      travelReference: formState.travelReference || undefined,
       reason: formState.reason,
       to: formState.to,
       transportMode: formState.transportMode,
@@ -501,6 +513,16 @@ const onDraftSave = async () => {
               placeholder="Order number (if known)"
             />
           </div>
+          <div>
+            <FL htmlFor="travel-reference">Travel Reference</FL>
+            <input
+              id="travel-reference"
+              className={inp}
+              value={formState.travelReference}
+              onChange={(e) => set("travelReference", e.target.value)}
+              placeholder="Booking reference (if known)"
+            />
+          </div>
         </div>
 
         <div className="mt-6 space-y-5">
@@ -589,6 +611,16 @@ const onDraftSave = async () => {
                     placeholder="Employee code"
                   />
                 </div>
+                <div>
+                  <FL>Internal / External</FL>
+                  <Sel value={t.internalExternal || "Internal"} onChange={(v) => updateTraveler(i, { internalExternal: v as "Internal" | "External" })}>
+                    {INTERNAL_EXTERNAL_OPTIONS.map((o) => (
+                      <option key={o} value={o}>
+                        {o}
+                      </option>
+                    ))}
+                  </Sel>
+                </div>
               </div>
             </div>
           ))}
@@ -625,6 +657,17 @@ const onDraftSave = async () => {
             <FL required>Travel Type</FL>
             <Sel value={formState.travelType} onChange={(v) => set("travelType", v as "Domestic" | "International")}>
               {TRAVEL_TYPE_OPTIONS.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </Sel>
+          </div>
+          <div>
+            <FL required htmlFor="trip-type" error={err("tripType")}>Trip Type</FL>
+            <Sel value={formState.tripType} onChange={(v) => set("tripType", v as TripType | "")}>
+              <option value="">Select trip type</option>
+              {TRIP_TYPE_OPTIONS.map((t) => (
                 <option key={t} value={t}>
                   {t}
                 </option>

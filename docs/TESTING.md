@@ -13,7 +13,7 @@ npx vitest --coverage   # With coverage report
 
 | File | Tests | What's tested |
 |------|-------|---------------|
-| `api-services.test.ts` | 55 | Local-store service layer: CRUD, submit lifecycle, workflows, reports, errors |
+| `api-services.test.ts` | 57 | Local-store service layer: CRUD, submit lifecycle, workflows, reports, file content, errors |
 | `integration.test.ts` | 28 | Auth + journey flows against the local store |
 | `NewDeclarationScreen.test.tsx` | 14 | Travel form render, validation, submit/draft, traveler blocks, file upload |
 | `approval-workflow.test.tsx` | 23 | WorkflowTimeline options, decisions, auto-fetch |
@@ -30,8 +30,10 @@ npx vitest --coverage   # With coverage report
 | `AdminApprovalOptions.test.tsx` | 1 | Approval options admin screen |
 | `admin-dashboard-states.test.tsx` | 2 | Admin dashboard loading/error states |
 | `org-api.test.ts` | 4 | Organization API helpers |
+| `Sel.test.tsx` | 2 | Select component: placeholder display, clearing back to empty option |
+| `travel.test.ts` | 6 | Derived report dimensions: trip duration, ISO week number |
 
-**Total: 254 tests**
+**Total: 264 tests**
 
 Tests run fully offline — the service layer reads/writes the localStorage-backed
 store, reset via `resetLocalStore()` in `beforeEach`. No backend required.
@@ -50,17 +52,19 @@ npx vitest run -t "login"
 
 | Component | Status |
 |-----------|--------|
-| LoginPage | Tested via auth-edge-cases, integration |
+| LandingScreen (login) | Tested via auth-edge-cases, integration |
 | ApproverDashboard | Tested via dashboard-render |
 | ErrorBoundary | Tested via ErrorBoundary tests |
 | UserContext | Tested via UserContext tests |
-| ProtectedRoute | Tested via integration |
-| LoginForm | Tested via auth-edge-cases |
+| NewDeclarationScreen | Tested via NewDeclarationScreen tests |
+| Sel | Tested via Sel tests |
+| Travel date helpers (`utils/travel`) | Tested via travel tests |
 
 ## Mock Strategy
 
 Tests use Vitest's `vi.mock()` to:
-- Mock `window.fetch` / axios for API calls
-- Mock `localStorage` / `sessionStorage` for token storage
-- Mock `react-router-dom` navigation hooks
-- Mock child components for isolation
+- Mock `../services/api` module functions (the local-store-backed service layer)
+- Mock the `Sel` component with a native input in form tests
+- Stub `ResizeObserver`, `scrollIntoView`, and pointer-capture APIs missing in jsdom
+- Mock `window.fetch` for file download/view paths
+- Control `localStorage` seeds via `resetLocalStore()` in `beforeEach`

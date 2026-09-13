@@ -27,6 +27,8 @@ export type StatusType =
 
 export type TravelPurpose = "Business" | "Leisure" | "Visiting" | "Other";
 
+export type TripType = "One Way" | "Return";
+
 export type TransportMode =
   | "None"
   | "Flight"
@@ -73,6 +75,7 @@ export interface Traveler {
   company: string;
   gender?: string;
   companyToBeBilled?: string;
+  internalExternal?: "Internal" | "External";
 }
 
 export interface Declaration {
@@ -119,6 +122,8 @@ export interface Declaration {
   travelType?: "Domestic" | "International";
   reason?: string;
   to?: string;
+  tripType?: TripType;
+  travelReference?: string;
   transportMode?: TransportMode;
   transportDetails?: string;
   flightCost?: number;

@@ -168,6 +168,8 @@ interface SeedDeclParams {
   to: string;
   departureDate: string;
   returnDate: string;
+  tripType?: Declaration["tripType"];
+  travelReference?: string;
   transportMode?: Declaration["transportMode"];
   travelers?: Declaration["travelers"];
   numberOfPeople?: number;
@@ -206,6 +208,8 @@ function mkDecl(p: SeedDeclParams): Declaration {
     departureDate: p.departureDate,
     returnDate: p.returnDate,
     travelType: (p.type === "International" ? "International" : "Domestic") as "Domestic" | "International",
+    tripType: p.tripType,
+    travelReference: p.travelReference,
     reason: p.reason,
     to: p.to,
     transportMode: p.transportMode || "Flight",
@@ -238,23 +242,23 @@ function step(
 
 function seedDeclarations(): { declarations: Declaration[]; workflows: WorkflowInstance[] } {
   const declarations: Declaration[] = [
-    mkDecl({ id: "TR-2024-0044", employee: "Nomvula Dlamini", employeeId: "user-1", teamMemberNumber: "HB-10001", lineManager: "Sipho Nkosi", approver: "Sipho Nkosi", department: "Marketing", type: "Domestic", destination: "Cape Town", value: 1200, submitted: "2024-11-02", status: "Pending", reason: "Client site visit", from: "Durban", to: "Cape Town", departureDate: "2024-11-20", returnDate: "2024-11-22", organizationId: "org-hb",
+    mkDecl({ id: "TR-2024-0044", employee: "Nomvula Dlamini", employeeId: "user-1", teamMemberNumber: "HB-10001", lineManager: "Sipho Nkosi", approver: "Sipho Nkosi", department: "Marketing", type: "Domestic", destination: "Cape Town", value: 1200, submitted: "2024-11-02", status: "Pending", reason: "Client site visit", from: "Durban", to: "Cape Town", departureDate: "2024-11-20", returnDate: "2024-11-22", tripType: "Return", organizationId: "org-hb",
       travelers: [
-        { id: "t-44-1", name: "Nomvula Dlamini", employeeId: "user-1", teamMemberNumber: "HB-10001", department: "Marketing", position: "Brand Manager", idDocument: "9001015800083", idDocumentType: "ID", email: "nomvula@hb.co.za", cellPhone: "0821234567", jobTitle: "Brand Manager", company: "Hollywoodbets Group", gender: "Female" },
+        { id: "t-44-1", name: "Nomvula Dlamini", employeeId: "user-1", teamMemberNumber: "HB-10001", department: "Marketing", position: "Brand Manager", idDocument: "9001015800083", idDocumentType: "ID", email: "nomvula@hb.co.za", cellPhone: "0821234567", jobTitle: "Brand Manager", company: "Hollywoodbets Group", gender: "Female", internalExternal: "Internal" },
       ] }),
-    mkDecl({ id: "TR-2024-0045", employee: "Kabelo Molefe", employeeId: "user-3", teamMemberNumber: "NPN-10001", lineManager: "James van Wyk", approver: "James van Wyk", department: "Sales", type: "International", destination: "Windhoek", value: 8500, submitted: "2024-11-05", status: "Pending", reason: "Regional sales conference", from: "Johannesburg", to: "Windhoek", departureDate: "2024-11-25", returnDate: "2024-11-28", organizationId: "org-npn" }),
-    mkDecl({ id: "TR-2024-0047", employee: "Nomvula Dlamini", employeeId: "user-1", teamMemberNumber: "HB-10001", lineManager: "Sipho Nkosi", approver: "Sipho Nkosi", department: "Marketing", type: "Domestic", destination: "Johannesburg", value: 900, submitted: "2024-11-08", status: "Pending", reason: "Brand activation", from: "Durban", to: "Johannesburg", departureDate: "2024-11-18", returnDate: "2024-11-19", organizationId: "org-hb" }),
-    mkDecl({ id: "TR-2025-0009", employee: "Nomvula Dlamini", employeeId: "user-1", teamMemberNumber: "HB-10001", lineManager: "Sipho Nkosi", approver: "Sipho Nkosi", department: "Marketing", type: "Domestic", destination: "Durban", value: 1500, submitted: "2025-03-10", status: "Approved", reason: "Supplier workshop", from: "Pietermaritzburg", to: "Durban", departureDate: "2025-03-17", returnDate: "2025-03-18", organizationId: "org-hb" }),
-    mkDecl({ id: "TR-2026-0001", employee: "Nomvula Dlamini", employeeId: "user-1", teamMemberNumber: "HB-10001", lineManager: "Sipho Nkosi", approver: "Sipho Nkosi", department: "Marketing", type: "Domestic", destination: "Cape Town", value: 2400, submitted: "2026-06-28", status: "Pending", reason: "Campaign shoot", from: "Durban", to: "Cape Town", departureDate: "2026-08-01", returnDate: "2026-08-05", transportMode: "Flight", numberOfPeople: 2, organizationId: "org-hb",
+    mkDecl({ id: "TR-2024-0045", employee: "Kabelo Molefe", employeeId: "user-3", teamMemberNumber: "NPN-10001", lineManager: "James van Wyk", approver: "James van Wyk", department: "Sales", type: "International", destination: "Windhoek", value: 8500, submitted: "2024-11-05", status: "Pending", reason: "Regional sales conference", from: "Johannesburg", to: "Windhoek", departureDate: "2024-11-25", returnDate: "2024-11-28", tripType: "Return", organizationId: "org-npn" }),
+    mkDecl({ id: "TR-2024-0047", employee: "Nomvula Dlamini", employeeId: "user-1", teamMemberNumber: "HB-10001", lineManager: "Sipho Nkosi", approver: "Sipho Nkosi", department: "Marketing", type: "Domestic", destination: "Johannesburg", value: 900, submitted: "2024-11-08", status: "Pending", reason: "Brand activation", from: "Durban", to: "Johannesburg", departureDate: "2024-11-18", returnDate: "2024-11-19", tripType: "Return", organizationId: "org-hb" }),
+    mkDecl({ id: "TR-2025-0009", employee: "Nomvula Dlamini", employeeId: "user-1", teamMemberNumber: "HB-10001", lineManager: "Sipho Nkosi", approver: "Sipho Nkosi", department: "Marketing", type: "Domestic", destination: "Durban", value: 1500, submitted: "2025-03-10", status: "Approved", reason: "Supplier workshop", from: "Pietermaritzburg", to: "Durban", departureDate: "2025-03-17", returnDate: "2025-03-18", tripType: "Return", organizationId: "org-hb" }),
+    mkDecl({ id: "TR-2026-0001", employee: "Nomvula Dlamini", employeeId: "user-1", teamMemberNumber: "HB-10001", lineManager: "Sipho Nkosi", approver: "Sipho Nkosi", department: "Marketing", type: "Domestic", destination: "Cape Town", value: 2400, submitted: "2026-06-28", status: "Pending", reason: "Campaign shoot", from: "Durban", to: "Cape Town", departureDate: "2026-08-01", returnDate: "2026-08-05", transportMode: "Flight", numberOfPeople: 2, tripType: "Return", travelReference: "BK-88412", organizationId: "org-hb",
       travelers: [
-        { id: "t-1", name: "Nomvula Dlamini", employeeId: "user-1", teamMemberNumber: "HB-10001", department: "Marketing", position: "Brand Manager", idDocument: "9001015800083", idDocumentType: "ID", email: "nomvula@hb.co.za", cellPhone: "0821234567", jobTitle: "Brand Manager", company: "Hollywoodbets Group", gender: "Female" },
-        { id: "t-2", name: "Thandi Mokoena", teamMemberNumber: "HB-10002", department: "Marketing", position: "Designer", idDocument: "P1234567", idDocumentType: "Passport", email: "thandi@hb.co.za", cellPhone: "0831234567", jobTitle: "Designer", company: "Hollywoodbets Group", gender: "Female" },
+        { id: "t-1", name: "Nomvula Dlamini", employeeId: "user-1", teamMemberNumber: "HB-10001", department: "Marketing", position: "Brand Manager", idDocument: "9001015800083", idDocumentType: "ID", email: "nomvula@hb.co.za", cellPhone: "0821234567", jobTitle: "Brand Manager", company: "Hollywoodbets Group", gender: "Female", internalExternal: "Internal" },
+        { id: "t-2", name: "Thandi Mokoena", teamMemberNumber: "HB-10002", department: "Marketing", position: "Designer", idDocument: "P1234567", idDocumentType: "Passport", email: "thandi@hb.co.za", cellPhone: "0831234567", jobTitle: "Designer", company: "Hollywoodbets Group", gender: "Female", internalExternal: "External" },
       ] }),
-    mkDecl({ id: "TR-2026-0002", employee: "Kabelo Molefe", employeeId: "user-3", teamMemberNumber: "NPN-10001", lineManager: "James van Wyk", approver: "James van Wyk", department: "Sales", type: "International", destination: "Gaborone", value: 12000, submitted: "2026-05-12", status: "Approved", reason: "Territory expansion", from: "Johannesburg", to: "Gaborone", departureDate: "2026-06-02", returnDate: "2026-06-06", organizationId: "org-npn" }),
-    mkDecl({ id: "TR-2026-0003", employee: "Nomvula Dlamini", employeeId: "user-1", teamMemberNumber: "HB-10001", lineManager: "Sipho Nkosi", approver: "Sipho Nkosi", department: "Marketing", type: "Domestic", destination: "Bloemfontein", value: 800, submitted: "2026-06-02", status: "Declined", reason: "Store opening", from: "Durban", to: "Bloemfontein", departureDate: "2026-06-20", returnDate: "2026-06-21", transportMode: "Bus", organizationId: "org-hb" }),
-    mkDecl({ id: "TR-2026-0004", employee: "Nomvula Dlamini", employeeId: "user-1", teamMemberNumber: "HB-10001", lineManager: "Sipho Nkosi", approver: "Sipho Nkosi", department: "Marketing", type: "Domestic", destination: "Polokwane", value: 1100, submitted: "2026-06-15", status: "Returned", reason: "Mall activation", from: "Durban", to: "Polokwane", departureDate: "2026-07-05", returnDate: "2026-07-06", transportMode: "Flight", organizationId: "org-hb" }),
-    mkDecl({ id: "TR-2026-0005", employee: "Nomvula Dlamini", employeeId: "user-1", teamMemberNumber: "HB-10001", lineManager: "Sipho Nkosi", approver: "Sipho Nkosi", department: "Marketing", type: "Domestic", destination: "Umhlanga", value: 500, submitted: "2026-07-01", status: "Draft", reason: "Photoshoot", from: "Durban", to: "Umhlanga", departureDate: "2026-08-10", returnDate: "2026-08-10", transportMode: "Car", organizationId: "org-hb" }),
-    mkDecl({ id: "TR-2026-0006", employee: "James van Wyk", employeeId: "user-4", teamMemberNumber: "NPN-20001", lineManager: "Aisha Patel", approver: "Aisha Patel", department: "Sales", type: "International", destination: "Maputo", value: 20000, submitted: "2026-06-20", status: "Escalated", reason: "Partner negotiations", from: "Johannesburg", to: "Maputo", departureDate: "2026-07-22", returnDate: "2026-07-26", organizationId: "org-npn" }),
+    mkDecl({ id: "TR-2026-0002", employee: "Kabelo Molefe", employeeId: "user-3", teamMemberNumber: "NPN-10001", lineManager: "James van Wyk", approver: "James van Wyk", department: "Sales", type: "International", destination: "Gaborone", value: 12000, submitted: "2026-05-12", status: "Approved", reason: "Territory expansion", from: "Johannesburg", to: "Gaborone", departureDate: "2026-06-02", returnDate: "2026-06-06", tripType: "Return", organizationId: "org-npn" }),
+    mkDecl({ id: "TR-2026-0003", employee: "Nomvula Dlamini", employeeId: "user-1", teamMemberNumber: "HB-10001", lineManager: "Sipho Nkosi", approver: "Sipho Nkosi", department: "Marketing", type: "Domestic", destination: "Bloemfontein", value: 800, submitted: "2026-06-02", status: "Declined", reason: "Store opening", from: "Durban", to: "Bloemfontein", departureDate: "2026-06-20", returnDate: "2026-06-21", transportMode: "Bus", tripType: "One Way", organizationId: "org-hb" }),
+    mkDecl({ id: "TR-2026-0004", employee: "Nomvula Dlamini", employeeId: "user-1", teamMemberNumber: "HB-10001", lineManager: "Sipho Nkosi", approver: "Sipho Nkosi", department: "Marketing", type: "Domestic", destination: "Polokwane", value: 1100, submitted: "2026-06-15", status: "Returned", reason: "Mall activation", from: "Durban", to: "Polokwane", departureDate: "2026-07-05", returnDate: "2026-07-06", transportMode: "Flight", tripType: "One Way", organizationId: "org-hb" }),
+    mkDecl({ id: "TR-2026-0005", employee: "Nomvula Dlamini", employeeId: "user-1", teamMemberNumber: "HB-10001", lineManager: "Sipho Nkosi", approver: "Sipho Nkosi", department: "Marketing", type: "Domestic", destination: "Umhlanga", value: 500, submitted: "2026-07-01", status: "Draft", reason: "Photoshoot", from: "Durban", to: "Umhlanga", departureDate: "2026-08-10", returnDate: "2026-08-10", transportMode: "Car", tripType: "Return", organizationId: "org-hb" }),
+    mkDecl({ id: "TR-2026-0006", employee: "James van Wyk", employeeId: "user-4", teamMemberNumber: "NPN-20001", lineManager: "Aisha Patel", approver: "Aisha Patel", department: "Sales", type: "International", destination: "Maputo", value: 20000, submitted: "2026-06-20", status: "Escalated", reason: "Partner negotiations", from: "Johannesburg", to: "Maputo", departureDate: "2026-07-22", returnDate: "2026-07-26", tripType: "Return", organizationId: "org-npn" }),
   ];
 
   const pending = (id: string, lmId: string, lmName: string, hrId: string, hrName: string): WorkflowInstance => ({
@@ -545,6 +549,8 @@ export function createDeclarationRecord(data: Partial<Declaration>): Declaration
     departureDate: data.departureDate || "",
     returnDate: data.returnDate || "",
     travelType: data.travelType || ((data.type === "International" ? "International" : "Domestic") as "Domestic" | "International"),
+    tripType: data.tripType,
+    travelReference: data.travelReference,
     reason: data.reason || data.description || "",
     to: data.to,
     transportMode: data.transportMode || "None",
@@ -1011,20 +1017,20 @@ export function getDestinationConcentration(params?: Record<string, string>): { 
     .sort((a, b) => b.totalValue - a.totalValue);
 }
 
-export function getHighValueRows(params?: Record<string, string>): { employee: string; lineManager: string; declarationCount: number; totalValue: number; averageValue: number; totalGift: number; totalHospitality: number; totalEntertainment: number; mostFrequentSupplier: string }[] {
+export function getHighValueRows(params?: Record<string, string>): { employee: string; lineManager: string; declarationCount: number; totalValue: number; averageValue: number; totalDomestic: number; totalInternational: number; totalOther: number; mostFrequentSupplier: string }[] {
   const threshold = getConfig().highValueThreshold;
   const declarations = applyReportFilters(
     getDeclarations().filter((d) => d.value >= threshold),
     params,
   );
-  const groups = new Map<string, { employee: string; lineManager: string; declarationCount: number; totalValue: number; totalGift: number; totalHospitality: number; totalEntertainment: number; suppliers: Map<string, number> }>();
+  const groups = new Map<string, { employee: string; lineManager: string; declarationCount: number; totalValue: number; totalDomestic: number; totalInternational: number; totalOther: number; suppliers: Map<string, number> }>();
   for (const d of declarations) {
-    const current = groups.get(d.employee) || { employee: d.employee, lineManager: d.lineManager || "", declarationCount: 0, totalValue: 0, totalGift: 0, totalHospitality: 0, totalEntertainment: 0, suppliers: new Map<string, number>() };
+    const current = groups.get(d.employee) || { employee: d.employee, lineManager: d.lineManager || "", declarationCount: 0, totalValue: 0, totalDomestic: 0, totalInternational: 0, totalOther: 0, suppliers: new Map<string, number>() };
     current.declarationCount += 1;
     current.totalValue += d.value;
-    if (d.type === "Domestic") current.totalGift += d.value;
-    else if (d.type === "International") current.totalHospitality += d.value;
-    else current.totalEntertainment += d.value;
+    if (d.travelType === "Domestic" || d.type === "Domestic") current.totalDomestic += d.value;
+    else if (d.travelType === "International" || d.type === "International") current.totalInternational += d.value;
+    else current.totalOther += d.value;
     const supplier = d.destination || d.counterparty || "Unknown";
     current.suppliers.set(supplier, (current.suppliers.get(supplier) || 0) + 1);
     groups.set(d.employee, current);
@@ -1052,4 +1058,49 @@ export function getReportList(params?: Record<string, string>): Declaration[] {
         (d.approver || "").toLowerCase().includes(q),
     ),
   );
+}
+
+export function getTripTypeReport(params?: Record<string, string>): { tripType: string; count: number; totalValue: number; avgValue: number }[] {
+  const declarations = applyReportFilters(getDeclarations(), params);
+  const groups = new Map<string, { tripType: string; count: number; totalValue: number }>();
+  for (const d of declarations) {
+    const key = d.tripType || "Not Specified";
+    const current = groups.get(key) || { tripType: key, count: 0, totalValue: 0 };
+    current.count += 1;
+    current.totalValue += d.value;
+    groups.set(key, current);
+  }
+  return [...groups.values()]
+    .map((g) => ({ ...g, avgValue: g.totalValue / g.count }))
+    .sort((a, b) => b.totalValue - a.totalValue);
+}
+
+export function getTransportModeReport(params?: Record<string, string>): { transportMode: string; count: number; totalValue: number; avgValue: number }[] {
+  const declarations = applyReportFilters(getDeclarations(), params);
+  const groups = new Map<string, { transportMode: string; count: number; totalValue: number }>();
+  for (const d of declarations) {
+    const key = d.transportMode || "Not Specified";
+    const current = groups.get(key) || { transportMode: key, count: 0, totalValue: 0 };
+    current.count += 1;
+    current.totalValue += d.value;
+    groups.set(key, current);
+  }
+  return [...groups.values()]
+    .map((g) => ({ ...g, avgValue: g.totalValue / g.count }))
+    .sort((a, b) => b.totalValue - a.totalValue);
+}
+
+export function getDepartmentSpendReport(params?: Record<string, string>): { department: string; count: number; totalValue: number; avgValue: number }[] {
+  const declarations = applyReportFilters(getDeclarations(), params);
+  const groups = new Map<string, { department: string; count: number; totalValue: number }>();
+  for (const d of declarations) {
+    const key = d.department || "Unknown";
+    const current = groups.get(key) || { department: key, count: 0, totalValue: 0 };
+    current.count += 1;
+    current.totalValue += d.value;
+    groups.set(key, current);
+  }
+  return [...groups.values()]
+    .map((g) => ({ ...g, avgValue: g.totalValue / g.count }))
+    .sort((a, b) => b.totalValue - a.totalValue);
 }

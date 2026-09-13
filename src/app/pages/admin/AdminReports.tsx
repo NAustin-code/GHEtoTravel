@@ -9,11 +9,14 @@ import { formatRand, GRADIENT_PRIMARY } from "../../../config/theme";
 import { fetchReports } from "../../../services/reports";
 import { exportToExcel, ColumnDef } from "../../utils/excelExport";
 
-type ReportType = "High-Value Travel Report" | "Destination Concentration Report";
+type ReportType = "High-Value Travel Report" | "Destination Concentration Report" | "Trip Type Report" | "Transport Mode Report" | "Department Spend Report";
 
 const REPORTS: Array<{ title: ReportType; desc: string }> = [
   { title: "High-Value Travel Report", desc: "Employee-level summary for travel requests at or above the configured high-value threshold in the selected period." },
   { title: "Destination Concentration Report", desc: "Destination totals and concentration for the selected period." },
+  { title: "Trip Type Report", desc: "One Way vs Return breakdown for the selected period." },
+  { title: "Transport Mode Report", desc: "Travel volume and spend by mode of transport (Flight, Car, Bus, etc.)." },
+  { title: "Department Spend Report", desc: "Travel spend aggregated by department." },
 ];
 
 export function AdminReports() {
@@ -25,9 +28,12 @@ export function AdminReports() {
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [counterpartyData, setCounterpartyData] = useState<{ counterparty: string; count: number; totalValue: number; avgValue: number }[]>([]);
-  const [highValueData, setHighValueData] = useState<{ employee: string; lineManager: string; declarationCount: number; totalValue: number; averageValue: number; totalGift: number; totalHospitality: number; totalEntertainment: number; mostFrequentSupplier: string }[]>([]);
+  const [highValueData, setHighValueData] = useState<{ employee: string; lineManager: string; declarationCount: number; totalValue: number; averageValue: number; totalDomestic: number; totalInternational: number; totalOther: number; mostFrequentSupplier: string }[]>([]);
   const [statusBreakdown, setStatusBreakdown] = useState<Record<string, number>>({});
   const [slaData, setSlaData] = useState<{ role: string; avg: number; min: number; max: number; count: number }[]>([]);
+  const [tripTypeData, setTripTypeData] = useState<{ tripType: string; count: number; totalValue: number; avgValue: number }[]>([]);
+  const [transportModeData, setTransportModeData] = useState<{ transportMode: string; count: number; totalValue: number; avgValue: number }[]>([]);
+  const [departmentSpendData, setDepartmentSpendData] = useState<{ department: string; count: number; totalValue: number; avgValue: number }[]>([]);
   const [departments, setDepartments] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const tableRef = useRef<HTMLDivElement>(null);
@@ -50,6 +56,9 @@ export function AdminReports() {
       setHighValueData(data.highValueData);
       setStatusBreakdown(data.statusBreakdown);
       setSlaData(data.slaData);
+      setTripTypeData(data.tripTypeData);
+      setTransportModeData(data.transportModeData);
+      setDepartmentSpendData(data.departmentSpendData);
       setDepartments(data.departments);
       setGeneratedAt(new Date().toLocaleString("en-ZA"));
     } catch {
@@ -63,7 +72,15 @@ export function AdminReports() {
     handleGenerate();
   }, [handleGenerate]);
 
-  const activeRows = reportType === "High-Value Travel Report" ? highValueData : counterpartyData;
+  const activeRows = reportType === "High-Value Travel Report"
+    ? highValueData
+    : reportType === "Trip Type Report"
+    ? tripTypeData
+    : reportType === "Transport Mode Report"
+    ? transportModeData
+    : reportType === "Department Spend Report"
+    ? departmentSpendData
+    : counterpartyData;
 
   const exportColumns: ColumnDef[] = reportType === "High-Value Travel Report"
     ? [
@@ -72,10 +89,31 @@ export function AdminReports() {
         { header: "Declarations", key: "declarationCount", width: 14 },
         { header: "Total Value", key: "totalValue", width: 14 },
         { header: "Average Value", key: "averageValue", width: 14 },
-        { header: "Total Domestic", key: "totalGift", width: 10 },
-        { header: "Total International", key: "totalHospitality", width: 10 },
-        { header: "Total Other", key: "totalEntertainment", width: 10 },
+        { header: "Total Domestic", key: "totalDomestic", width: 10 },
+        { header: "Total International", key: "totalInternational", width: 10 },
+        { header: "Total Other", key: "totalOther", width: 10 },
         { header: "Most Frequent Supplier", key: "mostFrequentSupplier", width: 28 },
+      ]
+    : reportType === "Trip Type Report"
+    ? [
+        { header: "Trip Type", key: "tripType", width: 18 },
+        { header: "Declarations", key: "count", width: 14 },
+        { header: "Total Value", key: "totalValue", width: 14 },
+        { header: "Average Value", key: "avgValue", width: 14 },
+      ]
+    : reportType === "Transport Mode Report"
+    ? [
+        { header: "Transport Mode", key: "transportMode", width: 18 },
+        { header: "Declarations", key: "count", width: 14 },
+        { header: "Total Value", key: "totalValue", width: 14 },
+        { header: "Average Value", key: "avgValue", width: 14 },
+      ]
+    : reportType === "Department Spend Report"
+    ? [
+        { header: "Department", key: "department", width: 22 },
+        { header: "Declarations", key: "count", width: 14 },
+        { header: "Total Value", key: "totalValue", width: 14 },
+        { header: "Average Value", key: "avgValue", width: 14 },
       ]
     : [
         { header: "Destination", key: "counterparty", width: 26 },
@@ -138,7 +176,13 @@ export function AdminReports() {
       pdf.text(`Generated: ${new Date().toLocaleString("en-ZA")}`, 14, 26);
       let y = 36;
       const lines = reportType === "High-Value Travel Report"
-        ? highValueData.map((row) => `${row.employee} | ${row.lineManager} | ${row.declarationCount} | ${formatRand(row.totalValue)} | Avg ${formatRand(row.averageValue)} | Domestic ${row.totalGift} International ${row.totalHospitality} Other ${row.totalEntertainment} | ${row.mostFrequentSupplier}`)
+        ? highValueData.map((row) => `${row.employee} | ${row.lineManager} | ${row.declarationCount} | ${formatRand(row.totalValue)} | Avg ${formatRand(row.averageValue)} | Domestic ${row.totalDomestic} International ${row.totalInternational} Other ${row.totalOther} | ${row.mostFrequentSupplier}`)
+        : reportType === "Trip Type Report"
+        ? tripTypeData.map((row) => `${row.tripType} | ${row.count} declarations | ${formatRand(row.totalValue)} | Avg ${formatRand(row.avgValue)}`)
+        : reportType === "Transport Mode Report"
+        ? transportModeData.map((row) => `${row.transportMode} | ${row.count} declarations | ${formatRand(row.totalValue)} | Avg ${formatRand(row.avgValue)}`)
+        : reportType === "Department Spend Report"
+        ? departmentSpendData.map((row) => `${row.department} | ${row.count} declarations | ${formatRand(row.totalValue)} | Avg ${formatRand(row.avgValue)}`)
         : counterpartyData.map((row) => `${row.counterparty} | ${row.count} declarations | ${formatRand(row.totalValue)} | Avg ${formatRand(row.avgValue)}`);
       lines.forEach((line) => {
         if (y > 190) { pdf.addPage(); y = 20; }
@@ -256,9 +300,9 @@ export function AdminReports() {
                   <Td className={COL.TABULAR_NUMS}>{row.declarationCount}</Td>
                   <Td className={COL.VALUE}>{formatRand(row.totalValue)}</Td>
                   <Td className={COL.TABULAR_NUMS}>{formatRand(row.averageValue)}</Td>
-                  <Td className={COL.TABULAR_NUMS}>{row.totalGift}</Td>
-                  <Td className={COL.TABULAR_NUMS}>{row.totalHospitality}</Td>
-                  <Td className={COL.TABULAR_NUMS}>{row.totalEntertainment}</Td>
+                  <Td className={COL.TABULAR_NUMS}>{row.totalDomestic}</Td>
+                  <Td className={COL.TABULAR_NUMS}>{row.totalInternational}</Td>
+                  <Td className={COL.TABULAR_NUMS}>{row.totalOther}</Td>
                   <Td className={COL.TEXT_MUTED}>{row.mostFrequentSupplier}</Td>
                 </Tr>
               ))}
@@ -286,6 +330,90 @@ export function AdminReports() {
               ) : counterpartyData.map((row) => (
                 <Tr key={row.counterparty}>
                   <Td className={COL.EMPLOYEE}>{row.counterparty}</Td>
+                  <Td className={COL.TABULAR_NUMS}>{row.count}</Td>
+                  <Td className={COL.VALUE}>{formatRand(row.totalValue)}</Td>
+                  <Td className={COL.TABULAR_NUMS}>{formatRand(row.avgValue)}</Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </div></Card>
+      )}
+
+      {generatedAt && reportType === "Trip Type Report" && (
+        <Card className="overflow-x-auto p-0"><div ref={tableRef}>
+          <div className="flex items-center justify-between border-b border-border px-5 py-4">
+            <h3 className="text-sm font-bold text-foreground">Trip Type Report</h3>
+            <span className="text-xs text-muted-foreground">Generated {generatedAt}</span>
+          </div>
+          <Table>
+            <Thead>
+              {["Trip Type", "Declarations", "Total Value", "Average Value"].map((label) => (
+                <Th key={label}>{label}</Th>
+              ))}
+            </Thead>
+            <Tbody>
+              {tripTypeData.length === 0 ? (
+                <Tr><Td colSpan={4} className="py-10 text-center">No records for the selected range.</Td></Tr>
+              ) : tripTypeData.map((row) => (
+                <Tr key={row.tripType}>
+                  <Td className={COL.EMPLOYEE}>{row.tripType}</Td>
+                  <Td className={COL.TABULAR_NUMS}>{row.count}</Td>
+                  <Td className={COL.VALUE}>{formatRand(row.totalValue)}</Td>
+                  <Td className={COL.TABULAR_NUMS}>{formatRand(row.avgValue)}</Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </div></Card>
+      )}
+
+      {generatedAt && reportType === "Transport Mode Report" && (
+        <Card className="overflow-x-auto p-0"><div ref={tableRef}>
+          <div className="flex items-center justify-between border-b border-border px-5 py-4">
+            <h3 className="text-sm font-bold text-foreground">Transport Mode Report</h3>
+            <span className="text-xs text-muted-foreground">Generated {generatedAt}</span>
+          </div>
+          <Table>
+            <Thead>
+              {["Transport Mode", "Declarations", "Total Value", "Average Value"].map((label) => (
+                <Th key={label}>{label}</Th>
+              ))}
+            </Thead>
+            <Tbody>
+              {transportModeData.length === 0 ? (
+                <Tr><Td colSpan={4} className="py-10 text-center">No records for the selected range.</Td></Tr>
+              ) : transportModeData.map((row) => (
+                <Tr key={row.transportMode}>
+                  <Td className={COL.EMPLOYEE}>{row.transportMode}</Td>
+                  <Td className={COL.TABULAR_NUMS}>{row.count}</Td>
+                  <Td className={COL.VALUE}>{formatRand(row.totalValue)}</Td>
+                  <Td className={COL.TABULAR_NUMS}>{formatRand(row.avgValue)}</Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </div></Card>
+      )}
+
+      {generatedAt && reportType === "Department Spend Report" && (
+        <Card className="overflow-x-auto p-0"><div ref={tableRef}>
+          <div className="flex items-center justify-between border-b border-border px-5 py-4">
+            <h3 className="text-sm font-bold text-foreground">Department Spend Report</h3>
+            <span className="text-xs text-muted-foreground">Generated {generatedAt}</span>
+          </div>
+          <Table>
+            <Thead>
+              {["Department", "Declarations", "Total Value", "Average Value"].map((label) => (
+                <Th key={label}>{label}</Th>
+              ))}
+            </Thead>
+            <Tbody>
+              {departmentSpendData.length === 0 ? (
+                <Tr><Td colSpan={4} className="py-10 text-center">No records for the selected range.</Td></Tr>
+              ) : departmentSpendData.map((row) => (
+                <Tr key={row.department}>
+                  <Td className={COL.EMPLOYEE}>{row.department}</Td>
                   <Td className={COL.TABULAR_NUMS}>{row.count}</Td>
                   <Td className={COL.VALUE}>{formatRand(row.totalValue)}</Td>
                   <Td className={COL.TABULAR_NUMS}>{formatRand(row.avgValue)}</Td>

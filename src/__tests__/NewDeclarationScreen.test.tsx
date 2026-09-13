@@ -101,6 +101,9 @@ function fillItinerary() {
   const dates = document.querySelectorAll('input[type="date"]');
   fireEvent.change(dates[0], { target: { value: "2026-08-01" } });
   fireEvent.change(dates[1], { target: { value: "2026-08-05" } });
+  // Mocked Sel inputs render in DOM order: people, billed company, gender,
+  // internal/external, travel type, then trip type.
+  fireEvent.change(screen.getAllByRole("combobox")[6], { target: { value: "Return" } });
 }
 
 function agreeToUndertaking() {
@@ -139,6 +142,7 @@ describe("NewDeclarationScreen (Travel Request)", () => {
       expect(screen.getByText("Departure date is required")).toBeInTheDocument();
       expect(screen.getByText("Return date is required")).toBeInTheDocument();
       expect(screen.getByText("Reason for travel is required")).toBeInTheDocument();
+      expect(screen.getByText("Trip type is required")).toBeInTheDocument();
       expect(screen.getByText("Traveler name is required")).toBeInTheDocument();
     });
     expect(createDeclaration).not.toHaveBeenCalled();
@@ -181,6 +185,7 @@ describe("NewDeclarationScreen (Travel Request)", () => {
           reason: "Client site visit",
           numberOfPeople: 1,
           travelType: "Domestic",
+          tripType: "Return",
         })
       );
       const payload = vi.mocked(createDeclaration).mock.calls[0][0];
@@ -190,6 +195,7 @@ describe("NewDeclarationScreen (Travel Request)", () => {
         name: "Thandi Mokoena",
         email: "thandi@hb.co.za",
         cellPhone: "0821234567",
+        internalExternal: "Internal",
       });
       expect(submitDeclaration).toHaveBeenCalledWith("TR-2026-9999");
       expect(onSuccess).toHaveBeenCalled();

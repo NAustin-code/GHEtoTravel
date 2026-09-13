@@ -1,11 +1,14 @@
-import { getDestinationConcentration, getHighValueRows, getReportList, getSLAData, getStatusBreakdown } from "./localStore";
+import { getDestinationConcentration, getHighValueRows, getReportList, getSLAData, getStatusBreakdown, getTripTypeReport, getTransportModeReport, getDepartmentSpendReport } from "./localStore";
 import type { Declaration } from "@/types/declaration";
 
 export interface ReportsData {
   statusBreakdown: Record<string, number>;
   slaData: Array<{ role: string; avg: number; min: number; max: number; count: number }>;
   counterpartyData: Array<{ counterparty: string; count: number; totalValue: number; avgValue: number }>;
-  highValueData: Array<{ employee: string; lineManager: string; declarationCount: number; totalValue: number; averageValue: number; totalGift: number; totalHospitality: number; totalEntertainment: number; mostFrequentSupplier: string }>;
+  highValueData: Array<{ employee: string; lineManager: string; declarationCount: number; totalValue: number; averageValue: number; totalDomestic: number; totalInternational: number; totalOther: number; mostFrequentSupplier: string }>;
+  tripTypeData: Array<{ tripType: string; count: number; totalValue: number; avgValue: number }>;
+  transportModeData: Array<{ transportMode: string; count: number; totalValue: number; avgValue: number }>;
+  departmentSpendData: Array<{ department: string; count: number; totalValue: number; avgValue: number }>;
   declarations: Declaration[];
   departments: string[];
 }
@@ -26,6 +29,9 @@ export async function fetchReports(params?: Record<string, string>): Promise<Rep
     slaData: getSLAData(query),
     counterpartyData: getDestinationConcentration(query),
     highValueData: getHighValueRows(query),
+    tripTypeData: getTripTypeReport(query),
+    transportModeData: getTransportModeReport(query),
+    departmentSpendData: getDepartmentSpendReport(query),
     declarations: getReportList(query),
     departments,
   };
