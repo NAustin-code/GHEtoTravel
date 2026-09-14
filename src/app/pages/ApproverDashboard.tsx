@@ -1,67 +1,41 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, CheckSquare, Clock, RefreshCw } from "lucide-react";
-import { fetchConfig, fetchDeclarations, fetchPendingWorkflows, fetchWorkflowInstance } from "@/services/api";
+import { AlertTriangle, CheckSquare, Coins, FileText } from "lucide-react";
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { fetchDeclarations } from "@/services/api";
 import { Declaration, Screen } from "@/types/declaration";
-import { ORANGE, GRADIENT_PRIMARY, formatRand } from "@/config/theme";
+import { ORANGE, PURPLE, GRADIENT_PRIMARY, TYPE_COLORS, formatRand, PRIORITY_COLORS } from "@/config/theme";
 import { useUser } from "@/app/auth/UserContext";
 import { PageHeader } from "@/app/components/PageHeader";
 import { KpiCard, STATUS_KPI } from "@/app/components/KpiCard";
 import { StatusBadge } from "@/app/components/StatusBadge";
 
-function Panel({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
-  return <section className="overflow-hidden rounded-md border border-[#E4E7ED] bg-white"><div className="flex items-center justify-between border-b border-[#E4E7ED] px-4 py-3"><h2 className="text-xs font-extrabold uppercase text-[#35138D]">{title}</h2>{action}</div>{children}</section>;
-}
+function Panel({ title, children, accent }: { title: string; children: React.ReactNode; accent?: string }) { return <section className="overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 shadow-[0_4px_24px_rgba(79,29,149,0.06)]" style={accent ? { borderLeft: `3px solid ${accent}` } : undefined}><h2 className="border-b border-purple-100 px-5 py-4 text-sm font-bold uppercase tracking-wide text-[#35138D]">{title}</h2>{children}</section>; }
 
 export function ApproverDashboard({ onNavigate, onReview }: { onNavigate: (s: Screen) => void; onReview?: (d: Declaration) => void }) {
   const { user } = useUser();
   const [declarations, setDeclarations] = useState<Declaration[]>([]);
-  const [assignedPending, setAssignedPending] = useState<{ declaration: Declaration; step: import("@/types/declaration").WorkflowStep | null }[]>([]);
-  const [decisionDates, setDecisionDates] = useState<Record<string, string>>({});
-  const [slaDays, setSlaDays] = useState(7);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const load = async () => {
-    setError(null);
-    try {
-      const [all, workflows, config] = await Promise.all([fetchDeclarations(), fetchPendingWorkflows(), fetchConfig()]);
-      setDeclarations(all);
-      setSlaDays(config.slaEscalationDays || 7);
-      const visible = user?.role === "admin" ? workflows : workflows.filter((item) => item.step?.assignee === user?.id);
-      setAssignedPending(visible);
-      const terminal = all.filter((d) => ["Approved", "Declined", "Returned"].includes(d.status));
-      const instances = await Promise.all(terminal.map((d) => fetchWorkflowInstance(d.id)));
-      const dates: Record<string, string> = {};
-      instances.forEach((instance) => instance.steps.forEach((step) => { if (step.decidedAt && (!dates[instance.declarationId] || step.decidedAt > dates[instance.declarationId])) dates[instance.declarationId] = step.decidedAt; }));
-      setDecisionDates(dates);
-      setLastUpdated(new Date());
-    } catch (e) { setError(e instanceof Error ? e.message : "Unable to load dashboard"); }
-    finally { setLoading(false); }
-  };
-  useEffect(() => { load(); }, []);
-  const scoped = useMemo(() => user?.role === "admin" ? declarations : declarations.filter((d) => assignedPending.some((item) => item.declaration.id === d.id) || d.employeeId === user?.id), [declarations, assignedPending, user]);
-  const pending = useMemo(() => assignedPending.filter((item) => item.step).map((item) => item.declaration).sort((a, b) => a.submitted.localeCompare(b.submitted)), [assignedPending]);
-  const overdue = useMemo(() => assignedPending.filter((item) => item.step && Date.now() - new Date(item.declaration.submitted).getTime() > slaDays * 86400000).map((item) => item.declaration), [assignedPending, slaDays]);
-  const recent = useMemo(() => scoped.filter((d) => ["Approved", "Declined", "Returned"].includes(d.status)).sort((a, b) => (decisionDates[b.id] || b.submitted).localeCompare(decisionDates[a.id] || a.submitted)).slice(0, 6), [scoped, decisionDates]);
+  useEffect(() => { fetchDeclarations().then(setDeclarations).catch((e: Error) => setError(e.message)).finally(() => setLoading(false)); }, []);
+  const scoped = useMemo(() => user?.role === "teamMember" ? declarations.filter((d) => d.employeeId === user.id) : declarations, [declarations, user]);
+  const pending = scoped.filter((d) => ["Pending", "Escalated"].includes(d.status));
   const stats = { pending: pending.length, approved: scoped.filter((d) => d.status === "Approved").length, returned: scoped.filter((d) => d.status === "Returned").length, declined: scoped.filter((d) => d.status === "Declined").length };
-  if (loading) return <div className="py-20 text-center text-sm text-muted-foreground">Loading approval dashboard…</div>;
-  if (error) return <div className="rounded-md border border-red-200 bg-red-50 p-5 text-sm text-red-700"><strong>Failed to load dashboard:</strong> {error}<button type="button" onClick={load} className="ml-3 underline">Retry</button></div>;
-  return <div className="space-y-5">
-    <PageHeader title="Approver Dashboard" subtitle="Approval workload and items requiring attention" actions={<div className="flex items-center gap-3"><span className="hidden text-[10px] text-[#5D6371] sm:inline">{lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit" })}` : ""}</span><button type="button" onClick={() => onNavigate("approval-queue")} className="flex h-10 items-center gap-2 rounded-md px-4 text-sm font-semibold text-white" style={{ background: GRADIENT_PRIMARY }}><CheckSquare size={15} /> Approval Queue <span className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold" style={{ background: ORANGE, color: "#1E1E2D" }}>{pending.length}</span></button></div>} />
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
-      <KpiCard label="Pending Queue" value={String(stats.pending)} icon={STATUS_KPI.Pending.icon} decorKey="Pending" onClick={() => onNavigate("approval-queue")} />
-      <KpiCard label="Overdue 7+ Days" value={String(overdue.length)} icon={Clock} decorKey="Escalated" onClick={() => onNavigate("approval-queue")} />
-      <KpiCard label="Approved" value={String(stats.approved)} icon={STATUS_KPI.Approved.icon} decorKey="Approved" />
-      <KpiCard label="Returned" value={String(stats.returned)} icon={STATUS_KPI.Returned.icon} decorKey="Returned" />
-      <KpiCard label="Declined" value={String(stats.declined)} icon={STATUS_KPI.Declined.icon} decorKey="Declined" />
+  const activity = useMemo(() => Array.from(new Set(scoped.map((d) => d.employee))).map((name) => { const rows = scoped.filter((d) => d.employee === name); return { name, trips: rows.length, spend: rows.reduce((s, d) => s + d.value, 0), approved: rows.filter((d) => d.status === "Approved").length, declined: rows.filter((d) => d.status === "Declined").length }; }).sort((a, b) => b.spend - a.spend).slice(0, 5), [scoped]);
+  const typeData = useMemo(() => Object.entries(scoped.reduce<Record<string, number>>((a, d) => { a[d.type] = (a[d.type] || 0) + 1; return a; }, {})).map(([name, value]) => ({ name, value, color: TYPE_COLORS[name] || PURPLE })), [scoped]);
+  const overdue = pending.filter((d) => Date.now() - new Date(d.submitted).getTime() > 7 * 86400000);
+  const departments = useMemo(() => Array.from(new Set(scoped.map((d) => d.department))).map((name) => { const rows = scoped.filter((d) => d.department === name); return { name, total: rows.length, pending: rows.filter((d) => ["Pending", "Escalated"].includes(d.status)).length, approved: rows.filter((d) => d.status === "Approved").length, declined: rows.filter((d) => d.status === "Declined").length, value: rows.reduce((s, d) => s + d.value, 0) }; }).sort((a, b) => b.value - a.value), [scoped]);
+  if (loading) return <div className="py-20 text-center text-sm text-muted-foreground">Loading dashboard…</div>;
+  if (error) return <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-700">Failed to load dashboard: {error}</div>;
+  return <div className="space-y-6">
+    <PageHeader title="Approver Dashboard" subtitle="Inception to Date" actions={<button type="button" onClick={() => onNavigate("approval-queue")} className="flex h-10 items-center gap-2 rounded-xl px-5 text-sm font-semibold text-white" style={{ background: GRADIENT_PRIMARY }}><CheckSquare size={15} /> Approval Queue <span className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold" style={{ background: ORANGE, color: "#1E1E2D" }}>{pending.length}</span></button>} />
+    <div className="grid grid-cols-1 gap-[clamp(.75rem,1.5vw,1.25rem)] sm:grid-cols-2 xl:grid-cols-5"><KpiCard label="Pending Queue" value={String(stats.pending)} icon={STATUS_KPI.Pending.icon} decorKey="Pending" onClick={() => onNavigate("approval-queue")} /><KpiCard label="Approved" value={String(stats.approved)} icon={STATUS_KPI.Approved.icon} decorKey="Approved" /><KpiCard label="Returned" value={String(stats.returned)} icon={STATUS_KPI.Returned.icon} decorKey="Returned" /><KpiCard label="Declined" value={String(stats.declined)} icon={STATUS_KPI.Declined.icon} decorKey="Declined" /><KpiCard label="Total Value" value={formatRand(scoped.filter((d) => ["Pending", "Approved"].includes(d.status)).reduce((s, d) => s + d.value, 0))} icon={Coins} decorKey="Total Value" /></div>
+    <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
+      <Panel title="Team Member Activity" accent={PURPLE}><div className="grid grid-cols-[1.4fr_.8fr_.8fr] gap-2 border-b border-slate-100 px-4 py-2 text-[10px] font-bold uppercase text-[#5D6371]"><span>Team Member</span><span>Approved</span><span>Declined</span></div>{activity.length ? activity.map((row) => <div key={row.name} className="grid grid-cols-[1.4fr_.8fr_.8fr] items-center gap-2 border-b border-slate-100 px-4 py-3 text-xs"><div><p className="font-semibold">{row.name}</p><p className="text-[10px] text-[#35138D]">{formatRand(row.spend)} · {row.trips} trips</p></div><span className="text-emerald-700">{row.approved}</span><span className="text-red-700">{row.declined}</span></div>) : <Empty message="No activity available." />}</Panel>
+      <Panel title="Travel Type Distribution" accent={PURPLE}><div className="h-56"><ResponsiveContainer><PieChart><Pie data={typeData} dataKey="value" nameKey="name" innerRadius={48} outerRadius={82}>{typeData.map((d) => <Cell key={d.name} fill={d.color} />)}</Pie><Tooltip /></PieChart></ResponsiveContainer></div><div className="flex flex-wrap justify-center gap-2 px-3 pb-4">{typeData.map((d) => <span key={d.name} className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-semibold">{d.name}: {d.value}</span>)}</div></Panel>
+      <Panel title="Overdue 7+ Days" accent="#EF4444">{overdue.length ? overdue.slice(0, 5).map((d) => <button type="button" key={d.id} onClick={() => onReview?.(d)} className="flex w-full items-center justify-between border-b border-slate-100 px-4 py-3 text-left hover:bg-red-50"><div><p className="font-mono text-xs font-bold text-[#35138D]">{d.id}</p><p className="text-xs">{d.employee} · {d.destination || d.to}</p></div><span className={`rounded-full px-2 py-1 text-[10px] font-semibold ${PRIORITY_COLORS[d.priority].bg} ${PRIORITY_COLORS[d.priority].text}`}>{d.priority}</span></button>) : <Empty message="No overdue declarations." />}</Panel>
     </div>
-    <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1.35fr_1fr]">
-      <Panel title="Requests Requiring My Attention" action={<button type="button" onClick={() => onNavigate("approval-queue")} className="text-xs font-bold text-[#35138D]">View all</button>}>{pending.length === 0 ? <Empty message="No pending approvals." /> : <div>{pending.slice(0, 7).map((d) => <RequestRow key={d.id} declaration={d} onReview={onReview} />)}</div>}</Panel>
-      <Panel title="SLA Health"><div className="grid grid-cols-2 gap-3 p-4"><div className="border-l-4 border-emerald-500 bg-slate-50 p-3"><p className="text-[10px] font-bold uppercase text-[#5D6371]">On track</p><p className="mt-1 text-2xl font-extrabold text-[#101426]">{Math.max(0, pending.length - overdue.length)}</p></div><div className="border-l-4 border-red-500 bg-slate-50 p-3"><p className="text-[10px] font-bold uppercase text-[#5D6371]">Overdue</p><p className="mt-1 text-2xl font-extrabold text-[#101426]">{overdue.length}</p></div></div><div className="border-t border-[#E4E7ED] px-4 py-3 text-xs text-[#5D6371]">Pending value: <strong className="text-[#101426]">{formatRand(pending.reduce((sum, d) => sum + d.value, 0))}</strong> · SLA target: <strong className="text-[#101426]">{slaDays} days</strong></div></Panel>
-    </div>
-    <div className="grid grid-cols-1 gap-3 xl:grid-cols-2"><Panel title="Overdue Approvals" action={<AlertTriangle size={15} className="text-red-600" />}>{overdue.length === 0 ? <Empty message="No approvals overdue by more than seven days." /> : <div>{overdue.slice(0, 5).map((d) => <RequestRow key={d.id} declaration={d} onReview={onReview} overdue />)}</div>}</Panel><Panel title="Recent Decisions" action={<button type="button" onClick={load} aria-label="Refresh recent decisions" className="text-[#5D6371] hover:text-[#35138D]"><RefreshCw size={14} /></button>}>{recent.length === 0 ? <Empty message="No decisions recorded yet." /> : <div>{recent.map((d) => <RequestRow key={d.id} declaration={d} onReview={onReview} />)}</div>}</Panel></div>
+    <Panel title="Department Insights"><div className="overflow-x-auto"><table className="w-full text-xs"><thead><tr className="bg-[#35138D] text-left text-white"><th className="px-4 py-2">Department</th><th className="px-4 py-2">Declarations</th><th className="px-4 py-2">Pending</th><th className="px-4 py-2">Approved</th><th className="px-4 py-2">Declined</th><th className="px-4 py-2">Total Value</th></tr></thead><tbody>{departments.map((d) => <tr key={d.name} className="border-b border-slate-100"><td className="px-4 py-2 font-semibold">{d.name}</td><td className="px-4 py-2">{d.total}</td><td className="px-4 py-2 text-amber-700">{d.pending}</td><td className="px-4 py-2 text-emerald-700">{d.approved}</td><td className="px-4 py-2 text-red-700">{d.declined}</td><td className="px-4 py-2 font-semibold">{formatRand(d.value)}</td></tr>)}</tbody></table></div></Panel>
   </div>;
 }
 
-function RequestRow({ declaration, onReview, overdue = false }: { declaration: Declaration; onReview?: (d: Declaration) => void; overdue?: boolean }) { return <button type="button" onClick={() => onReview?.(declaration)} className={`flex w-full items-center justify-between gap-3 border-b border-[#E4E7ED] border-l-4 px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-[#F5F2FF] ${overdue ? "border-l-red-500 bg-red-50/35" : declaration.status === "Escalated" ? "border-l-orange-500 bg-orange-50/25" : "border-l-transparent"}`}><div className="min-w-0"><div className="flex items-center gap-2"><span className="font-mono text-xs font-bold text-[#35138D]">{declaration.id}</span>{overdue && <span className="text-[10px] font-extrabold uppercase text-red-600">Overdue</span>}{declaration.status === "Escalated" && <span className="text-[10px] font-extrabold uppercase text-orange-600">Escalated</span>}</div><p className="truncate text-sm font-bold text-[#101426]">{declaration.employee} · {declaration.destination || declaration.to || "Destination pending"}</p><p className="text-[10px] text-[#5D6371]">{declaration.departureDate || "Travel date pending"} · {declaration.reason || "Reason not provided"}</p><div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-semibold"><span className="text-[#35138D]">{formatRand(declaration.value)}</span><span className={declaration.priority === "High" ? "text-red-600" : declaration.priority === "Medium" ? "text-orange-600" : "text-[#5D6371]"}>{declaration.priority} priority</span><span className="text-[#5D6371]">Submitted {declaration.submitted}</span></div></div><StatusBadge status={declaration.status} /></button>; }
-function Empty({ message }: { message: string }) { return <p className="px-4 py-8 text-center text-xs text-[#5D6371]">{message}</p>; }
+function Empty({ message }: { message: string }) { return <p className="px-4 py-10 text-center text-xs text-[#5D6371]">{message}</p>; }

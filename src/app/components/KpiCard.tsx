@@ -192,8 +192,9 @@ export function KpiCard({
   const key = decorKey || label;
   const Decor = getDecor(key);
   const bgGradient = getGradient(key);
-  const isTotal = key === "Total";
+  const isTotal = key === "Total" || key === "Total Value";
   const isReturned = key === "Returned";
+  const valueFontSize = value.length > 15 ? 22 : value.length > 12 ? 28 : value.length > 9 ? 35 : 46;
 
   // Map lucide icon to kpi.html mini char for exact match, fallback to Icon
   const miniChar = MINI_CHAR_MAP[key];
@@ -288,10 +289,16 @@ export function KpiCard({
                 bottom: 20,
                 display: "flex",
                 alignItems: "center",
-                gap: 38,
-                fontSize: 46,
-                lineHeight: "42px",
+                gap: 12,
+                fontSize: valueFontSize,
+                lineHeight: 1,
                 fontWeight: 800,
+                right: 18,
+                width: "calc(100% - 46px)",
+                maxWidth: "calc(100% - 36px)",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
               }
             : isReturned
               ? {
@@ -301,9 +308,15 @@ export function KpiCard({
                   display: "flex",
                   alignItems: "center",
                   gap: 0,
-                  fontSize: 46,
+                  fontSize: valueFontSize,
                   lineHeight: 0.85,
                   fontWeight: 800,
+                  right: 18,
+                  width: "calc(100% - 51px)",
+                  maxWidth: "calc(100% - 45px)",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
                   textShadow: "0 1px 1px rgba(0,0,0,.15)",
                 }
               : {
@@ -313,15 +326,21 @@ export function KpiCard({
                   display: "flex",
                   alignItems: "center",
                   gap: 0,
-                  fontSize: 46,
-                  lineHeight: "42px",
+                  fontSize: valueFontSize,
+                  lineHeight: 1,
                   fontWeight: 800,
+                  right: 18,
+                  width: "calc(100% - 46px)",
+                  maxWidth: "calc(100% - 36px)",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
                 }
         }
       >
-        <span>{value}</span>
+        <span style={{ display: "block", minWidth: 0, flexShrink: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{value}</span>
         {isTotal && secondaryValue && (
-          <span className="money" style={{ fontSize: 46, letterSpacing: 1, fontWeight: 800 }}>
+          <span className="money" style={{ fontSize: valueFontSize, letterSpacing: 0, fontWeight: 800 }}>
             {secondaryValue}
           </span>
         )}
