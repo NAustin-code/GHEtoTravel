@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hollywoodbets · Dashboard Overview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="overrides.css" />
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-star">★</span><span>HOLLYWOOD<small>bets</small></span></div>
+    <nav class="main-nav">
+      <a class="active" href="#"><span>▣</span>Dashboard</a>
+      <a href="#"><span>♧</span>Travel Data</a>
+      <a href="#"><span>♙</span>Travel Analysis</a>
+      <a href="#"><span>♙</span>Approval Analysis</a>
+      <a href="#"><span>♧</span>Company Analysis</a>
+      <a href="#"><span>♧</span>Route Analysis</a>
+      <a href="#"><span>▤</span>Spend Analysis</a>
+      <a href="#"><span>▧</span>Reports</a>
+    </nav>
+    <div class="shortcut-title">DATE RANGE SHORTCUT</div>
+    <div class="shortcuts">
+      <button data-range="MTD">▣ <span>MTD</span></button>
+      <button data-range="QTD">▣ <span>QTD</span></button>
+      <button data-range="YTD">▣ <span>YTD</span></button>
+      <button data-range="Last 7 Days">▣ <span>Last 7 Days</span></button>
+      <button data-range="Last 30 Days">▣ <span>Last 30 Days</span></button>
+      <button data-range="Last 12 Months">▣ <span>Last 12 Months</span></button>
+    </div>
+    <div class="responsible"><div class="plane">✈</div><b>BET<br><em>RESPONSIBLY</em></b><p>IT'S ONLY<br><i>A GAME</i></p></div>
+  </aside>
+
+  <main class="content">
+    <header class="topbar"><div><h1>DASHBOARD OVERVIEW</h1><span>Travel performance summary</span></div><button class="export" id="exportBtn">⇩ &nbsp; Export</button></header>
+    <section class="filters" id="filters">
+      <label>Date Booked<input type="text" value="01 May 2024 - 31 May 2024" /></label>
+      <label>Date Of Departure<select><option>All</option></select></label>
+      <label>Traveller<select><option>All</option></select></label>
+      <label>Department<select><option>All</option></select></label>
+      <label>Approver<select><option>All</option></select></label>
+      <label>Billing Company<select><option>All</option></select></label>
+      <label>Company<select><option>All</option></select></label>
+      <label>Travel Type<select><option>All</option></select></label>
+      <label>Travel Ref<input placeholder="Search..." /></label>
+      <button class="clear" id="clearBtn">⌕ &nbsp; Clear Filters</button>
+    </section>
+
+    <section class="kpis">
+      <article class="kpi purple"><span class="kpi-icon">▤</span><div><b>TOTAL SPEND</b><strong>R8,724,560</strong><small>vs Apr 2024 &nbsp; <i>▲ 15.3%</i></small></div></article>
+      <article class="kpi blue"><span class="kpi-icon">▥</span><div><b>TOTAL TRIPS</b><strong>1,248</strong><small>vs Apr 2024 &nbsp; <i>▲ 12.5%</i></small></div></article>
+      <article class="kpi teal"><span class="kpi-icon">♟</span><div><b>TOTAL TRAVELLERS</b><strong>982</strong><small>vs Apr 2024 &nbsp; <i>▲ 8.7%</i></small></div></article>
+      <article class="kpi orange"><span class="kpi-icon">▦</span><div><b>AVERAGE TRIP DURATION</b><strong>4.2 <small>Days</small></strong><small>vs Apr 2024 &nbsp; <em>▼ 0.3%</em></small></div></article>
+      <article class="kpi green"><span class="kpi-icon">✓</span><div><b>APPROVAL RATE</b><strong>97.6%</strong><small>vs Apr 2024 &nbsp; <i>▲ 1.4%</i></small></div></article>
+    </section>
+
+    <section class="grid charts">
+      <div class="panel chart-panel"><h2>TOTAL SPEND OVER TIME (R)</h2><div class="legend"><span class="bar-key"></span>Total Spend (R) <span class="line-key"></span>vs Previous Period (R)</div><div class="chart" data-type="spend"></div></div>
+      <div class="panel chart-panel"><h2>TOTAL TRIPS OVER TIME</h2><div class="legend"><span class="bar-key"></span>Total Trips <span class="line-key"></span>vs Previous Period</div><div class="chart" data-type="trips"></div></div>
+      <div class="panel chart-panel"><h2>TOTAL TRAVELLERS OVER TIME</h2><div class="legend"><span class="bar-key"></span>Total Travellers <span class="line-key"></span>vs Previous Period</div><div class="chart" data-type="travellers"></div></div>
+    </section>
+
+    <section class="grid tables">
+      <div class="panel table-panel"><h2>TOP 5 TRAVELLERS</h2><table><thead><tr><th>#</th><th>Traveller</th><th>Trips</th><th>Total Spend (R)</th><th>Most Used Reason</th><th>Approver/s</th></tr></thead><tbody><tr><td>1</td><td>John Smith</td><td>12</td><td>R152,450</td><td>Conference</td><td>M. Naidoo</td></tr><tr><td>2</td><td>Sarah Naicker</td><td>10</td><td>R118,600</td><td>Site Visit</td><td>S. Govender</td></tr><tr><td>3</td><td>Lerato Mokoena</td><td>9</td><td>R97,850</td><td>Meeting</td><td>T. Mokoena</td></tr><tr><td>4</td><td>Ahmed Khan</td><td>8</td><td>R86,220</td><td>Training</td><td>P. Naidoo</td></tr><tr><td>5</td><td>Michael Botha</td><td>7</td><td>R75,400</td><td>Project Work</td><td>K. Pillay</td></tr></tbody><tfoot><tr><th colspan="2">TOTAL</th><th>46</th><th>R530,520</th><th colspan="2"></th></tr></tfoot></table></div>
+      <div class="panel table-panel"><h2>TOP 5 APPROVERS</h2><table><thead><tr><th>#</th><th>Approver</th><th>Approved Trips</th><th>Total Approved Spend (R)</th><th>Top Billing Company</th></tr></thead><tbody><tr><td>1</td><td>M. Naidoo</td><td>412</td><td>R3,020,450</td><td>Hollywoodbets</td></tr><tr><td>2</td><td>S. Govender</td><td>298</td><td>R2,145,760</td><td>Purple Team</td></tr><tr><td>3</td><td>T. Mokoena</td><td>198</td><td>R1,342,360</td><td>Gold Circle</td></tr><tr><td>4</td><td>P. Naidoo</td><td>156</td><td>R1,015,400</td><td>Hollywoodbets</td></tr><tr><td>5</td><td>K. Pillay</td><td>112</td><td>R784,400</td><td>Purple Team</td></tr></tbody><tfoot><tr><th colspan="2">TOTAL</th><th>1,176</th><th>R8,272,560</th><th></th></tr></tfoot></table></div>
+      <div class="panel table-panel"><h2>TOP 5 BILLING COMPANIES BY SPEND</h2><table><thead><tr><th>#</th><th>Billing Company</th><th>Trips</th><th>Total Spend (R)</th><th>% of Total Spend</th></tr></thead><tbody><tr><td>1</td><td>Hollywoodbets</td><td>612</td><td>R4,120,650</td><td>47.2%</td></tr><tr><td>2</td><td>Purple Team</td><td>358</td><td>R2,350,780</td><td>26.9%</td></tr><tr><td>3</td><td>Gold Circle</td><td>184</td><td>R1,280,540</td><td>14.7%</td></tr><tr><td>4</td><td>HBGaming</td><td>58</td><td>R520,350</td><td>6.0%</td></tr><tr><td>5</td><td>Other</td><td>36</td><td>R250,240</td><td>2.9%</td></tr></tbody><tfoot><tr><th colspan="2">TOTAL</th><th>1,248</th><th>R8,522,560</th><th>100%</th></tr></tfoot></table></div>
+    </section>
+
+    <section class="grid bottom-panels">
+      <div class="panel donut-panel"><h2>SPEND BY INTERNAL / EXTERNAL</h2><div class="donut-wrap"><div class="donut"><span>R8.72M<small>Total Spend</small></span></div><div class="donut-labels"><p><i class="dot purple-dot"></i>Internal <b>78.1%</b><small>R6,811,640</small></p><p><i class="dot teal-dot"></i>External <b>21.9%</b><small>R1,912,920</small></p></div></div></div>
+      <div class="panel reasons"><h2>SPEND BY REASON FOR TRAVEL</h2><div class="reason-row head"><span>Reason For Travel</span><span>Trips</span><span>Total Spend (R)</span><span>% of Total Spend</span></div><div class="reason-row"><span>Conference</span><span>342</span><span>R2,842,150</span><span><i style="width:90%"></i>32.6%</span></div><div class="reason-row"><span>Training</span><span>232</span><span>R1,732,750</span><span><i style="width:54%"></i>19.1%</span></div><div class="reason-row"><span>Meeting</span><span>198</span><span>R1,286,420</span><span><i style="width:43%"></i>14.7%</span></div><div class="reason-row"><span>Site Visit</span><span>176</span><span>R1,124,830</span><span><i style="width:38%"></i>12.9%</span></div><div class="reason-row"><span>Project Work</span><span>124</span><span>R783,250</span><span><i style="width:27%"></i>9.0%</span></div><div class="reason-row"><span>Audit</span><span>72</span><span>R354,960</span><span><i style="width:13%"></i>4.1%</span></div><div class="reason-row"><span>Recruitment</span><span>38</span><span>R237,000</span><span><i style="width:9%"></i>2.7%</span></div><div class="total-row">TOTAL <b>1,182</b><b>R8,361,360</b><b>96.1%</b></div></div>
+      <div class="panel duration"><h2>AVERAGE TRIP DURATION (DAYS) OVER TIME</h2><span class="axis-title">Days</span><div class="duration-chart"><svg viewBox="0 0 600 190" preserveAspectRatio="none"><polyline points="20,130 70,145 120,127 170,112 220,124 270,102 320,94 370,108 420,72 470,110 520,126 575,114" fill="none" stroke="#3b168d" stroke-width="3"/><g fill="#3b168d"><circle cx="20" cy="130" r="4"/><circle cx="70" cy="145" r="4"/><circle cx="120" cy="127" r="4"/><circle cx="170" cy="112" r="4"/><circle cx="220" cy="124" r="4"/><circle cx="270" cy="102" r="4"/><circle cx="320" cy="94" r="4"/><circle cx="370" cy="108" r="4"/><circle cx="420" cy="72" r="4"/><circle cx="470" cy="110" r="4"/><circle cx="520" cy="126" r="4"/><circle cx="575" cy="114" r="4"/></g></svg><div class="duration-values"><span>3.8</span><span>3.6</span><span>3.9</span><span>4.1</span><span>4.0</span><span>4.3</span><span>4.4</span><span>4.2</span><span>4.6</span><span>4.1</span><span>4.0</span><span>4.2</span></div></div><div class="months">Jun 23　 Jul 23　 Aug 23　 Sep 23　 Oct 23　 Nov 23　 Dec 23　 Jan 24　 Feb 24　 Mar 24　 Apr 24　 May 24</div></div>
+    </section>
+  </main>
+  <div class="toast" id="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>
