@@ -101,5 +101,3 @@ export function formatRand(v: number) {
 // ─── Shared input class strings ─────────────────────────────────────────────────
 export const inp =
   "w-full h-11 rounded-xl px-4 text-sm border border-slate-200 bg-slate-50 text-foreground focus:outline-none focus:ring-4 focus:ring-teal-500/20 focus:border-teal-600 focus:bg-white hover:border-teal-300 transition-all duration-200 ease-out placeholder:text-muted-foreground/50";
-
-export const sel = `${inp} appearance-none pr-10 cursor-pointer bg-white border-slate-200 hover:bg-teal-50 hover:border-teal-400 hover:text-[15.5px] hover:font-semibold hover:text-teal-900 focus:bg-white focus:border-teal-600 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_14px_rgba(13,148,136,0.12)] transition-all duration-300`;

@@ -377,7 +377,7 @@ function setWorkflows(workflows: WorkflowInstance[]): void {
   write("workflows", workflows);
 }
 
-function nextSeq(): number {
+export function nextSeq(): number {
   ensureSeeded();
   const n = read<number>("seq", 100) + 1;
   write("seq", n);
@@ -895,7 +895,7 @@ export async function readStoredFile(declarationId: string, file: UploadedFile):
 // ─── Dashboards & reports ─────────────────────────────────────────────────────
 
 export interface LocalDashboardStats {
-  kpis: { total: number; pending: number; approved: number; declined: number; escalated: number; totalValue: number };
+  kpis: { total: number; pending: number; approved: number; declined: number; escalated: number; totalValue: number; avgProcessingDays: number };
   complianceTrend: { month: string; approved: number; declined: number }[];
   typeBreakdown: { name: string; value: number; color: string }[];
 }
@@ -927,7 +927,7 @@ export function getDashboardStats(): LocalDashboardStats {
     if (d.status === "Approved") kpis.approved += 1;
     if (d.status === "Declined") kpis.declined += 1;
     if (d.status === "Escalated") kpis.escalated += 1;
-    if (d.status === "Pending" || d.status === "Approved") kpis.totalValue += d.value;
+    if (d.status === "Pending" || d.status === "Approved" || d.status === "Escalated") kpis.totalValue += d.value;
 
     // Compliance trend
     const month = String(d.submitted).slice(0, 7);
@@ -941,6 +941,28 @@ export function getDashboardStats(): LocalDashboardStats {
   }
   const complianceTrend = [...trend.values()].sort((a, b) => a.month.localeCompare(b.month));
   const typeBreakdown = [...byType.entries()].map(([name, value]) => ({ name, value, color: TYPE_COLOR_FALLBACK[name] || "#6B7280" }));
+
+  const decided = declarations.filter((d) => ["Approved", "Declined", "Returned"].includes(d.status));
+  const workflowByDecl = new Map<string, WorkflowInstance>();
+  for (const w of getWorkflows()) {
+    if (w.declarationId) workflowByDecl.set(w.declarationId, w);
+  }
+  let avgProcessingDays = 0;
+  if (decided.length > 0) {
+    const totalDays = decided.reduce((sum, d) => {
+      const wf = workflowByDecl.get(d.id);
+      const lastDecided = wf?.steps.reduce<{ ts: string | null }>((best, s) => {
+        if (s.decidedAt && (!best.ts || new Date(s.decidedAt).getTime() > new Date(best.ts).getTime())) return { ts: s.decidedAt };
+        return best;
+      }, { ts: null });
+      const endMs = lastDecided?.ts ? new Date(lastDecided.ts).getTime() : Date.now();
+      const startMs = new Date(d.submitted).getTime();
+      if (Number.isNaN(startMs)) return sum;
+      return sum + Math.max(0, Math.round((endMs - startMs) / 86400000));
+    }, 0);
+    avgProcessingDays = Math.round((totalDays / decided.length) * 10) / 10;
+  }
+
   const kpisComplete = {
     total: kpis.total,
     pending: kpis.pending,
@@ -948,6 +970,7 @@ export function getDashboardStats(): LocalDashboardStats {
     declined: kpis.declined,
     escalated: kpis.escalated,
     totalValue: kpis.totalValue,
+    avgProcessingDays,
   };
   return { kpis: kpisComplete, complianceTrend, typeBreakdown };
 }

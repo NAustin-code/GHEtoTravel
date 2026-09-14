@@ -32,7 +32,7 @@ export async function fetchReports(params?: Record<string, string>): Promise<Rep
     tripTypeData: getTripTypeReport(query),
     transportModeData: getTransportModeReport(query),
     departmentSpendData: getDepartmentSpendReport(query),
-    declarations: getReportList(query),
+    declarations: filtered,
     departments,
   };
 }

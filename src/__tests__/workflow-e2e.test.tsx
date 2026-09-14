@@ -318,8 +318,9 @@ describe("Journey 6: Approve Declaration", () => {
     fireEvent.click(screen.getByText("Submit Decision"));
 
     await waitFor(() => {
-      expect(screen.getByText(/Decision submitted successfully/)).not.toBeInTheDocument();
-    }, { timeout: 100 }).catch(() => {});
+      const submitBtn = screen.getByText("Submit Decision").closest("button");
+      expect(submitBtn).toBeDisabled();
+    });
   });
 
   it("non-assigned approver cannot see decision controls (J6.13)", async () => {

@@ -187,7 +187,7 @@ describe("fetchDashboardStats", () => {
     expect(result.kpis.pending).toBe(4);
     expect(result.kpis.approved).toBe(2);
     expect(result.kpis.declined).toBe(1);
-    expect(result.kpis.totalValue).toBe(26500);
+    expect(result.kpis.totalValue).toBe(46500);
     expect(result.complianceTrend.length).toBeGreaterThan(0);
     expect(result.typeBreakdown.length).toBeGreaterThan(0);
   });

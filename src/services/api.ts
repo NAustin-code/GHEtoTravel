@@ -44,6 +44,7 @@ export interface DashboardStats {
     declined: number;
     escalated: number;
     totalValue: number;
+    avgProcessingDays: number;
   };
   complianceTrend: ComplianceTrendPoint[];
   typeBreakdown: TypeBreakdownItem[];

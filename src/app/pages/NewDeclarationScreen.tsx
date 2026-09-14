@@ -15,6 +15,7 @@ import {
   fetchUserById,
   fetchOrganizations,
 } from "@/services/api";
+import { nextSeq } from "@/services/localStore";
 import { useUser } from "@/app/auth/UserContext";
 
 const GENDER_OPTIONS = ["Male", "Female"];
@@ -298,7 +299,7 @@ const base: Omit<Declaration, "travelers" | "id" | "numberOfPeople"> = {
       status,
       priority: total >= config.highValueThreshold ? "High" : total >= config.mediumValueThreshold ? "Medium" : "Low",
       description: formState.reason,
-      relationship: `${formState.from}  ${formState.to}`.trim(),
+      relationship: `${formState.from} → ${formState.to}`.trim(),
       receivedGiven: "",
       from: formState.from,
       contactPerson: active[0]?.name || "",
@@ -310,7 +311,7 @@ const base: Omit<Declaration, "travelers" | "id" | "numberOfPeople"> = {
     };
     return {
       ...base,
-      id: idOverride || draft?.id || savedId || `TR-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000).padStart(4, "0")}`,
+      id: idOverride || draft?.id || savedId || `TR-${new Date().getFullYear()}-${String(nextSeq()).padStart(4, "0")}`,
       travelers: active,
       numberOfPeople,
       destination: formState.destination,

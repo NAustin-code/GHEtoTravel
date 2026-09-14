@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+﻿import { useState, useEffect, useMemo } from "react";
 import { Download, Search, AlertTriangle } from "lucide-react";
 import { fetchPendingWorkflows, fetchConfig } from "@/services/api";
 import { Declaration } from "@/types/declaration";
@@ -57,7 +57,7 @@ export function ApprovalQueue({ onReview }: { onReview: (d: Declaration) => void
   const queue = allDeclarations;
   const departments = Array.from(new Set(queue.map((d) => d.department))).sort();
   const employees = Array.from(new Set(queue.map((d) => d.employee))).sort();
-  const filteredQueue = queue.filter((d) => {
+  const filteredQueue = useMemo(() => queue.filter((d) => {
     const query = search.trim().toLowerCase();
     return (
       (!query ||
@@ -70,13 +70,13 @@ export function ApprovalQueue({ onReview }: { onReview: (d: Declaration) => void
       (employeeFilter === "All" || d.employee === employeeFilter) &&
       (!overdueOnly || isOutstanding(d.submitted, slaDays))
     );
-  });
+  }), [queue, search, department, status, priority, employeeFilter, overdueOnly, slaDays]);
   const sortFieldMap: Record<string, string> = {
     "Request ID": "id", TeamMember: "employee", Dept: "department", Type: "type",
     Destination: "counterparty", Value: "value", Submitted: "submitted",
     Priority: "priority", Status: "status",
   };
-  const sorted = sortKey
+  const sorted = useMemo(() => sortKey
     ? [...filteredQueue].sort((a, b) => {
         const aVal: unknown = (a as unknown as Record<string, unknown>)[sortFieldMap[sortKey] || sortKey] ?? "";
         const bVal: unknown = (b as unknown as Record<string, unknown>)[sortFieldMap[sortKey] || sortKey] ?? "";
@@ -87,9 +87,9 @@ export function ApprovalQueue({ onReview }: { onReview: (d: Declaration) => void
         if (aStr > bStr) return sortDir === "asc" ? 1 : -1;
         return 0;
       })
-    : filteredQueue;
+    : filteredQueue, [filteredQueue, sortKey, sortDir]);
   const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
-  const pagedQueue = sorted.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const pagedQueue = useMemo(() => sorted.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE), [sorted, page]);
 
   const exportQueue = () => {
     exportRowsToXls(

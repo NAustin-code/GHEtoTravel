@@ -63,7 +63,7 @@ describe("Integration — fetchDashboardStats", () => {
     expect(stats.kpis.total).toBe(10);
     expect(stats.kpis.pending).toBe(4);
     expect(stats.kpis.approved).toBe(2);
-    expect(stats.kpis.totalValue).toBe(26500);
+    expect(stats.kpis.totalValue).toBe(46500);
     expect(typeof stats.kpis.total).toBe("number");
     expect(stats.complianceTrend.length).toBeGreaterThan(0);
     expect(stats.typeBreakdown.length).toBeGreaterThan(0);

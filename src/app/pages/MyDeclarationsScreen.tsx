@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+﻿import { useState, useEffect, useMemo } from "react";
 import { ArrowLeft, Download, Eye, Edit } from "lucide-react";
 import { Declaration } from "@/types/declaration";
 import { fetchDeclarations, fetchDeclarationById } from "@/services/api";
@@ -79,6 +79,41 @@ export function MyDeclarationsScreen({ onEditDraft }: { onEditDraft?: (d: Declar
   const showAllNonDraftsAndUserDrafts = (d: Declaration) => d.status !== "Draft" || d.employeeId === user?.id || d.employee === user?.name;
   const visibleDeclarations = (viewMode === "my" ? userDeclarations : declarations).filter(showAllNonDraftsAndUserDrafts);
 
+  const filtered = useMemo(() => visibleDeclarations.filter(
+    (d) =>
+      (!search ||
+        d.id.toLowerCase().includes(search.toLowerCase()) ||
+        d.counterparty.toLowerCase().includes(search.toLowerCase()) ||
+        (d.destination || "").toLowerCase().includes(search.toLowerCase()) ||
+        d.employee.toLowerCase().includes(search.toLowerCase()) ||
+        (d.approver || "").toLowerCase().includes(search.toLowerCase())) &&
+      (typeFilter === "All" || d.type === typeFilter) &&
+      (statusFilter === "All" || d.status === statusFilter) &&
+      (approverFilter === "All" || d.approver === approverFilter) &&
+      (employeeFilter === "All" || d.employee === employeeFilter) &&
+      (!dateFilterStart || d.submitted >= dateFilterStart) &&
+      (!dateFilterEnd || d.submitted <= dateFilterEnd)
+  ), [visibleDeclarations, search, typeFilter, statusFilter, approverFilter, employeeFilter, dateFilterStart, dateFilterEnd]);
+
+  const sorted = useMemo(() => [...filtered].sort((a, b) => {
+    if (!sortKey) return 0;
+    const aVal = a[sortKey] ?? "";
+    const bVal = b[sortKey] ?? "";
+
+    if (typeof aVal === "number" && typeof bVal === "number") {
+      return sortDir === "asc" ? aVal - bVal : bVal - aVal;
+    }
+
+    const aStr = String(aVal).toLowerCase();
+    const bStr = String(bVal).toLowerCase();
+    if (aStr < bStr) return sortDir === "asc" ? -1 : 1;
+    if (aStr > bStr) return sortDir === "asc" ? 1 : -1;
+    return 0;
+  }), [filtered, sortKey, sortDir]);
+
+  const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
+  const paged = useMemo(() => sorted.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE), [sorted, page]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -94,41 +129,6 @@ export function MyDeclarationsScreen({ onEditDraft }: { onEditDraft?: (d: Declar
       </div>
     );
   }
-
-
-  const filtered = visibleDeclarations.filter(
-    (d) =>
-      (!search ||
-        d.id.toLowerCase().includes(search.toLowerCase()) ||
-        d.counterparty.toLowerCase().includes(search.toLowerCase()) ||
-        d.employee.toLowerCase().includes(search.toLowerCase()) ||
-        (d.approver || "").toLowerCase().includes(search.toLowerCase())) &&
-      (typeFilter === "All" || d.type === typeFilter) &&
-      (statusFilter === "All" || d.status === statusFilter) &&
-      (approverFilter === "All" || d.approver === approverFilter) &&
-      (employeeFilter === "All" || d.employee === employeeFilter) &&
-      (!dateFilterStart || d.submitted >= dateFilterStart) &&
-      (!dateFilterEnd || d.submitted <= dateFilterEnd)
-  );
-
-  const sorted = [...filtered].sort((a, b) => {
-    if (!sortKey) return 0;
-    const aVal = a[sortKey] ?? "";
-    const bVal = b[sortKey] ?? "";
-
-    if (typeof aVal === "number" && typeof bVal === "number") {
-      return sortDir === "asc" ? aVal - bVal : bVal - aVal;
-    }
-
-    const aStr = String(aVal).toLowerCase();
-    const bStr = String(bVal).toLowerCase();
-    if (aStr < bStr) return sortDir === "asc" ? -1 : 1;
-    if (aStr > bStr) return sortDir === "asc" ? 1 : -1;
-    return 0;
-  });
-
-  const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
-  const paged = sorted.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
 
   const handleKpiClick = (type: string) => {

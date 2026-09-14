@@ -60,7 +60,6 @@ function buildStepsFromWorkflow(wf: WorkflowInstance | null | undefined): StepVi
         decidedByName: step.decidedByName || null,
         notes: step.notes || "",
       });
-      if (isTerminal) hasTerminal = true;
     }
   }
   if (!hasData && result.every((s) => s.state === "skipped")) {

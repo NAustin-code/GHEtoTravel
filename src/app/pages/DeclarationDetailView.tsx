@@ -186,8 +186,7 @@ async function viewFile(file: UploadedFile, declarationId: string, onError: (msg
 }
 
 function parseFiles(data: Record<string, string> | Declaration): UploadedFile[] {
-  const isRecord = typeof (data as Declaration).value === "number";
-  const d = isRecord ? (data as Declaration) : null;
+  const d = "employeeId" in data ? (data as Declaration) : null;
   const record = !d ? (data as Record<string, string>) : null;
   const sourceFiles = d?.files ?? record?.files ?? [];
   return Array.isArray(sourceFiles)
