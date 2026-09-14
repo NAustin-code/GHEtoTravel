@@ -71,8 +71,7 @@ export function AdminConfig() {
     try {
       await saveConfig(config);
       setSaved(true);
-      const t = setTimeout(() => setSaved(false), 2000);
-      return () => clearTimeout(t);
+      setTimeout(() => setSaved(false), 2000);
     } catch (err: unknown) {
       setFetchError(err instanceof Error ? err.message : "Failed to save configuration.");
     }

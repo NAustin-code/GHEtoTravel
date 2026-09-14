@@ -1,9 +1,16 @@
 import { Home, Plane, FileText, CheckSquare, Menu, ChevronLeft, Settings, Users, Activity, List, BarChart3, CheckCircle2, type LucideIcon } from "lucide-react";
 import { ImageWithFallback } from "@/app/components/ImageWithFallback";
 import logoImg from "@/assets/HB-Logo-NO-BG.png";
-import { YELLOW, GRADIENT_SIDEBAR } from "@/config/theme";
+import { ORANGE, GRADIENT_SIDEBAR } from "@/config/theme";
 import { Role, Screen, User } from "@/types/declaration";
 import { canAccessScreen } from "@/app/auth/authService";
+
+const APPROVER_BASE_LINKS: { screen: Screen; icon: LucideIcon; label: string }[] = [
+  { screen: "approver-dashboard" as Screen, icon: Home,        label: "Dashboard" },
+  { screen: "new-declaration"    as Screen, icon: Plane,       label: "New Travel Request" },
+  { screen: "approval-queue"     as Screen, icon: CheckSquare, label: "Approval Queue" },
+  { screen: "my-declarations"    as Screen, icon: FileText,    label: "All Travel Requests" },
+];
 
 export function Sidebar({
   role,
@@ -36,18 +43,12 @@ export function Sidebar({
           { screen: "new-declaration" as Screen, icon: Plane,        label: "New Travel Request" },
           { screen: "my-declarations"  as Screen, icon: FileText,   label: "My Travel Requests" },
         ]
-      : (() => {
-          const base: { screen: Screen; icon: LucideIcon; label: string }[] = [
-            { screen: "approver-dashboard" as Screen, icon: Home,        label: "Dashboard" },
-            { screen: "new-declaration"    as Screen, icon: Plane,       label: "New Travel Request" },
-            { screen: "approval-queue"     as Screen, icon: CheckSquare, label: "Approval Queue" },
-            { screen: "my-declarations"    as Screen, icon: FileText,    label: "All Travel Requests" },
-          ];
-          if (user && canAccessScreen(user, "admin-reports")) {
-            base.push({ screen: "admin-reports" as Screen, icon: BarChart3, label: "Reports" });
-          }
-          return base;
-        })();
+      : [
+          ...APPROVER_BASE_LINKS,
+          ...(user && canAccessScreen(user, "admin-reports")
+            ? [{ screen: "admin-reports" as Screen, icon: BarChart3, label: "Reports" }]
+            : []),
+        ];
 
   return (
     <>
@@ -92,7 +93,7 @@ export function Sidebar({
                 className={`w-full flex items-center gap-3 rounded-xl transition-all ${
                   collapsed ? "justify-center p-2.5 text-base" : "px-3 py-3 text-[16px]"
                 } ${active ? "font-semibold" : "text-[#efe9ff] hover:bg-white/10 font-medium"}`}
-                style={active ? { background: YELLOW, color: "#1E1E2D" } : {}}
+                style={active ? { background: ORANGE, color: "#1E1E2D" } : {}}
               >
                 <link.icon size={18} className={active ? "" : "opacity-90"} />
                 {!collapsed && link.label}
@@ -114,7 +115,7 @@ export function Sidebar({
               className={`min-w-0 flex-1 rounded-xl px-2 py-2 text-sm font-semibold transition-all ${
                 active ? "text-[#1E1E2D]" : "text-gray-100 hover:bg-white/10"
               }`}
-              style={active ? { background: YELLOW } : {}}
+              style={active ? { background: ORANGE } : {}}
             >
               <link.icon size={16} className="mx-auto mb-1" />
               <span className="block truncate">{link.label}</span>

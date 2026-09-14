@@ -8,7 +8,7 @@ import {
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { fetchDeclarations } from "@/services/api";
 import { Screen, Declaration } from "@/types/declaration";
-import { PURPLE, YELLOW, formatRand, PRIORITY_COLORS, STATUS_COLORS, GRADIENT_PRIMARY, TYPE_COLORS } from "@/config/theme";
+import { PURPLE, ORANGE, formatRand, PRIORITY_COLORS, STATUS_COLORS, GRADIENT_PRIMARY, TYPE_COLORS } from "@/config/theme";
 import { useUser } from "@/app/auth/UserContext";
 import { PageHeader } from "@/app/components/PageHeader";
 import { THead } from "@/app/components/THead";
@@ -165,7 +165,7 @@ export function ApproverDashboard({ onNavigate, onReview }: { onNavigate: (s: Sc
             style={{ background: GRADIENT_PRIMARY }}
           >
             <CheckSquare size={15} /> Approval Queue
-            <span className="ml-0.5 flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold" style={{ background: YELLOW, color: "#1E1E2D" }}>
+            <span className="ml-0.5 flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold" style={{ background: ORANGE, color: "#1E1E2D" }}>
               {queueCount}
             </span>
           </button>

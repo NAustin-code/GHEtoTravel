@@ -166,8 +166,8 @@ export async function fetchReportCounterpartyConcentration(params?: Record<strin
   return store.getDestinationConcentration(params);
 }
 
-export async function fetchReportHighValue(): Promise<{ employee: string; lineManager: string; declarationCount: number; totalValue: number; averageValue: number; totalDomestic: number; totalInternational: number; totalOther: number; mostFrequentSupplier: string }[]> {
-  return store.getHighValueRows();
+export async function fetchReportHighValue(params?: Record<string, string>): Promise<{ employee: string; lineManager: string; declarationCount: number; totalValue: number; averageValue: number; totalDomestic: number; totalInternational: number; totalOther: number; mostFrequentSupplier: string }[]> {
+  return store.getHighValueRows(params);
 }
 
 export async function fetchReportList(params?: Record<string, string>): Promise<Declaration[]> {

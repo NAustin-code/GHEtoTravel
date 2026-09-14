@@ -46,7 +46,7 @@ export function DeclarationDetailView({
     ["Transport Details",      safe(d.transportDetails)],
     ["Flight Cost",            d.flightCost != null ? formatRand(d.flightCost) : "—"],
     ["Seat Preference",        safe(d.seatPreference)],
-    ["First Time Flying",      d.firstTimeFlying != null ? (d.firstTimeFlying ? "Yes" : "No") : "—"],
+    ["First Time Flying",      d.firstTimeFlying === "Yes" ? "Yes" : d.firstTimeFlying === "No" ? "No" : "—"],
     ["Accommodation Required", d.accommodationRequired ? "Yes" : "No"],
     ["Accommodation Details",  safe(d.accommodationDetails)],
     ["Accommodation Cost",     d.accommodationCost != null ? formatRand(d.accommodationCost) : "—"],

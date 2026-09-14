@@ -109,7 +109,7 @@ export function AdminDropdowns() {
             <THead cols={["Option Name", "Actions"]} />
             <tbody className="divide-y divide-border">
               {currentList.map((item, idx) => (
-                <tr key={`${item}-${idx}`} className="transition-all hover:bg-purple-50/45">
+                <tr key={idx} className="transition-all hover:bg-purple-50/45">
                   <td className="px-5 py-3">
                     {editingIdx === idx ? (
                       <input value={editValue} onChange={(e) => setEditValue(e.target.value)} className="rounded border px-2 py-1 text-sm w-full" />
@@ -134,7 +134,7 @@ export function AdminDropdowns() {
         <div className="space-y-2 p-4 md:hidden">
           {currentList.length === 0 && <p className="py-4 text-center text-sm text-muted-foreground">No items in this list.</p>}
           {currentList.map((item, idx) => (
-            <div key={`${item}-${idx}`} className="group rounded-xl border border-primary/10 bg-white/95 p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:border-purple-200/70">
+            <div key={idx} className="group rounded-xl border border-primary/10 bg-white/95 p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:border-purple-200/70">
               <div className="flex items-center justify-between gap-3">
                 {editingIdx === idx ? (
                   <input value={editValue} onChange={(e) => setEditValue(e.target.value)} className="flex-1 rounded border px-2 py-1 text-sm" autoFocus />

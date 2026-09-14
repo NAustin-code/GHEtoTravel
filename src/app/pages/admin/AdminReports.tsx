@@ -68,8 +68,11 @@ export function AdminReports() {
     }
   }, [params]);
 
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   useEffect(() => {
-    handleGenerate();
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => { handleGenerate(); }, 300);
+    return () => clearTimeout(debounceRef.current);
   }, [handleGenerate]);
 
   const activeRows = reportType === "High-Value Travel Report"

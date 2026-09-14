@@ -1,5 +1,5 @@
 import { Check, Sparkles } from "lucide-react";
-import { PURPLE, YELLOW, F, GRADIENT_PRIMARY, INFO_BG } from "@/config/theme";
+import { PURPLE, ORANGE, F, GRADIENT_PRIMARY, INFO_BG } from "@/config/theme";
 import { Declaration } from "@/types/declaration";
 
 export function SuccessModal({
@@ -12,7 +12,7 @@ export function SuccessModal({
   onView: () => void;
 }) {
   const pieces = Array.from({ length: 22 }, (_, i) => ({
-    color: [PURPLE, YELLOW, "#10b981", "#3b82f6", "#f43f5e", "#f97316"][i % 6],
+    color: [PURPLE, ORANGE, "#10b981", "#3b82f6", "#f43f5e", "#f97316"][i % 6],
     left: `${(i * 4.5) % 100}%`,
     delay: `${(i * 0.12) % 1.8}s`,
     dur: `${2.5 + (i % 4) * 0.5}s`,
@@ -23,18 +23,6 @@ export function SuccessModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: "rgb(0 0 0 / 0.55)", backdropFilter: "blur(6px)" }}
     >
-      <style>{`
-        @keyframes confettiFall {
-          0%   { transform: translateY(-40px) rotate(0deg) scale(1); opacity: 1; }
-          100% { transform: translateY(340px) rotate(720deg) scale(0.4); opacity: 0; }
-        }
-        @keyframes popIn {
-          0%   { transform: scale(0.7); opacity: 0; }
-          70%  { transform: scale(1.05); }
-          100% { transform: scale(1); opacity: 1; }
-        }
-      `}</style>
-
       {/* Confetti */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
         {pieces.map((p, i) => (
@@ -62,9 +50,9 @@ export function SuccessModal({
           <Check size={36} className="text-white" strokeWidth={3} />
         </div>
         <div className="flex items-center justify-center gap-2 mb-2">
-          <Sparkles size={18} style={{ color: YELLOW }} />
+          <Sparkles size={18} style={{ color: ORANGE }} />
           <h2 className="text-2xl font-bold text-foreground">Travel Request Submitted!</h2>
-          <Sparkles size={18} style={{ color: YELLOW }} />
+          <Sparkles size={18} style={{ color: ORANGE }} />
         </div>
         <p className="text-sm text-muted-foreground leading-relaxed mb-1">
           Thank you, <span className="font-semibold text-foreground">{data.employee}</span>.

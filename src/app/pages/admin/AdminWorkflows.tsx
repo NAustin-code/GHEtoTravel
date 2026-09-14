@@ -98,7 +98,7 @@ export function AdminWorkflows() {
         {rules
           .filter((r) => {
             const steps = stepsOf(r);
-            return !steps.some((s) => s.role === "ceo" || s.label?.toLowerCase().includes("ceo"));
+            return !steps.some((s) => s.role === "ceo");
           })
           .map((rule) => (
           <Card key={rule.id} className="group flex flex-col justify-between gap-4 border-white/70 bg-white/80 p-5 card-shadow transition-all md:flex-row md:items-center">

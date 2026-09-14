@@ -22,8 +22,9 @@ function buildParams(params?: Record<string, string>): Record<string, string> | 
 
 export async function fetchReports(params?: Record<string, string>): Promise<ReportsData> {
   const query = buildParams(params);
+  const allDeclarations = getReportList();
+  const departments = [...new Set(allDeclarations.map((d: Declaration) => d.department).filter(Boolean))].sort();
   const filtered = getReportList(query);
-  const departments = [...new Set(filtered.map((d: Declaration) => d.department).filter(Boolean))].sort();
   return {
     statusBreakdown: getStatusBreakdown(query),
     slaData: getSLAData(query),

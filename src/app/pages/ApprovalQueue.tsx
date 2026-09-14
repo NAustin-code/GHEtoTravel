@@ -339,7 +339,7 @@ export function ApprovalQueue({ onReview }: { onReview: (d: Declaration) => void
         </Table>
         <div className="flex items-center justify-between border-t border-border bg-table-header-bg px-5 py-3">
           <p className="text-xs text-muted-foreground">
-            Showing <span className="font-semibold text-foreground">{filteredQueue.length}</span> travel requests
+            Showing <span className="font-semibold text-foreground">{page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, sorted.length)}</span> of <span className="font-semibold text-foreground">{sorted.length}</span> travel requests
           </p>
           {totalPages > 1 && (
             <div className="flex items-center gap-2">

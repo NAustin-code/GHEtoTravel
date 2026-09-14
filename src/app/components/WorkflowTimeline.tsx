@@ -36,6 +36,7 @@ function buildStepsFromWorkflow(wf: WorkflowInstance | null | undefined): StepVi
   const existing = new Map<string, WorkflowStep>(steps.map((s: WorkflowStep) => [s.role, s]));
   const result: StepView[] = [];
   let hasTerminal = false;
+  let hasStartedPending = false;
   for (const r of ALL_ROLES) {
     const step = existing.get(r.role);
     // If prior step was terminal (Returned/Declined), subsequent pending becomes skipped
@@ -46,7 +47,9 @@ function buildStepsFromWorkflow(wf: WorkflowInstance | null | undefined): StepVi
     if (!step) {
       result.push({ label: r.label, actor: r.defaultActor, state: "skipped" });
     } else if (step.status === "pending") {
-      result.push({ label: step.label, actor: step.assigneeName, state: result.some((s) => s.state === "active" || s.state === "pending") ? "pending" : "active" });
+      const state = hasStartedPending ? "pending" : "active";
+      if (state === "active") hasStartedPending = true;
+      result.push({ label: step.label, actor: step.assigneeName, state });
     } else {
       const decLabel = step.decision ? (DECISION_LABELS[step.decision] || step.decision) : null;
       const isTerminal = decLabel ? (labelToStatus(decLabel) === "Returned" || labelToStatus(decLabel) === "Declined") : false;
@@ -63,8 +66,7 @@ function buildStepsFromWorkflow(wf: WorkflowInstance | null | undefined): StepVi
     }
   }
   if (!hasData && result.every((s) => s.state === "skipped")) {
-    result[0].state = "active";
-    result[0].actor = "Loading...";
+    result[0] = { ...result[0], state: "active", actor: "Loading..." };
   }
   return result;
 }

@@ -152,6 +152,15 @@ const DECOR_MAP: Record<string, React.FC> = {
   "Total Value": DecorTotal,
 };
 
+const MINI_CHAR_MAP: Record<string, string> = {
+  Total: "▤",
+  Pending: "◷",
+  Approved: "✓",
+  Returned: "↶",
+  Declined: "×",
+  Escalated: "↑",
+};
+
 function getGradient(keyOrLabel: string): string {
   return GRADIENTS[keyOrLabel] || GRADIENTS.Total;
 }
@@ -187,20 +196,15 @@ export function KpiCard({
   const isReturned = key === "Returned";
 
   // Map lucide icon to kpi.html mini char for exact match, fallback to Icon
-  const miniCharMap: Record<string, string> = {
-    Total: "▤",
-    Pending: "◷",
-    Approved: "✓",
-    Returned: "↶",
-    Declined: "×",
-    Escalated: "↑",
-  };
-  const miniChar = miniCharMap[key];
+  const miniChar = MINI_CHAR_MAP[key];
 
   return (
     <div
       id={uid}
       onClick={onClick}
+      onKeyDown={onClick ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } } : undefined}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
       className={`relative overflow-hidden select-none transition-all duration-300 ${onClick ? "cursor-pointer" : "cursor-default"} ${active ? "scale-[1.02] shadow-xl" : "hover:-translate-y-0.5 hover:shadow-lg"}`}
       style={{
         height: "clamp(108px, 8vw, 128px)",

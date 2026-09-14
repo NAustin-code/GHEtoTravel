@@ -575,7 +575,10 @@ export function updateDeclarationRecord(id: string, data: Partial<Declaration>):
   const declarations = getDeclarations();
   const idx = declarations.findIndex((d) => d.id === id);
   if (idx === -1) throw notFound("Declaration", id);
-  declarations[idx] = { ...clone(declarations[idx]), ...clone(data), id };
+  const existing = clone(declarations[idx]);
+  const updates = clone(data);
+  delete updates.id;
+  declarations[idx] = { ...existing, ...updates };
   setDeclarations(declarations);
   return clone(declarations[idx]);
 }
@@ -638,7 +641,12 @@ export function submitDeclarationRecord(id: string): Declaration {
   return clone(declarations[idx]);
 }
 
+const VALID_STATUSES = new Set<string>(["Draft", "Pending", "Approved", "Declined", "Returned", "Escalated"]);
+
 export function setDeclarationStatus(id: string, status: string): Declaration {
+  if (!VALID_STATUSES.has(status)) {
+    throw new Error(`Invalid status: "${status}"`);
+  }
   return updateDeclarationRecord(id, { status: status as StatusType });
 }
 

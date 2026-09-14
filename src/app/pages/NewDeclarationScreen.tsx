@@ -124,6 +124,10 @@ function blankTraveler(index: number): Traveler {
   };
 }
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const ACCEPTED_EXTENSIONS = ["pdf", "png", "jpg", "jpeg", "docx"];
+const MAX_FILE_BYTES = 20 * 1024 * 1024;
+
 export function NewDeclarationScreen({
   onSubmitSuccess,
   onDraftSaved,
@@ -219,7 +223,7 @@ export function NewDeclarationScreen({
       transportDetails: draft.transportDetails || "",
       flightCost: draft.flightCost != null ? String(draft.flightCost) : "",
       seatPreference: draft.seatPreference || "Aisle",
-      firstTimeFlying: draft.firstTimeFlying === true || draft.firstTimeFlying === "Yes" ? "Yes" : "No",
+      firstTimeFlying: ((draft.firstTimeFlying as unknown) === true || draft.firstTimeFlying === "Yes") ? "Yes" : "No",
       accommodationRequired: draft.accommodationRequired || false,
       accommodationDetails: draft.accommodationDetails || "",
       accommodationCost: draft.accommodationCost != null ? String(draft.accommodationCost) : "",
@@ -249,8 +253,6 @@ export function NewDeclarationScreen({
     });
   };
 
-  const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
   const validate = (): boolean => {
     const next: Record<string, string> = {};
     if (!formState.destination.trim()) next.destination = "Destination is required";
@@ -275,7 +277,7 @@ export function NewDeclarationScreen({
     return Object.keys(next).length === 0;
   };
 
-  const buildDeclaration = (status: "Draft" | "Pending", idOverride?: string, _uploadedFiles?: UploadedFile[]): Declaration => {
+  const buildDeclaration = (status: "Draft" | "Pending", idOverride?: string): Declaration => {
     const flight = Number(formState.flightCost) || 0;
     const stay = Number(formState.accommodationCost) || 0;
     const active = travelers.slice(0, numberOfPeople);
@@ -390,9 +392,6 @@ const onDraftSave = async () => {
   };
 
   const err = (field: string) => errors[field] || "";
-
-  const ACCEPTED_EXTENSIONS = ["pdf", "png", "jpg", "jpeg", "docx"];
-  const MAX_FILE_BYTES = 20 * 1024 * 1024;
 
   // Files are only staged here; nothing is uploaded until save/submit, so
   // abandoned forms leave no orphaned file records behind.
@@ -795,7 +794,10 @@ const onDraftSave = async () => {
             <FL>Car Hire Required</FL>
             <Sel
               value={formState.transportMode === "Car" ? "Yes" : "No"}
-              onChange={(v) => set("transportMode", v === "Yes" ? "Car" : "None")}
+              onChange={(v) => {
+                set("transportMode", v === "Yes" ? "Car" : "None");
+                if (v === "No") set("transportDetails", "");
+              }}
             >
               <option value="Yes">Yes</option>
               <option value="No">No</option>

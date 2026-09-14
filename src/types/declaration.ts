@@ -128,7 +128,7 @@ export interface Declaration {
   transportDetails?: string;
   flightCost?: number;
   seatPreference?: "Aisle" | "Window" | "Other";
-  firstTimeFlying?: boolean | string;
+  firstTimeFlying?: "Yes" | "No";
   accommodationRequired?: boolean;
   accommodationDetails?: string;
   accommodationCost?: number;

@@ -23,6 +23,7 @@ export function ApprovalDetail({ declaration, onBack, readOnly }: { declaration:
   } = useWorkflowApproval({
     declarationId: declaration.id,
     userId: user?.id ?? null,
+    initialWorkflowSteps: declaration.workflowSteps,
     onStatusUpdate: (s) => setDeclarationStatus(s),
   });
 

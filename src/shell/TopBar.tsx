@@ -12,7 +12,8 @@ export function TopBar({
   onSignOut: () => void;
 }) {
   const initials = userName
-    .split(" ")
+    .trim()
+    .split(/\s+/)
     .map((n) => n[0])
     .join("")
     .slice(0, 2)

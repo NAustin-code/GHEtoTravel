@@ -4,16 +4,10 @@ import { StatusType } from "@/types/declaration";
 export const PURPLE     = "#4F1D95";
 export const PURPLE_DARK= "#39156F";
 export const ORANGE     = "#F8D74A";
-export const ORANGE_LIGHT = "#F8D74A";
+export const ORANGE_LIGHT = "#FDE68A";
 export const DARKEST    = "#0f0225";
 export const PURPLE_600 = "#6d28d9";
 export const F          = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
-
-// Legacy aliases (kept so existing screens compile)
-export const TEAL       = PURPLE;
-export const TEAL_DARK  = PURPLE_DARK;
-export const TEAL_600   = PURPLE_600;
-export const YELLOW     = ORANGE;
 
 // ─── Common gradient strings (for inline style={{ background: ... }}) ──────────
 export const GRADIENT_PRIMARY = `linear-gradient(135deg, ${PURPLE}, ${PURPLE_600})`;
@@ -62,7 +56,7 @@ export const STATUS_COLORS: Record<StatusType, { bg: string; text: string; ring:
 };
 
 // ─── Decision labels (shared by WorkflowTimeline & useWorkflowApproval) ────────
-export const DECISION_LABELS: Record<string, string> = {
+export const DECISION_LABELS: Record<"return" | "accept" | "org" | "foundation" | "decline", string> = {
   return: "Returned - Team member to provide additional information.",
   accept: "Approved - Team member travel request approved.",
   org: "Approved - Travel request approved and shared with the organisation pool.",
@@ -95,7 +89,7 @@ export const PRIORITY_COLORS: Record<string, { bg: string; text: string }> = {
 // ─── Formatters ─────────────────────────────────────────────────────────────────
 export function formatRand(v: number) {
   if (typeof v !== "number" || !Number.isFinite(v)) return "R 0.00";
-  return `R ${v.toLocaleString("en-ZA")}`;
+  return `R ${v.toLocaleString("en-ZA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 // ─── Shared input class strings ─────────────────────────────────────────────────

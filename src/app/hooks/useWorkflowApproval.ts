@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { fetchWorkflowInstance, approveWorkflowStep } from "@/services/api";
 import type { WorkflowDecisionResult } from "@/services/api";
 import { DECISION_LABELS } from "@/config/theme";
@@ -27,6 +27,7 @@ export function useWorkflowApproval({ declarationId, userId, initialWorkflowStep
   const [wfMessage, setWfMessage] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const messageTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   const loadWorkflowInstance = useCallback(async () => {
     if (!declarationId) {
@@ -61,7 +62,11 @@ export function useWorkflowApproval({ declarationId, userId, initialWorkflowStep
     loadWorkflowInstance();
   }, [loadWorkflowInstance]);
 
-  const steps = wfInstance?.steps ?? [];
+  useEffect(() => {
+    return () => clearTimeout(messageTimerRef.current);
+  }, []);
+
+  const steps = useMemo(() => wfInstance?.steps ?? [], [wfInstance]);
   const lmStep = steps.find((s: WorkflowStep) => s.role === "lineManager");
   const hrStep = steps.find((s: WorkflowStep) => s.role === "hr");
 
@@ -81,7 +86,7 @@ export function useWorkflowApproval({ declarationId, userId, initialWorkflowStep
     get step() { return lmStep; },
     get exists() { return hasLm; },
     get enabled() { return lmStep?.status === "pending"; },
-    get completed() { return lmStep && lmStep.status !== "pending"; },
+    get completed() { return !!lmStep && lmStep.status !== "pending"; },
     get decidedAt() { return lmStep?.decidedAt || null; },
   }), [lmStep, lmDecision, lmNotes, hasLm]);
 
@@ -96,7 +101,7 @@ export function useWorkflowApproval({ declarationId, userId, initialWorkflowStep
     get step() { return hrStep; },
     get exists() { return hasHr; },
     get enabled() { return isHrEnabled && hrStep?.status === "pending"; },
-    get completed() { return hrStep && hrStep.status !== "pending"; },
+    get completed() { return !!hrStep && hrStep.status !== "pending"; },
     get decidedAt() { return hrStep?.decidedAt || null; },
   }), [hrStep, hrDecision, hrNotes, hasHr, isLmApproved]);
 
@@ -127,7 +132,7 @@ export function useWorkflowApproval({ declarationId, userId, initialWorkflowStep
   const currentUserStep = useMemo(() => steps.find(
     (s: WorkflowStep, i: number) => s.status === "pending" && steps.slice(0, i).every((p: WorkflowStep) => p.status === "approved" || p.status === "skipped")
   ), [steps]);
-  const canApprove = !!(currentUserStep?.assignee === userId && currentUserStep);
+  const canApprove = currentUserStep?.assignee === userId;
   const currentUserStepRole = canApprove ? currentUserStep?.role : undefined;
   const activeRole = useMemo(() => allRoles.find((r) => r.enabled && r.roleKey === currentUserStepRole), [allRoles, currentUserStepRole]);
 
@@ -144,12 +149,12 @@ export function useWorkflowApproval({ declarationId, userId, initialWorkflowStep
     try {
       if (!declarationId) return;
       const res: WorkflowDecisionResult | undefined = await approveWorkflowStep({ declarationId, decision, notes });
-      // 204 returns undefined — treat as success
       if (res?.newStatus) onStatusUpdate?.(res.newStatus);
-      else if (res === undefined) onStatusUpdate?.("Pending" as StatusType);
+      // 204 returns undefined — rely on re-fetched state for status
       await loadWorkflowInstance();
       setWfMessage("Decision submitted successfully.");
-      setTimeout(() => { setWfMessage(""); }, 1500);
+      clearTimeout(messageTimerRef.current);
+      messageTimerRef.current = setTimeout(() => { setWfMessage(""); }, 1500);
     } catch (err: unknown) {
       setSubmitError(err instanceof Error ? err.message : "An error occurred while submitting the decision.");
     } finally {

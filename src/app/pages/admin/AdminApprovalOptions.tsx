@@ -43,7 +43,10 @@ export function AdminApprovalOptions() {
 
   const handleSaveEdit = async () => {
     try {
-      if (editingIdx === null || !editValue || !editLabel) return;
+      if (editingIdx === null || !editValue || !editLabel) {
+        setError("Value and label are required.");
+        return;
+      }
       const option = options[editingIdx];
       await updateApprovalOption(option.value, { value: editValue, label: editLabel });
       setOptions(await fetchApprovalOptions());
