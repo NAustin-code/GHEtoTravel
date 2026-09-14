@@ -10,6 +10,7 @@ const APPROVER_BASE_LINKS: { screen: Screen; icon: LucideIcon; label: string }[]
   { screen: "new-declaration"    as Screen, icon: Plane,       label: "New Travel Request" },
   { screen: "approval-queue"     as Screen, icon: CheckSquare, label: "Approval Queue" },
   { screen: "my-declarations"    as Screen, icon: FileText,    label: "All Travel Requests" },
+  { screen: "travel-analysis"    as Screen, icon: BarChart3,  label: "Travel Analysis" },
 ];
 
 export function Sidebar({
@@ -36,6 +37,7 @@ export function Sidebar({
           { screen: "admin-dropdowns" as Screen, icon: List,     label: "Dropdowns" },
           { screen: "admin-config"    as Screen, icon: Settings, label: "Config" },
           { screen: "admin-reports"   as Screen, icon: FileText, label: "Reports" },
+          { screen: "travel-analysis" as Screen, icon: BarChart3, label: "Travel Analysis" },
           { screen: "admin-approval-options" as Screen, icon: CheckCircle2, label: "Approval Options" },
         ]
       : role === "teamMember"

@@ -13,6 +13,7 @@ export type Screen =
   | "admin-config"
   | "admin-reports"
   | "admin-approval-options"
+  | "travel-analysis"
   | "travel-request";
 
 export type Role = "teamMember" | "approver" | "admin";

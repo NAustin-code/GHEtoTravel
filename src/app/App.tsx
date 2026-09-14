@@ -15,6 +15,7 @@ import { AdminDropdowns } from "@/app/pages/admin/AdminDropdowns";
 import { AdminConfig } from "@/app/pages/admin/AdminConfig";
 import { AdminReports } from "@/app/pages/admin/AdminReports";
 import { AdminApprovalOptions } from "@/app/pages/admin/AdminApprovalOptions";
+import { TravelAnalysis } from "@/app/features/analysis/TravelAnalysis";
 import { SuccessModal } from "@/app/components/SuccessModal";
 import { DraftBanner } from "@/app/components/DraftBanner";
 import { ErrorBoundary } from "@/app/components/ErrorBoundary";
@@ -50,7 +51,7 @@ function AppInner() {
 
   const getRoleForScreen = (s: Screen): Role =>
     s === "admin-dashboard" || s === "admin-users" || s === "admin-workflows" || s === "admin-dropdowns" || s === "admin-config" || s === "admin-reports" || s === "admin-approval-options" ? "admin"
-    : s === "approver-dashboard" || s === "approval-queue" || s === "approval-detail" ? "approver"
+    : s === "approver-dashboard" || s === "approval-queue" || s === "approval-detail" || s === "travel-analysis" ? "approver"
     : "teamMember";
 
   const handleLogin = (r: Role) => {
@@ -129,6 +130,7 @@ function AppInner() {
         {screen === "admin-config" && <AdminConfig />}
         {screen === "admin-reports" && <AdminReports />}
         {screen === "admin-approval-options" && <AdminApprovalOptions />}
+        {screen === "travel-analysis" && <TravelAnalysis />}
       </AppShell>
 
       {showSuccess && submittedData && (
