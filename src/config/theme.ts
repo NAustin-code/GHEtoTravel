@@ -1,50 +1,50 @@
 import { StatusType } from "@/types/declaration";
 
 // ─── Brand tokens ───────────────────────────────────────────────────────────────
-export const TEAL     = "#0D9488";
-export const TEAL_DARK= "#0F766E";
-export const ORANGE   = "#F97316";
-export const ORANGE_LIGHT = "#FF8F00";
-export const DARKEST  = "#1a0a3a";
-export const TEAL_600 = "#14B8A6";
-export const F        = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
+export const PURPLE     = "#4F1D95";
+export const PURPLE_DARK= "#39156F";
+export const ORANGE     = "#F8D74A";
+export const ORANGE_LIGHT = "#F8D74A";
+export const DARKEST    = "#0f0225";
+export const PURPLE_600 = "#6d28d9";
+export const F          = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
 
-// Legacy aliases (kept so existing screens compile; mapped onto travel palette)
-export const PURPLE     = TEAL;
-export const DEEP       = TEAL_DARK;
+// Legacy aliases (kept so existing screens compile)
+export const TEAL       = PURPLE;
+export const TEAL_DARK  = PURPLE_DARK;
+export const TEAL_600   = PURPLE_600;
 export const YELLOW     = ORANGE;
-export const PURPLE_600 = TEAL_600;
 
 // ─── Common gradient strings (for inline style={{ background: ... }}) ──────────
-export const GRADIENT_PRIMARY = `linear-gradient(135deg, ${TEAL}, ${TEAL_600})`;
+export const GRADIENT_PRIMARY = `linear-gradient(135deg, ${PURPLE}, ${PURPLE_600})`;
 export const GRADIENT_ACCENT = `linear-gradient(135deg, ${ORANGE}, ${ORANGE_LIGHT})`;
-export const GRADIENT_SIDEBAR = `linear-gradient(180deg, ${DARKEST} 0%, ${TEAL_DARK} 100%)`;
-export const GRADIENT_LANDING = `linear-gradient(145deg, ${DARKEST} 0%, ${TEAL_DARK} 35%, ${TEAL} 70%, ${TEAL_600} 100%)`;
+export const GRADIENT_SIDEBAR = `linear-gradient(180deg, ${DARKEST} 0%, ${PURPLE_DARK} 100%)`;
+export const GRADIENT_LANDING = `linear-gradient(145deg, ${DARKEST} 0%, ${PURPLE_DARK} 35%, ${PURPLE} 70%, ${PURPLE_600} 100%)`;
 
 // ─── Shared background colours ──────────────────────────────────────────────────
-export const TABLE_HEADER_BG = "#EFF6FF";
-export const INFO_BG        = "#DCFCE7";
+export const TABLE_HEADER_BG = "#EDE8FF";
+export const INFO_BG        = "#F5F2FF";
 export const DEFAULT_HIGH_VALUE_THRESHOLD = 5000;
 export const DEFAULT_MEDIUM_VALUE_THRESHOLD = 1000;
 export const DEFAULT_MAXIMUM_VALUE = 100000;
 
 // ─── Declaration type chart colours (shared by dashboard charts) ────────────────
 export const TYPE_COLORS: Record<string, string> = {
-  Business:      "#0D9488",
+  Business:      "#4F1D95",
   Leisure:       "#F97316",
   Visiting:      "#10B981",
   Other:         "#6B7280",
-  Domestic:      "#0D9488",
+  Domestic:      "#4F1D95",
   International: "#F97316",
 };
 
 // ─── Type badge colours ─────────────────────────────────────────────────────────
 export const typeCfg: Record<string, { bg: string; text: string }> = {
-  Business:      { bg: "#ECFDF9", text: "#0D9488" },
+  Business:      { bg: "#F5F2FF", text: "#4F1D95" },
   Leisure:       { bg: "#FFFBF0", text: "#F97316" },
   Visiting:      { bg: "#D1F9C4", text: "#10B981" },
   Other:         { bg: "#F3F4F6", text: "#6B7280" },
-  Domestic:      { bg: "#ECFDF9", text: "#0D9488" },
+  Domestic:      { bg: "#F5F2FF", text: "#4F1D95" },
   International: { bg: "#FFF3E8", text: "#F97316" },
 };
 
@@ -100,4 +100,4 @@ export function formatRand(v: number) {
 
 // ─── Shared input class strings ─────────────────────────────────────────────────
 export const inp =
-  "w-full h-11 rounded-xl px-4 text-sm border border-slate-200 bg-slate-50 text-foreground focus:outline-none focus:ring-4 focus:ring-teal-500/20 focus:border-teal-600 focus:bg-white hover:border-teal-300 transition-all duration-200 ease-out placeholder:text-muted-foreground/50";
+  "w-full h-11 rounded-xl px-4 text-sm border border-primary/20 bg-white text-foreground focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary focus:bg-white hover:border-primary/40 transition-all duration-200 ease-out placeholder:text-muted-foreground/50";

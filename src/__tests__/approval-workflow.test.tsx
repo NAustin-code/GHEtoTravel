@@ -167,7 +167,7 @@ describe("WorkflowTimeline", () => {
   it("highlights actively selected radio option", () => {
     render(<WorkflowTimeline steps={mockSteps()} decision="accept" onDecision={vi.fn()} />);
     const label = screen.getByText(/Approved.*Team member travel/).closest("label")!;
-    expect(label.className).toContain("border-teal-600");
+    expect(label.className).toContain("border-primary");
   });
 
   it("renders read-only completed decisions for all roles", () => {

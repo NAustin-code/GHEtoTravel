@@ -81,7 +81,7 @@ export function DeclarationDetailView({
               <ArrowLeft size={14} /> Back
             </button>
           )}
-          <h2 className="mb-6 inline-flex rounded-full border border-teal-200/70 bg-teal-50 px-4 py-1.5 text-sm font-extrabold uppercase tracking-[0.2em] text-teal-900 shadow-sm">
+          <h2 className="mb-6 inline-flex rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-extrabold uppercase tracking-[0.2em] text-primary shadow-sm">
             Travel Request Details
           </h2>
 
@@ -215,7 +215,7 @@ export function SupportingDocuments({ data }: { data: Record<string, string> | D
       >
 
         <div className="relative z-10">
-          <h3 className="mb-6 inline-flex rounded-full border border-teal-200/70 bg-teal-50 px-4 py-1.5 text-sm font-extrabold uppercase tracking-[0.2em] text-teal-900 shadow-sm">
+          <h3 className="mb-6 inline-flex rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-extrabold uppercase tracking-[0.2em] text-primary shadow-sm">
             Supporting Documents
           </h3>
 

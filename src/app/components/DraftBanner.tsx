@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Check, X } from "lucide-react";
-import { DEEP, PURPLE, F } from "@/config/theme";
+import { DARKEST, PURPLE, F } from "@/config/theme";
 
 export function DraftBanner({ onDismiss }: { onDismiss: () => void }) {
   const onDismissRef = useRef(onDismiss);
@@ -14,7 +14,7 @@ export function DraftBanner({ onDismiss }: { onDismiss: () => void }) {
     <div
       className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl shadow-xl text-sm font-semibold text-white"
       style={{
-        background: `linear-gradient(135deg, ${DEEP}, ${PURPLE})`,
+        background: `linear-gradient(135deg, ${DARKEST}, ${PURPLE})`,
         animation: "popIn 0.3s ease-out",
         ...F,
       }}

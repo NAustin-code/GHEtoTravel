@@ -901,9 +901,9 @@ export interface LocalDashboardStats {
 }
 
 const TYPE_COLOR_FALLBACK: Record<string, string> = {
-  Domestic: "#0D9488",
+  Domestic: "#4F1D95",
   International: "#F97316",
-  Business: "#0D9488",
+  Business: "#4F1D95",
   Leisure: "#F97316",
   Visiting: "#10B981",
   Other: "#6B7280",

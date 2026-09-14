@@ -850,7 +850,7 @@ const onDraftSave = async () => {
         <FL hint="Quotes, itineraries or invoices. PDF, PNG, JPG or DOCX up to 20 MB each.">
           Attach supporting documents
         </FL>
-        <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm font-medium text-muted-foreground transition-colors hover:border-teal-500 hover:text-foreground">
+        <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm font-medium text-muted-foreground transition-colors hover:border-primary hover:text-foreground">
           <Upload size={16} />
           Click to upload or drag files here
           <input
@@ -884,7 +884,7 @@ const onDraftSave = async () => {
               </li>
             ))}
             {pendingFiles.map((f, i) => (
-              <li key={`pending-${f.name}-${i}`} className="flex items-center justify-between gap-3 rounded-xl border border-dashed border-teal-300 bg-teal-50/50 px-3 py-2 text-sm">
+              <li key={`pending-${f.name}-${i}`} className="flex items-center justify-between gap-3 rounded-xl border border-dashed border-primary/30 bg-primary/5 px-3 py-2 text-sm">
                 <span className="flex min-w-0 items-center gap-2">
                   <Paperclip size={14} className="flex-shrink-0 text-muted-foreground" />
                   <span className="truncate font-medium text-foreground">{f.name}</span>
@@ -939,7 +939,7 @@ const onDraftSave = async () => {
         <button
           type="submit"
           disabled={saving}
-          className="rounded-xl bg-gradient-to-r from-teal-600 to-orange-500 px-6 py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+          className="rounded-xl bg-gradient-to-r from-primary to-accent px-6 py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
         >
           {saving ? "Submitting." : "Submit Travel Request"}
         </button>

@@ -2,7 +2,7 @@
 
 :root {
   --font-size: 16px;
-  --background: #f1f3f6;
+  --background: #F4F0FC;
   --foreground: #1E1E2D;
   --card: #ffffff;
   --card-foreground: #1E1E2D;
@@ -22,7 +22,7 @@
   --input: transparent;
   --input-background: #F0EEF8;
   --switch-background: #cbced4;
-  --table-header-bg: #F7F8FC;
+  --table-header-bg: #EDE8FF;
   --info-bg: #F5F2FF;
   --darkest: #0f0225;
   --purple-600: #6d28d9;

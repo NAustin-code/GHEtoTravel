@@ -12,7 +12,7 @@ interface ThProps {
 export function Th({ children, sortable, active, direction, onClick, className = "" }: ThProps) {
   const base = "px-5 py-3 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider";
   const sortClasses = sortable
-    ? "cursor-pointer transition-all duration-200 hover:bg-teal-50/45 hover:text-teal-700"
+    ? "cursor-pointer transition-all duration-200 hover:bg-primary/5 hover:text-primary"
     : "";
   return (
     <th onClick={onClick} className={`${base} ${sortClasses} ${className}`.trim()}>
