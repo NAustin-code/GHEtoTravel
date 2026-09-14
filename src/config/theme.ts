@@ -1,18 +1,18 @@
 import { StatusType } from "@/types/declaration";
 
 // ─── Brand tokens ───────────────────────────────────────────────────────────────
-export const PURPLE     = "#4F1D95";
-export const PURPLE_DARK= "#39156F";
-export const ORANGE     = "#F8D74A";
+export const PURPLE     = "#35138D";
+export const PURPLE_DARK= "#39127E";
+export const ORANGE     = "#F2BD00";
 export const ORANGE_LIGHT = "#FDE68A";
-export const DARKEST    = "#0f0225";
+export const DARKEST    = "#0D141B";
 export const PURPLE_600 = "#6d28d9";
-export const F          = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
+export const F          = { fontFamily: "'Inter', Arial, sans-serif" };
 
 // ─── Common gradient strings (for inline style={{ background: ... }}) ──────────
 export const GRADIENT_PRIMARY = `linear-gradient(135deg, ${PURPLE}, ${PURPLE_600})`;
 export const GRADIENT_ACCENT = `linear-gradient(135deg, ${ORANGE}, ${ORANGE_LIGHT})`;
-export const GRADIENT_SIDEBAR = `linear-gradient(180deg, ${DARKEST} 0%, ${PURPLE_DARK} 100%)`;
+export const GRADIENT_SIDEBAR = `linear-gradient(160deg, #111A22 0%, ${DARKEST} 100%)`;
 export const GRADIENT_LANDING = `linear-gradient(145deg, ${DARKEST} 0%, ${PURPLE_DARK} 35%, ${PURPLE} 70%, ${PURPLE_600} 100%)`;
 
 // ─── Shared background colours ──────────────────────────────────────────────────
@@ -94,4 +94,4 @@ export function formatRand(v: number) {
 
 // ─── Shared input class strings ─────────────────────────────────────────────────
 export const inp =
-  "w-full h-11 rounded-xl px-4 text-sm border border-primary/20 bg-white text-foreground focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary focus:bg-white hover:border-primary/40 transition-all duration-200 ease-out placeholder:text-muted-foreground/50";
+  "w-full h-10 rounded-md px-3 text-sm border border-[#E4E7ED] bg-white text-foreground focus:outline-none focus:ring-2 focus:ring-[#35138D]/15 focus:border-[#35138D] hover:border-[#35138D]/40 transition-all duration-200 ease-out placeholder:text-muted-foreground/60";

@@ -57,27 +57,27 @@ export function Sidebar({
       style={{ background: GRADIENT_SIDEBAR }}
     >
       <div
-        className={`h-16 flex items-center border-b ${collapsed ? "justify-center px-0" : "justify-between px-4"}`}
-        style={{ borderColor: "rgb(255 255 255 / 0.1)" }}
+        className={`h-[72px] flex items-center border-b border-[#F2BD00] ${collapsed ? "justify-center px-0" : "justify-between px-3"}`}
+        style={{ borderColor: ORANGE }}
       >
         {!collapsed && (
           <div className="flex-1 pr-3">
-            <ImageWithFallback src={logoImg} alt="Hollywoodbets" className="h-12 w-full object-contain object-left" />
+            <ImageWithFallback src={logoImg} alt="Hollywoodbets" className="h-11 w-full object-contain object-left" />
           </div>
         )}
         <button
           onClick={onToggle}
-          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors text-[#c4b5fd] flex-shrink-0"
+            className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-white/10 transition-colors text-[#F2BD00] flex-shrink-0"
         >
           {collapsed ? <Menu size={16} /> : <ChevronLeft size={16} />}
         </button>
       </div>
 
-      <nav className="flex-1 py-5 px-2">
+      <nav className="flex-1 py-4 px-2">
         {!collapsed && (
           <p
-            className="px-3 pb-3 text-[11px] font-semibold uppercase tracking-[0.22em]"
-            style={{ color: "rgb(245 243 255 / 0.78)" }}
+            className="px-3 pb-3 text-[10px] font-extrabold uppercase tracking-[0.12em]"
+            style={{ color: ORANGE }}
           >
             {role === "admin" ? "Administrator" : role === "teamMember" ? "Team Member" : "Approver"}
           </p>
@@ -90,10 +90,10 @@ export function Sidebar({
                 key={link.screen}
                 onClick={() => onNavigate(link.screen)}
                 title={collapsed ? link.label : undefined}
-                className={`w-full flex items-center gap-3 rounded-xl transition-all ${
-                  collapsed ? "justify-center p-2.5 text-base" : "px-3 py-3 text-[16px]"
-                } ${active ? "font-semibold" : "text-[#efe9ff] hover:bg-white/10 font-medium"}`}
-                style={active ? { background: ORANGE, color: "#1E1E2D" } : {}}
+                  className={`w-full flex items-center gap-3 rounded-md transition-all ${
+                  collapsed ? "justify-center p-2.5 text-base" : "px-3 py-2.5 text-[13px]"
+                } ${active ? "font-bold" : "text-white/90 hover:bg-white/10 font-medium"}`}
+                style={active ? { background: `linear-gradient(90deg, #5125BD, #39127E)`, color: "#fff" } : {}}
               >
                 <link.icon size={18} className={active ? "" : "opacity-90"} />
                 {!collapsed && link.label}

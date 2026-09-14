@@ -2,18 +2,15 @@ import { useEffect, useMemo, useState, ReactNode } from "react";
 import {
   Coins,
   CheckSquare,
-  AlertTriangle,
-  FileText,
 } from "lucide-react";
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts";
 import { fetchDeclarations } from "@/services/api";
 import { Screen, Declaration } from "@/types/declaration";
-import { PURPLE, ORANGE, formatRand, PRIORITY_COLORS, STATUS_COLORS, GRADIENT_PRIMARY, TYPE_COLORS } from "@/config/theme";
+import { PURPLE, ORANGE, formatRand, GRADIENT_PRIMARY } from "@/config/theme";
 import { useUser } from "@/app/auth/UserContext";
 import { PageHeader } from "@/app/components/PageHeader";
-import { THead } from "@/app/components/THead";
-import { Table, Tbody, Tr, Td, COL } from "@/app/components/table";
 import { KpiCard, STATUS_KPI } from "@/app/components/KpiCard";
+import { buildMonthlyTravelTrend, buildRanking } from "@/app/features/dashboard/dashboardAnalytics";
 
 function ModernCard({ children, className = "", style, accent }: { children: ReactNode; className?: string; style?: React.CSSProperties; accent?: string }) {
   return (
@@ -26,15 +23,19 @@ function ModernCard({ children, className = "", style, accent }: { children: Rea
   );
 }
 
-type DashboardFilter = "All" | "Pending" | "Approved" | "Returned" | "Declined" | "Escalated" | "Total Value";
+function AnalyticsChart({ title, data, dataKey, color, currency = false }: { title: string; data: { month: string; [key: string]: string | number }[]; dataKey: string; color: string; currency?: boolean }) {
+  return <ModernCard className="p-3"><h3 className="mb-2 text-xs font-extrabold uppercase text-[#35138D]">{title}</h3><div className="h-48"><ResponsiveContainer width="100%" height="100%"><BarChart data={data}><CartesianGrid stroke="#E4E7ED" vertical={false} /><XAxis dataKey="month" tick={{ fontSize: 9 }} /><YAxis tick={{ fontSize: 9 }} tickFormatter={(v) => currency ? `R${Math.round(Number(v) / 1000)}k` : String(v)} /><Tooltip formatter={(v) => currency ? formatRand(Number(v)) : v} /><Bar dataKey={dataKey} fill={color} radius={[3, 3, 0, 0]} /></BarChart></ResponsiveContainer></div></ModernCard>;
+}
 
-const PRIORITY_ORDER: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
+function RankingPanel({ title, rows }: { title: string; rows: { name: string; trips: number; spend: number }[] }) {
+  return <ModernCard><h3 className="border-b border-[#E4E7ED] px-3 py-3 text-xs font-extrabold uppercase text-[#35138D]">{title}</h3><div className="overflow-x-auto"><table className="w-full text-xs"><thead><tr className="bg-[#35138D] text-left text-white"><th className="px-3 py-2">#</th><th className="px-3 py-2">Name</th><th className="px-3 py-2">Trips</th><th className="px-3 py-2">Spend</th></tr></thead><tbody>{rows.map((r, i) => <tr key={r.name} className="border-b border-[#E4E7ED]"><td className="px-3 py-2">{i + 1}</td><td className="px-3 py-2 font-semibold">{r.name}</td><td className="px-3 py-2">{r.trips}</td><td className="px-3 py-2">{formatRand(r.spend)}</td></tr>)}</tbody></table></div></ModernCard>;
+}
+
+type DashboardFilter = "All" | "Pending" | "Approved" | "Returned" | "Declined" | "Escalated" | "Total Value";
 
 export function ApproverDashboard({ onNavigate, onReview }: { onNavigate: (s: Screen) => void; onReview?: (d: Declaration) => void }) {
   const { user } = useUser();
   const [activeFilter, setActiveFilter] = useState<DashboardFilter>("All");
-  const [deptPage, setDeptPage] = useState(0);
-  const DEPT_PAGE_SIZE = 10;
   const [declarations, setDeclarations] = useState<Declaration[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,13 +56,6 @@ export function ApproverDashboard({ onNavigate, onReview }: { onNavigate: (s: Sc
     return declarations;
   }, [declarations, isTeamMember, user]);
 
-  const filteredDeclarations = useMemo(() => {
-    if (activeFilter === "All" || activeFilter === "Total Value") return scopedDeclarations;
-    return scopedDeclarations.filter((d) => d.status === activeFilter);
-  }, [activeFilter, scopedDeclarations]);
-
-  const daysSince = (dateStr: string) => { const t = new Date(dateStr).getTime(); return Number.isNaN(t) ? 0 : Math.floor((Date.now() - t) / 86400000); };
-
   const kpisData = useMemo(() => ({
     pending: scopedDeclarations.filter((d) => d.status === "Pending").length,
     approved: scopedDeclarations.filter((d) => d.status === "Approved").length,
@@ -71,70 +65,16 @@ export function ApproverDashboard({ onNavigate, onReview }: { onNavigate: (s: Sc
     totalValue: scopedDeclarations.filter((d) => ["Pending", "Approved"].includes(d.status)).reduce((sum, d) => sum + d.value, 0),
   }), [scopedDeclarations]);
 
-  const teamActivity = useMemo(() => {
-    type ActivityStatus = { declarations: number; totalValue: number; types: Record<string, number> };
-    const emptyStatus = (): ActivityStatus => ({ declarations: 0, totalValue: 0, types: { Domestic: 0, International: 0 } });
-    const map = new Map<string, { totalValue: number; statuses: { Approved: ActivityStatus; Declined: ActivityStatus } }>();
-    scopedDeclarations.forEach((d) => {
-      const key = d.employee;
-      if (!map.has(key)) map.set(key, { totalValue: 0, statuses: { Approved: emptyStatus(), Declined: emptyStatus() } });
-      const row = map.get(key)!;
-      row.totalValue += d.value;
-      if (d.status === "Approved" || d.status === "Declined") {
-        const status = row.statuses[d.status];
-        status.declarations += 1;
-        status.totalValue += d.value;
-        status.types[d.type] = (status.types[d.type] || 0) + 1;
-      }
-    });
-    return Array.from(map.entries())
-      .map(([name, row]) => ({ name, ...row }))
-      .sort((a, b) => b.totalValue - a.totalValue)
-      .slice(0, 5);
-  }, [scopedDeclarations]);
 
-  const typeDistribution = useMemo(() => {
-    const counts = scopedDeclarations.reduce<Record<string, number>>((acc, d) => {
-      acc[d.type] = (acc[d.type] || 0) + 1;
-      return acc;
-    }, {});
-    return Object.entries(counts).map(([name, value]) => ({
-      name,
-      value,
-      color: TYPE_COLORS[name] || PURPLE,
-    }));
-  }, [scopedDeclarations]);
-
-  const overdueDeclarations = useMemo(() => {
-    const sevenDaysAgo = Date.now() - 7 * 86400000;
-    return scopedDeclarations
-      .filter((d) => {
-        if (!["Pending", "Escalated"].includes(d.status)) return false;
-        const t = new Date(d.submitted).getTime();
-        if (Number.isNaN(t) || t >= sevenDaysAgo) return false;
-        return true;
-      })
-      .sort((a, b) => {
-        const ta = new Date(a.submitted).getTime();
-        const tb = new Date(b.submitted).getTime();
-        if (Number.isNaN(ta) || Number.isNaN(tb)) return 0;
-        return ta - tb || (PRIORITY_ORDER[a.priority] ?? 99) - (PRIORITY_ORDER[b.priority] ?? 99);
-      });
-  }, [scopedDeclarations]);
-
-  const departmentStats = useMemo(() => {
-    const map = new Map<string, { declarations: number; approved: number; declined: number; pending: number; totalValue: number }>();
-    filteredDeclarations.forEach((d) => {
-      if (!map.has(d.department)) map.set(d.department, { declarations: 0, approved: 0, declined: 0, pending: 0, totalValue: 0 });
-      const row = map.get(d.department)!;
-      row.declarations += 1;
-      row.totalValue += d.value;
-      if (d.status === "Approved") row.approved += 1;
-      else if (d.status === "Declined") row.declined += 1;
-      else if (["Pending", "Escalated"].includes(d.status)) row.pending += 1;
-    });
-    return Array.from(map.entries()).map(([name, row]) => ({ name, ...row })).sort((a, b) => b.totalValue - a.totalValue);
-  }, [filteredDeclarations]);
+  const [travelFilter, setTravelFilter] = useState("All");
+  const [departmentFilter, setDepartmentFilter] = useState("All");
+  const [searchFilter, setSearchFilter] = useState("");
+  const analyticsDeclarations = useMemo(() => scopedDeclarations.filter((d) =>
+    (travelFilter === "All" || d.type === travelFilter) &&
+    (departmentFilter === "All" || d.department === departmentFilter) &&
+    (!searchFilter.trim() || `${d.employee} ${d.destination || d.to || ""} ${d.travelReference || ""}`.toLowerCase().includes(searchFilter.toLowerCase()))
+  ), [scopedDeclarations, travelFilter, departmentFilter, searchFilter]);
+  const trendData = useMemo(() => buildMonthlyTravelTrend(analyticsDeclarations), [analyticsDeclarations]);
 
   if (loading) {
     return <div className="flex items-center justify-center py-20"><div className="text-sm text-muted-foreground animate-pulse">Loading dashboard…</div></div>;
@@ -190,7 +130,29 @@ export function ApproverDashboard({ onNavigate, onReview }: { onNavigate: (s: Sc
         <KpiCard label="Total Value" value={formatRand(kpisData.totalValue)} icon={Coins} decorKey="Total Value" />
       </div>
 
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-2 rounded-md border border-[#E4E7ED] bg-white p-3 sm:grid-cols-4">
+        <label className="text-[10px] font-bold uppercase text-[#5D6371]">Travel Type<select value={travelFilter} onChange={(e) => setTravelFilter(e.target.value)} className="mt-1 h-9 w-full rounded-md border border-[#E4E7ED] px-2 text-xs"><option>All</option><option>Domestic</option><option>International</option></select></label>
+        <label className="text-[10px] font-bold uppercase text-[#5D6371]">Department<select value={departmentFilter} onChange={(e) => setDepartmentFilter(e.target.value)} className="mt-1 h-9 w-full rounded-md border border-[#E4E7ED] px-2 text-xs"><option>All</option>{Array.from(new Set(scopedDeclarations.map((d) => d.department))).sort().map((d) => <option key={d}>{d}</option>)}</select></label>
+        <label className="text-[10px] font-bold uppercase text-[#5D6371] sm:col-span-2">Traveller, destination or reference<input value={searchFilter} onChange={(e) => setSearchFilter(e.target.value)} placeholder="Search..." className="mt-1 h-9 w-full rounded-md border border-[#E4E7ED] px-2 text-xs" /></label>
+      </div>
+      <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
+        <AnalyticsChart title="Total Spend Over Time (R)" data={trendData} dataKey="spend" color="#35138D" currency />
+        <AnalyticsChart title="Total Trips Over Time" data={trendData} dataKey="trips" color="#074698" />
+        <AnalyticsChart title="Total Travellers Over Time" data={trendData} dataKey="travellers" color="#087B84" />
+      </div>
+      <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
+        <RankingPanel title="Top 5 Travellers" rows={buildRanking(analyticsDeclarations, "employee")} />
+        <RankingPanel title="Top 5 Approvers" rows={buildRanking(analyticsDeclarations, "approver")} />
+        <RankingPanel title="Top Billing Companies by Spend" rows={buildRanking(analyticsDeclarations, "companyToBeBilled")} />
+      </div>
+      <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+        <RankingPanel title="Spend by Reason for Travel" rows={buildRanking(analyticsDeclarations, "reason")} />
+        <AnalyticsChart title="Average Trip Duration (Days) Over Time" data={trendData} dataKey="duration" color="#35138D" />
+      </div>
+
+      {/* Legacy approval-monitoring panels removed: the analytics dashboard above is now the single dashboard view. */}
+      {/*
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
         <ModernCard className="flex flex-col p-5" accent={PURPLE}>
           <div className="mb-1 flex items-center gap-2">
             <FileText size={14} style={{ color: PURPLE }} />
@@ -335,7 +297,7 @@ export function ApproverDashboard({ onNavigate, onReview }: { onNavigate: (s: Sc
             </div>
           )}
         </div>
-      </ModernCard>
+      </ModernCard> */}
     </div>
   );
 }
