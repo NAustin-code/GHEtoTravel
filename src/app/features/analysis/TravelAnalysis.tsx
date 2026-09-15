@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { fetchDeclarations } from "@/services/api";
 import { Declaration, TransportMode, TripType } from "@/types/declaration";
-import { buildMonthlyTravelTrend, buildRanking } from "@/app/features/dashboard/dashboardAnalytics";
+import { buildMonthlyTravelTrend, buildRanking, MonthlyTravelTrend } from "@/app/features/dashboard/dashboardAnalytics";
 import { KpiCard } from "@/app/components/KpiCard";
 import { PageHeader } from "@/app/components/PageHeader";
 import { formatRand } from "@/config/theme";
@@ -92,7 +92,7 @@ export function TravelAnalysis() {
   </div>;
 }
 
-function Chart({ data, dataKey, color, currency = false }: { data: { month: string; [key: string]: string | number }[]; dataKey: string; color: string; currency?: boolean }) {
+function Chart({ data, dataKey, color, currency = false }: { data: MonthlyTravelTrend[]; dataKey: keyof MonthlyTravelTrend; color: string; currency?: boolean }) {
   return <div className="h-56 p-3"><ResponsiveContainer width="100%" height="100%"><LineChart data={data}><CartesianGrid stroke="#E4E7ED" vertical={false} /><XAxis dataKey="month" tick={{ fontSize: 9 }} /><YAxis tick={{ fontSize: 9 }} tickFormatter={(v) => currency ? `R${Math.round(Number(v) / 1000)}k` : String(v)} /><Tooltip formatter={(v) => currency ? formatRand(Number(v)) : v} /><Line type="monotone" dataKey={dataKey} stroke={color} strokeWidth={3} dot={{ r: 3 }} /></LineChart></ResponsiveContainer></div>;
 }
 

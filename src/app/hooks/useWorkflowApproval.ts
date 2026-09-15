@@ -27,7 +27,7 @@ export function useWorkflowApproval({ declarationId, userId, initialWorkflowStep
   const [wfMessage, setWfMessage] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const messageTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const messageTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const loadWorkflowInstance = useCallback(async () => {
     if (!declarationId) {

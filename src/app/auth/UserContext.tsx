@@ -10,6 +10,15 @@ interface UserContextValue {
   logout: () => void;
 }
 
+function isCachedUser(value: unknown): value is User {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<User>;
+  return typeof candidate.id === "string"
+    && typeof candidate.name === "string"
+    && typeof candidate.email === "string"
+    && (candidate.role === "teamMember" || candidate.role === "approver" || candidate.role === "admin");
+}
+
 const UserContext = createContext<UserContextValue>({
   user: null,
   setUser: () => {},
@@ -34,7 +43,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const cached = localStorage.getItem(CACHED_USER_KEY);
     if (cached) {
       try {
-        if (mounted) setUser(JSON.parse(cached));
+        const parsed: unknown = JSON.parse(cached);
+        if (mounted && isCachedUser(parsed)) setUser(parsed);
+        else localStorage.removeItem(CACHED_USER_KEY);
       } catch {
         localStorage.removeItem(CACHED_USER_KEY);
       }

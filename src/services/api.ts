@@ -1,5 +1,6 @@
 import { Declaration, ComplianceTrendPoint, Dropdowns, StatusType, SystemConfig, TypeBreakdownItem, UploadedFile, User, WorkflowInstance, WorkflowRule, WorkflowStep } from"@/types/declaration"
 import * as store from "@/services/localStore"
+import { getAuthToken } from "@/services/httpClient"
 
 // Local-store backed service layer (no backend). Signatures match the former
 // REST API wrappers so components and tests keep working unchanged.
@@ -130,8 +131,8 @@ export async function deleteWorkflowRule(id: string): Promise<{ message: string 
 }
 
 // ── Workflows ─────────────────────────────────────────
-export async function fetchPendingWorkflows(): Promise<{ declaration: Declaration; step: WorkflowStep | null }[]> {
-  return store.listPendingWorkflows();
+export async function fetchPendingWorkflows(actorId?: string, organizationId?: string, actorRole?: User["role"]): Promise<{ declaration: Declaration; step: WorkflowStep | null }[]> {
+  return store.listPendingWorkflows(actorId, organizationId, actorRole);
 }
 
 export async function fetchWorkflowInstance(declarationId: string): Promise<WorkflowInstance> {
@@ -149,8 +150,10 @@ export async function approveWorkflowStep(data: {
   declarationId: string;
   decision: string;
   notes?: string;
+  actorId?: string;
 }): Promise<WorkflowDecisionResult> {
-  return store.decideWorkflowStep(data.declarationId, data.decision, data.notes);
+  const actorId = data.actorId || store.getUserByToken(getAuthToken())?.id;
+  return store.decideWorkflowStep(data.declarationId, data.decision, data.notes, actorId);
 }
 
 // ── Reports ───────────────────────────────────────────

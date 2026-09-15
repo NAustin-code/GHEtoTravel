@@ -47,7 +47,13 @@ export function buildRanking(
 ): RankingRow[] {
   const rows = new Map<string, RankingRow>();
   declarations.forEach((declaration) => {
-    const name = String(declaration[field] || "Not specified");
+    const name = field === "internalExternal"
+      ? String(declaration.travelers?.find((traveler) => traveler.internalExternal)?.internalExternal || "Not specified")
+      : field === "companyToBeBilled"
+        ? String(declaration.companyToBeBilled || "Not specified")
+        : field === "reason"
+          ? String(declaration.reason || declaration.description || "Not specified")
+          : String(declaration[field] || "Not specified");
     const current = rows.get(name) || { name, trips: 0, spend: 0 };
     current.trips += 1;
     current.spend += Number.isFinite(declaration.value) ? declaration.value : 0;

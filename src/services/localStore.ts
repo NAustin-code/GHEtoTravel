@@ -652,13 +652,17 @@ export function setDeclarationStatus(id: string, status: string): Declaration {
 
 // ─── Workflows ────────────────────────────────────────────────────────────────
 
-export function listPendingWorkflows(): { declaration: Declaration; step: WorkflowStep | null }[] {
+export function listPendingWorkflows(actorId?: string, organizationId?: string, actorRole?: User["role"]): { declaration: Declaration; step: WorkflowStep | null }[] {
   const declarations = getDeclarations().filter((d) => d.status === "Pending" || d.status === "Escalated");
   const workflows = getWorkflows();
   return declarations.map((declaration) => {
     const instance = workflows.find((w) => w.declarationId === declaration.id);
     const current = instance?.steps.find((s) => s.status === "pending") || null;
     return { declaration: clone(declaration), step: current ? clone(current) : null };
+  }).filter(({ declaration, step }) => {
+    if (organizationId && declaration.organizationId !== organizationId) return false;
+    if (!actorId || actorRole === "admin") return true;
+    return step?.assignee === actorId;
   });
 }
 
@@ -679,7 +683,7 @@ const TERMINAL_BY_DECISION: Record<string, { step: WorkflowStep["status"]; decla
   return: { step: "returned", declaration: "Returned" },
 };
 
-export function decideWorkflowStep(declarationId: string, decision: string, notes?: string): { declarationId: string; steps: WorkflowStep[]; status: StatusType; newStatus: StatusType } {
+export function decideWorkflowStep(declarationId: string, decision: string, notes?: string, actorId?: string): { declarationId: string; steps: WorkflowStep[]; status: StatusType; newStatus: StatusType } {
   const declarations = getDeclarations();
   const idx = declarations.findIndex((d) => d.id === declarationId);
   if (idx === -1) throw notFound("Declaration", declarationId);
@@ -697,12 +701,15 @@ export function decideWorkflowStep(declarationId: string, decision: string, note
   }
   const current = instance.steps.find((s) => s.status === "pending");
   if (!current) throw new ApiClientError(409, "No pending workflow step for this declaration");
+  if (actorId && current.assignee !== actorId) {
+    throw new ApiClientError(403, "You are not authorized to decide this workflow step");
+  }
   const now = new Date().toISOString();
   current.decision = decision as ApprovalDecision;
   current.notes = notes || "";
   current.decidedAt = now;
-  current.decidedById = current.assignee;
-  current.decidedByName = current.assigneeName;
+  current.decidedById = actorId || current.assignee;
+  current.decidedByName = actorId ? (getUsers().find((u) => u.id === actorId)?.name || current.assigneeName) : current.assigneeName;
   const terminal = TERMINAL_BY_DECISION[decision];
   let status: StatusType;
   // 3-way branching:

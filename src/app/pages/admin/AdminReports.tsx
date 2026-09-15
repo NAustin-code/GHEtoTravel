@@ -68,7 +68,7 @@ export function AdminReports() {
     }
   }, [params]);
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => {
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => { handleGenerate(); }, 300);

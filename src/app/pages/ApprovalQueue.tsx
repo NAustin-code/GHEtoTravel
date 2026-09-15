@@ -5,6 +5,7 @@ import { Declaration } from "@/types/declaration";
 import { PURPLE, formatRand, PRIORITY_COLORS } from "@/config/theme";
 import { Card } from "@/app/components/Card";
 import { PageHeader } from "@/app/components/PageHeader";
+import { useUser } from "@/app/auth/UserContext";
 
 import { StatusBadge } from "@/app/components/StatusBadge";
 import { TypeBadge } from "@/app/components/TypeBadge";
@@ -22,6 +23,7 @@ function isOutstanding(dateStr: string, slaDays: number): boolean {
 }
 
 export function ApprovalQueue({ onReview }: { onReview: (d: Declaration) => void }) {
+  const { user } = useUser();
   const [allDeclarations, setAllDeclarations] = useState<Declaration[]>([]);
   const [stepsMap, setStepsMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -39,7 +41,7 @@ export function ApprovalQueue({ onReview }: { onReview: (d: Declaration) => void
   const [slaDays, setSlaDays] = useState(3);
 
   useEffect(() => {
-    fetchPendingWorkflows()
+    fetchPendingWorkflows(user?.id, user?.organizationId, user?.role)
       .then((items) => {
         setAllDeclarations(items.map((item) => item.declaration));
         const map: Record<string, string> = {};
@@ -50,7 +52,7 @@ export function ApprovalQueue({ onReview }: { onReview: (d: Declaration) => void
       .finally(() => setLoading(false));
     // Fetch SLA threshold for overdue calculation
     fetchConfig().then((c) => setSlaDays(c.slaEscalationDays ?? 3)).catch(() => {});
-  }, []);
+  }, [user?.id, user?.organizationId, user?.role]);
 
   useEffect(() => { setPage(0); }, [search, department, status, priority, employeeFilter, overdueOnly, sortKey, sortDir]);
 
